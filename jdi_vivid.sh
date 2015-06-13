@@ -283,6 +283,7 @@ gsettings set com.canonical.Unity.Lenses disabled-scopes \
 gsettings set com.canonical.unity.webapps integration-allowed false
 gsettings set org.compiz.unityshell:/org/compiz/profiles/unity/plugins/unityshell/ launcher-minimize-window true
 gsettings set org.compiz.unityshell:/org/compiz/profiles/unity/plugins/unityshell/ show-launcher '<Alt><Super>'
+gsettings get org.compiz.integrated show-hud ['<Primary><Alt><Mod2>Super_L']
 
 
 # indicator preferences
