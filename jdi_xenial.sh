@@ -279,7 +279,7 @@ pip install PySensors
 echo
 echo "=== Disabilitazione accelerazione mouse ==="
 echo
-FILE="50-mouse-acceleration.conf"
+FILE="/usr/share/X11/xorg.conf.d/50-mouse-acceleration.conf"
 
 /bin/cat <<EOM >$FILE
 Section "InputClass"
