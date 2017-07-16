@@ -20,16 +20,6 @@ APPZ="$APP_OFFICIAL_REPOS $APP_OTHER_REPOS"
 
 AUTOYES="--assume-yes"
 
-case $TMPDIR in 
-	'')
-		tmp_dir="/tmp"
-		;; 
-
-	*)
-		tmp_dir=$TMPDIR
-		;;
-esac
-
 while getopts :ahvy PARAMETER
 do
 	case $PARAMETER in
@@ -79,6 +69,17 @@ then
 	sudo ./`basename $0`
 	exit 0
 fi
+
+echo "tempd dir -> $tmp_dir"
+
+clean_up () 
+{
+  echo "Cleaning up"
+  rm -rf $tmp_dir
+  exit 0
+}
+
+trap clean_up SIGKILL SIGINT SIGTERM
 
 function add_repo {
 echo -n "Repository $1: "
@@ -245,6 +246,12 @@ apt-get install $AUTOYES $APPZ
 apt-get remove $AUTOYES postfix indicator-appmenu
 #pip install Glances
 
+if [[ `uname -m` == 'amd64' || `uname -m` == 'x86_64' ]]
+then
+	echo "=== Installing Skype ==="
+	wget -O $tmp_dir/skype.deb https://go.skype.com/skypeforlinux-64.deb &&
+	dpkg -i $tmp_dir/skype.deb
+fi
 
 echo
 echo "=== Disabling mouse acceleration ==="
@@ -289,5 +296,7 @@ gsettings set org.gnome.gedit.preferences.editor highlight-current-line true
 
 # nautilus
 gsettings set org.gnome.nautilus.preferences executable-text-activation 'ask'
+
+clean_up
 
 exit 0
