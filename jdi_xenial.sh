@@ -6,7 +6,7 @@ RELEASE="16.04"
 VERSION="JDInstall $CODENAME"
 PINGSITE="www.google.com"
 
-APP_OFFICIAL_REPOS="alacarte autofs build-essential bwm-ng calibre cmatrix compizconfig-settings-manager conky-all curl dconf-tools default-jdk dkms exfat-fuse exfat-utils faenza-icon-theme filezilla finch flashplugin-installer gdebi gimp git gnome-backgrounds gnome-commander gnome-gmail gnome-mplayer gnome-search-tool gnome-system-tools gnome-themes-standard gnome-tweak-tool gparted gthumb gtk-recordmydesktop gwakeonlan hardinfo hddtemp htop icedtea-plugin indicator-multiload inkscape inxi iotop jstest-gtk k3b libreoffice libsoil1 lm-sensors linux-headers-generic mc meld mercurial mplayer mumble nautilus-actions nautilus-dropbox nautilus-image-converter ncdu nfs-common nfs-kernel-server openjdk-8-jdk p7zip p7zip-full p7zip-rar pidgin powertop pavucontrol ppa-purge python-pip python-dev pwgen rar saidar silversearcher-ag sloccount skype smartmontools soundconverter sox subtitleeditor subversion synaptic synapse tagtool tig tofrodos tree ttf-mscorefonts-installer ubuntu-restricted-extras unity-tweak-tool unshield vdpau-va-driver vim vim-gtk vlc wakeonlan zlib1g-dev" #g15daemon tvtime me-tv eclipse texmaker texlive" #myunity ffmpeg synapse
+APP_OFFICIAL_REPOS="alacarte autofs build-essential bwm-ng calibre cmatrix compizconfig-settings-manager conky-all curl dconf-tools default-jdk dkms exfat-fuse exfat-utils faenza-icon-theme filezilla finch flashplugin-installer gdebi gimp git gnome-backgrounds gnome-commander gnome-gmail gnome-mplayer gnome-search-tool gnome-system-tools gnome-themes-standard gnome-tweak-tool gparted gthumb gtk-recordmydesktop gwakeonlan hardinfo hddtemp htop icedtea-plugin indicator-multiload inkscape inxi iotop jstest-gtk k3b libreoffice libsoil1 lm-sensors linux-headers-generic mc meld mercurial mplayer mumble nautilus-actions nautilus-dropbox nautilus-image-converter ncdu nfs-common nfs-kernel-server openjdk-8-jdk p7zip p7zip-full p7zip-rar pidgin powertop pavucontrol ppa-purge python-pip python-dev pwgen rar saidar silversearcher-ag sloccount smartmontools soundconverter sox subtitleeditor subversion synaptic synapse tagtool tig tofrodos tree ttf-mscorefonts-installer ubuntu-restricted-extras unity-tweak-tool unshield vdpau-va-driver vim vim-gtk vlc wakeonlan zlib1g-dev" #g15daemon tvtime me-tv eclipse texmaker texlive" #myunity ffmpeg synapse
 
 APP_OTHER_REPOS="libdvdcss2 google-chrome-beta" # google-musicmanager-beta google-talkplugin indicator-sensors jdownloader  my-weather-indicator 
 
@@ -141,7 +141,7 @@ DROPBOX_SRC="deb-src http://linux.dropbox.com/ubuntu $CODENAME main"
 VIRTUALBOX="deb http://download.virtualbox.org/virtualbox/debian $CODENAME contrib"
 VIRTUALBOX_KEY="http://download.virtualbox.org/virtualbox/debian/oracle_vbox.asc"
 #VBOX_USB="none /proc/bus/usb usbfs devgid=125,devmode=664 0 0"
-GOOGLE_CHROME="deb http://dl.google.com/linux/chrome/deb/ stable main"
+GOOGLE_CHROME="deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main"
 GOOGLE_MUSIC_MANAGER="deb http://dl.google.com/linux/musicmanager/deb/ stable main"
 GOOGLE_TALKPLUGIN="deb http://dl.google.com/linux/talkplugin/deb/ stable main"
 GOOGLE_KEY="https://dl-ssl.google.com/linux/linux_signing_key.pub"
