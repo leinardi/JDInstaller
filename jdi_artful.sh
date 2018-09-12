@@ -255,21 +255,8 @@ fi
 
 apt $AUTOYES --fix-broken install
 
-echo
-echo "=== Disabling mouse acceleration ==="
-echo
-FILE="/usr/share/X11/xorg.conf.d/50-mouse-acceleration.conf"
-
-/bin/cat <<EOM >$FILE
-Section "InputClass"
-	Identifier "My Mouse"
-	MatchIsPointer "yes"
-	Option "AccelerationProfile" "-1"
-	Option "AccelerationScheme" "none"
-	Option "AccelSpeed" "-1"
-EndSection
-EOM
-
+# disabling mouse acceleration
+gsettings set org.gnome.desktop.peripherals.mouse accel-profile 'flat'
 # ubuntu-dock preferences
 gsettings set org.gnome.shell.extensions.dash-to-dock click-action 'minimize'
 gsettings set org.gnome.shell.extensions.dash-to-dock scroll-action 'cycle-windows'
