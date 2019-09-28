@@ -1,14 +1,14 @@
 #!/bin/bash
 # JDInstall
 
-CODENAME="bionic"
-RELEASE="18.04"
+CODENAME="eoan"
+RELEASE="19.10"
 VERSION="JDInstall $CODENAME"
 PINGSITE="www.google.com"
 
-APP_OFFICIAL_REPOS="alacarte autofs build-essential bwm-ng calibre chrome-gnome-shell cmatrix compizconfig-settings-manager conky-all curl dconf-tools default-jdk dkms exfat-fuse exfat-utils faenza-icon-theme filezilla finch flashplugin-installer gconf-service gconf-service-backend gconf2-common gdebi gimp gir1.2-clutter-1.0 gir1.2-clutter-gst-3.0 gir1.2-gtkclutter-1.0 gir1.2-gtop-2.0 gir1.2-networkmanager-1.0 git gnome-backgrounds gnome-commander gnome-gmail gnome-system-tools gnome-themes-standard gnome-tweak-tool gparted gthumb gtk-recordmydesktop gwakeonlan hardinfo hddtemp htop icedtea-plugin indicator-multiload inkscape inxi iotop jstest-gtk k3b libgconf-2-4 libreoffice libsoil1 lm-sensors linux-headers-generic mc meld mercurial mplayer mumble nautilus-dropbox nautilus-image-converter ncdu nfs-common nfs-kernel-server openjdk-8-jdk p7zip p7zip-full p7zip-rar pidgin powertop pavucontrol ppa-purge python-pip python-dev pwgen rar saidar silversearcher-ag sloccount smartmontools soundconverter sox subtitleeditor subversion synaptic synapse tig tofrodos tree ttf-mscorefonts-installer ubuntu-restricted-extras unity-tweak-tool unshield vdpau-va-driver vim vim-gtk vlc wakeonlan zlib1g-dev" #g15daemon tvtime me-tv eclipse texmaker texlive" #myunity ffmpeg synapse
-
-APP_OTHER_REPOS="libdvdcss2 google-chrome-beta" # google-musicmanager-beta google-talkplugin jdownloader
+APP_OFFICIAL_REPOS="alacarte android-sdk-platform-tools-common autofs build-essential bwm-ng calibre chrome-gnome-shell cmatrix compizconfig-settings-manager curl default-jdk dkms exfat-fuse exfat-utils faenza-icon-theme filezilla finch flashplugin-installer gconf-service gconf-service-backend gconf2-common gdebi gimp gir1.2-clutter-1.0 gir1.2-clutter-gst-3.0 gir1.2-gtkclutter-1.0 gir1.2-gtop-2.0 git gnome-backgrounds gnome-system-tools gnome-themes-standard gnome-tweak-tool gparted grsync gthumb gtk-recordmydesktop gwakeonlan hardinfo hddtemp htop inkscape inxi iotop jstest-gtk k3b libgconf-2-4 libreoffice libgl1-mesa-dri:i386, libgl1-mesa-glx:i386, libc6:i386 libsoil1 lm-sensors linux-headers-generic mc meld mercurial mplayer mumble nautilus-dropbox nautilus-image-converter ncdu nfs-common nfs-kernel-server openjdk-8-jdk p7zip p7zip-full p7zip-rar pidgin powertop pavucontrol ppa-purge python-pip python-dev pwgen rar saidar silversearcher-ag sloccount smartmontools soundconverter sox subtitleeditor subversion synaptic telegram-desktop tig tofrodos tree ttf-mscorefonts-installer ubuntu-restricted-extras unshield vim vim-gtk vlc xclip wakeonlan zlib1g-dev" #texmaker texlive
+ 
+APP_OTHER_REPOS="libdvd-pkg google-chrome-beta" # jdownloader
 
 
 #if [[ `uname -m` == 'amd64' || `uname -m` == 'x86_64' ]]
@@ -202,17 +202,12 @@ enable_repo "Ubuntu $CODENAME-Backports (Sources)" "$BACKPORTS_SRC" "$BACKPORTS_
 #add-apt-repository -y ppa:tualatrix/ppa #Ubuntu-Tweak
 #add-apt-repository -y ppa:jd-team/jdownloader #JDownloader
 #add-apt-repository -y ppa:tiheum/equinox #Faenza
-#add-apt-repository -y ppa:ubuntu-x-swat/x-updates #X-Updates
-#add-apt-repository -y ppa:xorg-edgers/ppa #xorg-edgers
 add-apt-repository -y ppa:graphics-drivers/ppa #Proprietary GPU Drivers
 #add-apt-repository -y ppa:berfenger/roccat
 #add-apt-repository -y ppa:mumble/release #Mumble
-#add-apt-repository -y ppa:synapse-core/testing #Synapse Bleeding edge
 #add-apt-repository -y ppa:uck-team/uck-stable #UCK
 #add-apt-repository -y ppa:subdownloader-developers/ppa #SubDownloader
 #add-apt-repository -y ppa:pkg-games/ppa #pkg-games
-#add-apt-repository -y ppa:indicator-multiload/stable-daily
-#add-apt-repository -y ppa:alexmurray/indicator-sensors
 #add-apt-repository -y ppa:atareao/atareao
 add_repo "google-chrome-beta" "$GOOGLE_CHROME" "$GOOGLE_KEY"
 #add_repo "google-musicmanager" "$GOOGLE_MUSIC_MANAGER" "$GOOGLE_KEY"
@@ -258,7 +253,7 @@ apt $AUTOYES --fix-broken install
 echo
 echo "=== Cleanup Unity indicators ==="
 echo
-apt $AUTOYES purge indicator-application indicator-appmenu indicator-bluetooth indicator-common indicator-datetime indicator-keyboard indicator-messages  indicator-power indicator-printers indicator-session indicator-sound
+#apt $AUTOYES purge indicator-application indicator-appmenu indicator-bluetooth indicator-common indicator-datetime indicator-keyboard indicator-messages  indicator-power indicator-printers indicator-session indicator-sound
 
 # disabling mouse acceleration
 gsettings set org.gnome.desktop.peripherals.mouse accel-profile 'flat'
