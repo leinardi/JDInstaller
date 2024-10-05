@@ -1,0 +1,8 @@
+---
+- name: Install LibreOffice
+  become: true
+  ansible.builtin.apt:
+    name:
+      - libreoffice
+      - libreoffice-gnome
+    state: present

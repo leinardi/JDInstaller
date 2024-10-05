@@ -1,0 +1,16 @@
+---
+- name: Ubuntu Work Playbook
+  hosts: localhost
+  roles:
+    - role: discord
+      tags: discord
+      when: discord_enabled | bool
+    - role: gamemode
+      tags: gamemode
+      when: gamemode_enabled | bool
+    - role: mangohud
+      tags: mangohud
+      when: mangohud_enabled | bool
+    - role: steam
+      tags: steam
+      when: steam_enabled | bool

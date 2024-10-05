@@ -1,0 +1,43 @@
+---
+- block:
+    - name: Check Ubuntu version
+      ansible.builtin.pause:
+        prompt: |
+          ===========================================================================
+          Unsupported distribution version detected: {{ ansible_distribution }} {{ ansible_distribution_version }}.
+
+          Press any key to continue on unsupported Ubuntu version or CTRL+C to abort.
+          ===========================================================================
+      when: ansible_distribution == 'Ubuntu' and ansible_distribution_version not in ['24.04']
+
+    - name: Determine XDG_CONFIG_HOME value for current installation
+      ansible.builtin.set_fact:
+        xdg_config_home: "{{ lookup('env', 'XDG_CONFIG_HOME') | default(ansible_env.HOME + '/.config', true) }}"
+
+    - name: Check for NVIDIA VGA GPU presence
+      ansible.builtin.shell:
+        cmd: "lspci | grep -i 'vga' | grep -i 'nvidia'"
+        executable: /bin/bash
+      register: lspci_output
+      ignore_errors: true
+      changed_when: false
+      failed_when: false
+
+    - name: Set has_nvidia_gpu fact based on lspci output
+      ansible.builtin.set_fact:
+        has_nvidia_gpu: "{{ 'true' if lspci_output.stdout != '' else 'false' }}"
+
+    - name: Check for AMD VGA GPU presence
+      ansible.builtin.shell:
+        cmd: "lspci | grep -i 'vga' | grep -i 'amd'"
+        executable: /bin/bash
+      register: lspci_output_amd
+      ignore_errors: true
+      changed_when: false
+      failed_when: false
+
+    - name: Set has_amd_gpu fact based on lspci output
+      ansible.builtin.set_fact:
+        has_amd_gpu: "{{ 'true' if lspci_output_amd.stdout != '' else 'false' }}"
+
+  tags: always

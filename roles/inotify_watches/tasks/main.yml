@@ -1,0 +1,17 @@
+---
+- name: Set inotify watches limit in sysctl config
+  become: true
+  ansible.builtin.blockinfile:
+    path: /etc/sysctl.d/90-inotify-watches.conf
+    create: true
+    block: |
+      # Increase inotify watches limit for applications using inotify
+      fs.inotify.max_user_watches = 1048576
+    mode: "0644"
+    marker: "# {mark} Managed by Ansible - inotify_watches role: Inotify watches limit"
+
+- name: Reload sysctl settings
+  become: true
+  ansible.builtin.command:
+    cmd: "sysctl --system"
+  changed_when: false

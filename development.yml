@@ -1,0 +1,23 @@
+---
+- name: Ubuntu Development Playbook
+  hosts: localhost
+  roles:
+    - role: development
+      when: development_enabled | bool
+    - role: git
+      tags: git
+      when: git_enabled | bool
+    - role: filezilla
+      tags: filezilla
+      when: filezilla_enabled | bool
+    - role: openjdk
+      tags:
+        - java
+        - openjdk
+      when: openjdk_enabled | bool
+    - role: python
+      tags: python
+      when: python_enabled | bool
+    - role: slack
+      tags: slack
+      when: slack_enabled | bool

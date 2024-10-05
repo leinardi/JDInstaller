@@ -1,0 +1,17 @@
+---
+- name: Add Mattermost stable repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: mattermost-stable
+    types: deb
+    uris: https://deb.packages.mattermost.com
+    suites: stable
+    components: main
+    signed_by: https://deb.packages.mattermost.com/pubkey.gpg
+
+- name: Install Mattermost-stable
+  become: true
+  ansible.builtin.apt:
+    name: mattermost-desktop
+    state: present
+    update_cache: true

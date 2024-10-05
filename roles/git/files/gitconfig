@@ -1,0 +1,22 @@
+[core]
+	autocrlf = input
+[alias]
+	co = checkout
+	ci = commit
+	st = status
+	br = branch
+	pu = push
+	pf = push --force-with-lease
+	pr = pull --rebase
+	rc = rebase --continue
+	rs = rebase --skip
+	delete-merged-branches = "!git branch --merged | grep  -v '\\*\\|master\\|release' | xargs -n 1 git branch -d"
+	mr = !sh -c 'git fetch $1 merge-requests/$2/head:mr-$1-$2 && git checkout mr-$1-$2' -
+[push]
+	default = simple
+[credential]
+	helper = /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
+[commit]
+	gpgSign = true
+[merge]
+	tool = meld

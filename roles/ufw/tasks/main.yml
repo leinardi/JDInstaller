@@ -1,0 +1,20 @@
+---
+- name: Install UFW tool
+  become: true
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+
+- name: Configure UFW defaults
+  community.general.ufw:
+    direction: "{{ item.direction }}"
+    policy: "{{ item.policy }}"
+  loop:
+    - { direction: "incoming", policy: "deny" }
+    - { direction: "outgoing", policy: "allow" }
+  notify:
+    - Restart UFW
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled

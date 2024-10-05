@@ -1,0 +1,17 @@
+---
+- name: Add Graphics Drivers PPA
+  become: true
+  ansible.builtin.deb822_repository:
+    name: "graphics-drivers-ubuntu-ppa-{{ ansible_distribution_release }}"
+    types: deb
+    uris: "https://ppa.launchpadcontent.net/graphics-drivers/ppa/ubuntu/"
+    suites: "{{ ansible_distribution_release }}"
+    components: main
+    signed_by: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2388FF3BE10A76F638F80723FCAE110B1118213C
+  when: has_nvidia_gpu == 'true'
+
+- name: Upgrade installed packages
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: true

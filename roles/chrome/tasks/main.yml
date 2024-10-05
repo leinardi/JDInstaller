@@ -1,0 +1,24 @@
+---
+- name: Add Chrome repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: google-chrome
+    types: deb
+    uris: http://dl.google.com/linux/chrome/deb/
+    suites: stable
+    components: main
+    architectures: amd64
+    signed_by: https://dl.google.com/linux/linux_signing_key.pub
+
+- name: Install google-chrome-stable
+  become: true
+  ansible.builtin.apt:
+    name: google-chrome-stable
+    state: present
+    update_cache: true
+
+- name: Remove redundant google-chrome.list file
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/google-chrome.list
+    state: absent

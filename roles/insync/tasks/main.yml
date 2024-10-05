@@ -1,0 +1,33 @@
+---
+- name: Add Insync repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: insync
+    types: deb
+    uris: http://apt.insync.io/ubuntu
+    suites: "{{ ansible_distribution_release }}"
+    components: contrib non-free
+    signed_by: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xACCAF35C
+
+- name: Install Insync
+  become: true
+  ansible.builtin.apt:
+    name: insync
+    state: present
+    update_cache: true
+
+- name: Remove Insync-added inotify watches block (handled by inotify_watches role)
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.d/99-sysctl.conf
+    state: absent
+    regexp: '^fs\.inotify\.max_user_watches=.*$'
+    insertafter: "^# added by Insync$"
+    backrefs: true
+
+- name: Remove comment added by Insync
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.d/99-sysctl.conf
+    state: absent
+    line: "# added by Insync"
