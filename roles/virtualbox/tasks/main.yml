@@ -1,0 +1,79 @@
+---
+- name: Add VirtualBox repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: virtualbox
+    types: deb
+    uris: http://download.virtualbox.org/virtualbox/debian/
+    suites: "{{ ansible_distribution_release }}"
+    components: contrib
+    architectures: amd64
+    signed_by: https://www.virtualbox.org/download/oracle_vbox_2016.asc
+
+- name: "Install VirtualBox {{ virtualbox.version }}"
+  become: true
+  ansible.builtin.apt:
+    name: "virtualbox-{{ virtualbox.version }}"
+    state: present
+    update_cache: true
+
+- name: Check if VirtualBox kernel module is loaded
+  become: true
+  ansible.builtin.shell: lsmod | grep vboxdrv
+  register: vboxdrv_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Load VirtualBox kernel module if not already loaded
+  become: true
+  ansible.builtin.command: "/sbin/modprobe vboxdrv"
+  when: vboxdrv_check.rc != 0
+  changed_when: true
+  failed_when: false # Do not fail regardless of the exit code
+
+- name: Start vboxdrv service
+  become: true
+  ansible.builtin.service:
+    name: vboxdrv
+    state: started
+
+- name: Get installed VirtualBox major version
+  become: true
+  ansible.builtin.command: VBoxManage --version
+  register: vbox_version
+  changed_when: false
+
+- name: Set VirtualBox version (remove revision)
+  ansible.builtin.set_fact:
+    virtualbox_major_version: "{{ vbox_version.stdout | regex_replace('r.*', '') }}"
+
+- name: Download VirtualBox Extension Pack
+  become: true
+  ansible.builtin.get_url:
+    url: |
+      https://download.virtualbox.org/virtualbox/{{ virtualbox_major_version }}/Oracle_VM_VirtualBox_Extension_Pack-{{ virtualbox_major_version }}.vbox-extpack
+    dest: "/tmp/Oracle_VM_VirtualBox_Extension_Pack-{{ virtualbox_major_version }}.vbox-extpack"
+    mode: "0644"
+
+- name: Install VirtualBox Extension Pack
+  become: true
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      echo "y" | VBoxManage extpack install --replace /tmp/Oracle_VM_VirtualBox_Extension_Pack-{{ virtualbox_major_version }}.vbox-extpack
+    executable: /bin/bash
+  args:
+    creates: /usr/lib/virtualbox/ExtensionPacks/Oracle_VM_VirtualBox_Extension_Pack
+
+- name: Remove downloaded Extension Pack
+  become: true
+  ansible.builtin.file:
+    path: /tmp/Oracle_VM_VirtualBox_Extension_Pack-{{ virtualbox_major_version }}.vbox-extpack
+    state: absent
+
+- name: Add current user to vboxusers group
+  become: true
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    groups: vboxusers
+    append: true

@@ -1,0 +1,8 @@
+---
+- name: Install Filezilla
+  become: true
+  ansible.builtin.apt:
+    name: filezilla
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"

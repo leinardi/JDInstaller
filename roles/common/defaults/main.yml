@@ -1,0 +1,57 @@
+---
+apt_cache_time: 3600
+locales:
+  locale: "it_IT.UTF-8"
+  timezone: "Europe/Berlin"
+common_enabled: true
+common:
+  packages:
+    - android-sdk-platform-tools-common
+    - aptitude
+    - autofs
+    - axel
+    - bash-completion
+    - build-essential
+    - bwm-ng
+    - bzip2
+    - curl
+    - diffutils
+    - ftp-ssl
+    - grep
+    - gzip
+    - htop
+    - iftop
+    - imagemagick
+    - inxi
+    - iotop
+    - less
+    - linux-headers-generic
+    - lm-sensors
+    - mc
+    - mtr
+    - ncdu
+    - nfs-common
+    - nfs-kernel-server
+    - nmap
+    - openssl
+    - p7zip
+    - ppa-purge
+    - pwgen
+    - ranger
+    - rar
+    - rsync
+    - screen
+    - silversearcher-ag
+    - smartmontools
+    - smbclient
+    - software-properties-common
+    - tar
+    - tig
+    - tofrodos
+    - trash-cli
+    - tree
+    - unzip
+    - vim
+    - wget
+    - whois
+    - zip

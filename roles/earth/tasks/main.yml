@@ -1,0 +1,24 @@
+---
+- name: Add Earth repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: google-earth
+    types: deb
+    uris: http://dl.google.com/linux/earth/deb/
+    suites: stable
+    components: main
+    architectures: amd64
+    signed_by: https://dl.google.com/linux/linux_signing_key.pub
+
+- name: Install google-earth-pro-stable
+  become: true
+  ansible.builtin.apt:
+    name: google-earth-pro-stable
+    state: present
+    update_cache: true
+
+- name: Remove redundant google-earth.list file
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/google-earth-pro.list
+    state: absent

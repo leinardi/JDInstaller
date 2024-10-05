@@ -1,0 +1,40 @@
+---
+- name: Install Default OpenJDK and OpenJDK 17
+  become: true
+  ansible.builtin.apt:
+    name:
+      - default-jdk
+      - openjdk-17-jdk
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"
+
+- name: Check current java alternative
+  become: true
+  ansible.builtin.shell:
+    cmd: "set -o pipefail && update-alternatives --query java | grep Value"
+    executable: /bin/bash
+  register: java_alternative
+  changed_when: false
+
+- name: Set OpenJDK 17 as the default java alternative
+  become: true
+  ansible.builtin.command:
+    cmd: "update-alternatives --set java /usr/lib/jvm/java-17-openjdk-amd64/bin/java"
+  when: "'/usr/lib/jvm/java-17-openjdk-amd64/bin/java' not in java_alternative.stdout"
+  changed_when: "'/usr/lib/jvm/java-17-openjdk-amd64/bin/java' not in java_alternative.stdout"
+
+- name: Check current javac alternative
+  become: true
+  ansible.builtin.shell:
+    cmd: "set -o pipefail && update-alternatives --query javac | grep Value"
+    executable: /bin/bash
+  register: javac_alternative
+  changed_when: false
+
+- name: Set OpenJDK 17 as the default javac alternative
+  become: true
+  ansible.builtin.command:
+    cmd: "update-alternatives --set javac /usr/lib/jvm/java-17-openjdk-amd64/bin/javac"
+  when: "'/usr/lib/jvm/java-17-openjdk-amd64/bin/javac' not in javac_alternative.stdout"
+  changed_when: "'/usr/lib/jvm/java-17-openjdk-amd64/bin/javac' not in javac_alternative.stdout"

@@ -1,0 +1,17 @@
+---
+- name: Add Insync repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: insync
+    types: deb
+    uris: http://apt.insync.io/ubuntu
+    suites: "{{ ansible_distribution_release }}"
+    components: contrib non-free
+    signed_by: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xACCAF35C
+
+- name: Install Insync
+  become: true
+  ansible.builtin.apt:
+    name: insync
+    state: present
+    update_cache: true

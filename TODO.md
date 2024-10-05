@@ -1,0 +1,14 @@
+npm install --global prettier
+pinta
+calibre
+subtitleeditor
+https://github.com/evanjamesjackson/ansible-playbooks/blob/main/roles/personal/tasks/flatpak.yml
+jdk17
+chrome remote desktop
+https://intellij-support.jetbrains.com/hc/en-us/articles/15268113529362-Inotify-Watches-Limit-Linux
+jdownloader
+gnome builder
+protontricks
+sweethome3d
+mission center
+bookworm

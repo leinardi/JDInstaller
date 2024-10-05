@@ -1,0 +1,8 @@
+---
+- name: Install Default OpenJRE
+  become: true
+  ansible.builtin.apt:
+    name: default-jre-headless
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"

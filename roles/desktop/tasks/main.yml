@@ -1,0 +1,16 @@
+---
+- name: Accept mscorefonts EULA
+  become: true
+  ansible.builtin.debconf:
+    name: ttf-mscorefonts-installer
+    question: msttcorefonts/accepted-mscorefonts-eula
+    vtype: boolean
+    value: true
+
+- name: Install common desktop packages
+  become: true
+  ansible.builtin.apt:
+    name: "{{ desktop.packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"

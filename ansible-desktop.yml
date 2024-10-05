@@ -1,0 +1,23 @@
+---
+- name: Ubuntu Playbook Initialization
+  hosts: localhost
+
+- name: Import common tasks
+  import_playbook: common.yml
+  tags:
+    - common
+
+- name: Import desktop tasks
+  import_playbook: desktop.yml
+  tags:
+    - desktop
+
+- name: Import development tasks
+  import_playbook: development.yml
+  tags:
+    - development
+
+- name: Import work tasks
+  import_playbook: work.yml
+  tags:
+    - work

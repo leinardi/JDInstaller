@@ -1,0 +1,8 @@
+---
+- name: Install Double Commander
+  become: true
+  ansible.builtin.apt:
+    name: doublecmd-common
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"

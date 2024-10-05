@@ -1,0 +1,19 @@
+---
+- name: Ubuntu Common Playbook
+  hosts: localhost
+  roles:
+    - role: common
+      tags: common
+      when: common_enabled | bool
+    - role: ufw
+      tags:
+        - ufw
+        - system
+        - common
+      when: ufw_enabled | bool
+    - role: snapd
+      tags:
+        - snapd
+        - system
+        - common
+      when: snapd_enabled | bool

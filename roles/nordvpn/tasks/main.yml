@@ -1,0 +1,17 @@
+---
+- name: Add NordVPN repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: nordvpn
+    types: deb
+    uris: https://repo.nordvpn.com/deb/nordvpn/debian
+    suites: stable
+    components: main
+    signed_by: https://repo.nordvpn.com/gpg/nordvpn_public.asc
+
+- name: Install NordVPN
+  become: true
+  ansible.builtin.apt:
+    name: nordvpn
+    state: present
+    update_cache: true

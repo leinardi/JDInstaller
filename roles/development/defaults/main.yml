@@ -1,0 +1,7 @@
+---
+development_enabled: true
+development:
+  packages:
+    - shellcheck
+    - ansible-lint
+    - sloccount

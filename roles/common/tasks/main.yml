@@ -1,0 +1,19 @@
+---
+- name: Ensure that Aptitude repositories are up to date
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"
+
+- name: Install common packages
+  become: true
+  ansible.builtin.apt:
+    name: "{{ common.packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"
+
+- name: Upgrade installed packages
+  become: true
+  ansible.builtin.apt:
+    upgrade: true

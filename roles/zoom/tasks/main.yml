@@ -1,0 +1,5 @@
+---
+- name: Install Zoom {{ zoom.version }}
+  become: true
+  ansible.builtin.apt:
+    deb: "https://zoom.us/client/{{ zoom.version }}/zoom_amd64.deb"

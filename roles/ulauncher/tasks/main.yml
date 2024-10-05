@@ -1,0 +1,17 @@
+---
+- name: Add Ulauncher PPA
+  become: true
+  ansible.builtin.deb822_repository:
+    name: "agornostal-ubuntu-ulauncher-{{ ansible_distribution_release }}"
+    types: deb
+    uris: "https://ppa.launchpadcontent.net/agornostal/ulauncher/ubuntu/"
+    suites: "{{ ansible_distribution_release }}"
+    components: main
+    signed_by: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x59EBDE772980C381CA13FA59FAF1020699503176
+
+- name: Install Ulauncher
+  become: true
+  ansible.builtin.apt:
+    name: ulauncher
+    state: present
+    update_cache: true
