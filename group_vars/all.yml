@@ -130,7 +130,7 @@ handbrake_enabled: false
 inkscape_enabled: true
 
 # Variables from roles/insync
-insync_enabled: false
+insync_enabled: true
 
 # Variables from roles/libreoffice
 libreoffice_enabled: true
