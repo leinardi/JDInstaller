@@ -55,6 +55,9 @@
     - role: nordvpn
       tags: nordvpn
       when: nordvpn_enabled | bool
+    - role: sweethome3d
+      tags: sweethome3d
+      when: sweethome3d_enabled | bool
     - role: timeshift
       tags: timeshift
       when: timeshift_enabled | bool

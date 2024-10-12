@@ -1,0 +1,6 @@
+---
+- name: Install sweethome3d
+  become: true
+  community.general.flatpak:
+    name: com.sweethome3d.Sweethome3d
+    state: present

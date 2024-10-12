@@ -165,6 +165,9 @@ slack_enabled: false
 # Variables from roles/snapd
 snapd_enabled: false
 
+# Variables from roles/sweethome3d
+sweethome3d_enabled: true
+
 # Variables from roles/timeshift
 timeshift_enabled: false
 
