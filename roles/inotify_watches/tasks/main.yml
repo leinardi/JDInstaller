@@ -8,6 +8,7 @@
       # Increase inotify watches limit for applications using inotify
       fs.inotify.max_user_watches = 1048576
     mode: "0644"
+    marker: "# {mark} Managed by Ansible - inotify_watches role: Inotify watches limit"
 
 - name: Reload sysctl settings
   become: true

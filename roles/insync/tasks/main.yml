@@ -18,10 +18,16 @@
 
 - name: Remove Insync-added inotify watches block (handled by inotify_watches role)
   become: true
-  ansible.builtin.blockinfile:
+  ansible.builtin.lineinfile:
     path: /etc/sysctl.d/99-sysctl.conf
-    block: |
-      # added by Insync
-      fs.inotify.max_user_watches=1048576
     state: absent
-    marker: "# {mark} Managed by Ansible - inotify_watches role takes care of this"
+    regexp: '^fs\.inotify\.max_user_watches=.*$'
+    insertafter: "^# added by Insync$"
+    backrefs: true
+
+- name: Remove comment added by Insync
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.d/99-sysctl.conf
+    state: absent
+    line: "# added by Insync"

@@ -19,6 +19,7 @@
       Package: firefox*
       Pin: origin packages.mozilla.org
       Pin-Priority: 1001
+    marker: "# {mark} Managed by Ansible - firefox role: APT repository priority"
 
 - name: Allow unattended upgrades for Mozilla repository
   become: true
@@ -28,6 +29,7 @@
     mode: "0644"
     block: |
       Unattended-Upgrade::Origins-Pattern { "archive=mozilla"; };
+    marker: "# {mark} Managed by Ansible - firefox role: Unattended upgrades"
 
 - name: Remove Firefox Snap package (if installed)
   become: true
