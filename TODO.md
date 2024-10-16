@@ -3,9 +3,10 @@ pinta
 calibre
 subtitleeditor
 chrome remote desktop
-jdownloader
+https://ubuntuhandbook.org/index.php/2024/04/install-jdownloader-2-ubuntu/
 gnome builder
 protontricks
-sweethome3d
-mission center
 bookworm
+https://ubuntuhandbook.org/index.php/2024/01/foliate-opds-catalogs/amp/
+https://ubuntuhandbook.org/index.php/2021/08/enable-game-mode-ubuntu-linux/amp/
+https://gitlab.gnome.org/World/iotas

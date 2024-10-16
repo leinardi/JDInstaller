@@ -1,0 +1,160 @@
+---
+- name: Get current GNOME Dash to Dock click-action setting
+  ansible.builtin.command:
+    cmd: "gsettings get org.gnome.shell.extensions.dash-to-dock click-action"
+  register: gsettings_click_action
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  changed_when: false
+
+- name: Set GNOME Dash to Dock click-action to minimize
+  ansible.builtin.command:
+    cmd: "gsettings set org.gnome.shell.extensions.dash-to-dock click-action 'minimize'"
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  when: gsettings_click_action.stdout != "'minimize'"
+  changed_when: gsettings_click_action.stdout != "'minimize'"
+
+- name: Get current GNOME Dash to Dock scroll-action setting
+  ansible.builtin.command:
+    cmd: "gsettings get org.gnome.shell.extensions.dash-to-dock scroll-action"
+  register: gsettings_scroll_action
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  changed_when: false
+
+- name: Set GNOME Dash to Dock scroll-action to cycle windows
+  ansible.builtin.command:
+    cmd: "gsettings set org.gnome.shell.extensions.dash-to-dock scroll-action 'cycle-windows'"
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  when: gsettings_scroll_action.stdout != "'cycle-windows'"
+  changed_when: gsettings_scroll_action.stdout != "'cycle-windows'"
+
+- name: Get current GNOME Dash to Dock show-apps-at-top setting
+  ansible.builtin.command:
+    cmd: "gsettings get org.gnome.shell.extensions.dash-to-dock show-apps-at-top"
+  register: gsettings_show_apps_at_top
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  changed_when: false
+
+- name: Set GNOME Dash to Dock to show apps at the top
+  ansible.builtin.command:
+    cmd: "gsettings set org.gnome.shell.extensions.dash-to-dock show-apps-at-top true"
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  when: gsettings_show_apps_at_top.stdout != "true"
+  changed_when: gsettings_show_apps_at_top.stdout != "true"
+
+- name: Get current keybinding for switch-input-source
+  ansible.builtin.command:
+    cmd: "gsettings get org.gnome.desktop.wm.keybindings switch-input-source"
+  register: gsettings_switch_input_source
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  changed_when: false
+
+- name: Set keybinding for switch-input-source
+  ansible.builtin.command:
+    cmd: 'gsettings set org.gnome.desktop.wm.keybindings switch-input-source "[''<Primary><Alt><Super>space'']"'
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  when: gsettings_switch_input_source.stdout != "['<Primary><Alt><Super>space']"
+  changed_when: gsettings_switch_input_source.stdout != "['<Primary><Alt><Super>space']"
+
+- name: Get current keybinding for switch-input-source-backward
+  ansible.builtin.command:
+    cmd: "gsettings get org.gnome.desktop.wm.keybindings switch-input-source-backward"
+  register: gsettings_switch_input_source_backward
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  changed_when: false
+
+- name: Set keybinding for switch-input-source-backward
+  ansible.builtin.command:
+    cmd: 'gsettings set org.gnome.desktop.wm.keybindings switch-input-source-backward "[''<Primary><Shift><Alt><Super>space'']"'
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  when: gsettings_switch_input_source_backward.stdout != "['<Primary><Shift><Alt><Super>space']"
+  changed_when: gsettings_switch_input_source_backward.stdout != "['<Primary><Shift><Alt><Super>space']"
+
+- name: Get current setting for show battery percentage in GNOME
+  ansible.builtin.command:
+    cmd: "gsettings get org.gnome.desktop.interface show-battery-percentage"
+  register: gsettings_show_battery_percentage
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  changed_when: false
+
+- name: Show battery percentage in GNOME
+  ansible.builtin.command:
+    cmd: "gsettings set org.gnome.desktop.interface show-battery-percentage true"
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  when: gsettings_show_battery_percentage.stdout != "true"
+  changed_when: gsettings_show_battery_percentage.stdout != "true"
+
+- name: Get current setting for highlight-current-line in GNOME Text Editor
+  ansible.builtin.command:
+    cmd: "gsettings get org.gnome.TextEditor highlight-current-line"
+  register: gsettings_highlight_current_line
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  changed_when: false
+
+- name: Enable highlight-current-line in GNOME Text Editor
+  ansible.builtin.command:
+    cmd: "gsettings set org.gnome.TextEditor highlight-current-line true"
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  when: gsettings_highlight_current_line.stdout != "true"
+  changed_when: gsettings_highlight_current_line.stdout != "true"
+
+- name: Get current setting for show-line-numbers in GNOME Text Editor
+  ansible.builtin.command:
+    cmd: "gsettings get org.gnome.TextEditor show-line-numbers"
+  register: gsettings_show_line_numbers
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  changed_when: false
+
+- name: Show line numbers in GNOME Text Editor
+  ansible.builtin.command:
+    cmd: "gsettings set org.gnome.TextEditor show-line-numbers true"
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  when: gsettings_show_line_numbers.stdout != "true"
+  changed_when: gsettings_show_line_numbers.stdout != "true"
+
+- name: Get current setting for show-map in GNOME Text Editor
+  ansible.builtin.command:
+    cmd: "gsettings get org.gnome.TextEditor show-map"
+  register: gsettings_show_map
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  changed_when: false
+
+- name: Enable show-map in GNOME Text Editor
+  ansible.builtin.command:
+    cmd: "gsettings set org.gnome.TextEditor show-map true"
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  when: gsettings_show_map.stdout != "true"
+  changed_when: gsettings_show_map.stdout != "true"
+
+- name: Get current setting for tab width in GNOME Text Editor
+  ansible.builtin.command:
+    cmd: "gsettings get org.gnome.TextEditor tab-width"
+  register: gsettings_tab_width
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  changed_when: false
+
+- name: Set tab width to 4 in GNOME Text Editor
+  ansible.builtin.command:
+    cmd: "gsettings set org.gnome.TextEditor tab-width 4"
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  when: gsettings_tab_width.stdout != "4"
+  changed_when: gsettings_tab_width.stdout != "4"

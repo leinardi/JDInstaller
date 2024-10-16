@@ -10,9 +10,6 @@
     - role: chrome
       tags: chrome
       when: chrome_enabled | bool
-    - role: discord
-      tags: discord
-      when: discord_enabled | bool
     - role: doublecmd
       tags: doublecmd
       when: doublecmd_enabled | bool
@@ -31,6 +28,9 @@
     - role: gparted
       tags: gparted
       when: gparted_enabled | bool
+    - role: gsettings
+      tags: gsettings
+      when: gsettings_enabled | bool
     - role: handbrake
       tags: handbrake
       when: handbrake_enabled | bool
@@ -70,3 +70,6 @@
     - role: vlc
       tags: vlc
       when: vlc_enabled | bool
+    - role: xfburn
+      tags: xfburn
+      when: xfburn_enabled | bool

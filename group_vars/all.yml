@@ -109,6 +109,12 @@ firefox_enabled: true
 # Variables from roles/flatpak
 flatpak_enabled: true
 
+# Variables from roles/gamemode
+gparted_enabled: true
+
+# Variables from roles/gaming
+gaming_enabled: true
+
 # Variables from roles/gimp
 gimp_enabled: true
 
@@ -121,7 +127,7 @@ globalprotect_openconnect:
   version: "2.3.7"
 
 # Variables from roles/gparted
-gparted_enabled: true
+gamemode_enabled: true
 
 # Variables from roles/handbrake
 handbrake_enabled: false
@@ -165,6 +171,9 @@ slack_enabled: false
 # Variables from roles/snapd
 snapd_enabled: false
 
+# Variables from roles/steam
+steam_enabled: true
+
 # Variables from roles/sweethome3d
 sweethome3d_enabled: true
 
@@ -187,6 +196,9 @@ vlc_enabled: true
 
 # Variables from roles/work
 work_enabled: false
+
+# Variables from roles/xfburn
+xfburn_enabled: true
 
 # Variables from roles/zoom
 zoom_enabled: true

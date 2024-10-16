@@ -4,20 +4,25 @@
 
 - name: Import common tasks
   import_playbook: common.yml
-  tags:
-    - common
+  tags: common
+  when: common_enabled | bool
 
 - name: Import desktop tasks
   import_playbook: desktop.yml
-  tags:
-    - desktop
+  tags: desktop
+  when: desktop_enabled | bool
+
+- name: Import gaming tasks
+  import_playbook: gaming.yml
+  tags: gaming
+  when: gaming_enabled | bool
 
 - name: Import development tasks
   import_playbook: development.yml
-  tags:
-    - development
+  tags: development
+  when: development_enabled | bool
 
 - name: Import work tasks
   import_playbook: work.yml
-  tags:
-    - work
+  tags: work
+  when: work_enabled | bool

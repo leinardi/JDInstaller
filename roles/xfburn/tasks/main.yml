@@ -1,8 +1,8 @@
 ---
-- name: Install GameMode
+- name: Install Gxfburn
   become: true
   ansible.builtin.apt:
-    name: gamemode
+    name: xfburn
     state: present
     update_cache: true
     cache_valid_time: "{{ apt_cache_time | default(3600) }}"
