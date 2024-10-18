@@ -18,24 +18,17 @@
     name: mangohud
     state: absent
 
+- name: Gather currently installed packages (build dependencies)
+  ansible.builtin.shell: "dpkg-query -W -f='${binary:Package}\n' {{ item }}"
+  loop: "{{ mangohud.dependencies }}"
+  register: pre_installed_packages
+  ignore_errors: true
+  changed_when: false
+
 - name: Install build dependencies for MangoHud
   become: true
   ansible.builtin.apt:
-    name:
-      - cmake
-      - git
-      - glslang-tools
-      - libdbus-1-dev
-      - libgl-dev
-      - libglew-dev
-      - libglfw3-dev
-      - libwayland-dev
-      - libx11-dev
-      - libxkbcommon-dev
-      - libxnvctrl-dev
-      - meson
-      - pkg-config
-      - python3-mako
+    name: "{{ mangohud.dependencies }}"
     state: present
     update_cache: true
 
@@ -72,3 +65,16 @@
     path: /tmp/MangoHud
     state: absent
     force: true
+
+- name: Identify newly installed build dependencies
+  ansible.builtin.set_fact:
+    new_build_deps: "{{ item }}"
+  loop: "{{ mangohud.dependencies }}"
+  when: item not in pre_installed_packages.stdout_lines
+
+- name: Remove newly installed build dependencies
+  become: true
+  ansible.builtin.apt:
+    name: "{{ new_build_deps }}"
+    state: absent
+  when: new_build_deps | length > 0
