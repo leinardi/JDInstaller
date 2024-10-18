@@ -1,0 +1,74 @@
+---
+- name: Clone the MangoHud repository from GitHub
+  ansible.builtin.git:
+    repo: "https://github.com/flightlessmango/MangoHud.git"
+    dest: /tmp/MangoHud
+    version: "{{ mangohud.version }}"
+    force: true
+
+- name: Create build directory
+  ansible.builtin.file:
+    path: /tmp/MangoHud/build
+    state: directory
+    mode: "0755"
+
+- name: Ensure the apt package of MangoHud is absent to avoid conflicts
+  become: true
+  ansible.builtin.apt:
+    name: mangohud
+    state: absent
+
+- name: Install build dependencies for MangoHud
+  become: true
+  ansible.builtin.apt:
+    name:
+      - cmake
+      - git
+      - glslang-tools
+      - libdbus-1-dev
+      - libgl-dev
+      - libglew-dev
+      - libglfw3-dev
+      - libwayland-dev
+      - libx11-dev
+      - libxkbcommon-dev
+      - libxnvctrl-dev
+      - meson
+      - pkg-config
+      - python3-mako
+    state: present
+    update_cache: true
+
+- name: Configure the build using Meson
+  ansible.builtin.command:
+    cmd: "meson setup build -Dmangoapp=true -Dmangohudctl=true -Dmangoapp_layer=true --wrap-mode=default"
+    chdir: /tmp/MangoHud
+  register: meson_setup_output
+  changed_when: true
+
+- name: Build MangoHud
+  ansible.builtin.command:
+    cmd: "meson compile -C build"
+    chdir: /tmp/MangoHud
+  register: build_output
+  changed_when: true
+
+- name: Install MangoHud
+  become: true
+  ansible.builtin.command:
+    cmd: "meson install -C build"
+    chdir: /tmp/MangoHud
+  register: install_output
+  changed_when: true
+
+- name: Ensure MangoHud is installed and available
+  ansible.builtin.command:
+    cmd: "mangohud --version"
+  changed_when: false
+
+- name: Clean up source code after installation
+  become: true
+  ansible.builtin.file:
+    path: /tmp/MangoHud
+    state: absent
+    force: true

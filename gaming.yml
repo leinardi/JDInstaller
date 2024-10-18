@@ -8,3 +8,6 @@
     - role: gamemode
       tags: gamemode
       when: gamemode_enabled | bool
+    - role: mangohud
+      tags: mangohud
+      when: mangohud_enabled | bool
