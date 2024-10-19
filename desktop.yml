@@ -1,0 +1,86 @@
+---
+- name: Ubuntu Desktop Playbook
+  hosts: localhost
+  roles:
+    - role: desktop
+      when: desktop_enabled | bool
+    - role: chrome
+      tags: chrome
+      when: chrome_enabled | bool
+    - role: chromium
+      tags: chromium
+      when: chromium_enabled | bool
+    - role: doublecmd
+      tags: doublecmd
+      when: doublecmd_enabled | bool
+    - role: earth
+      tags: earth
+      when: earth_enabled | bool
+    - role: edge
+      tags: edge
+      when: edge_enabled | bool
+    - role: firefox
+      tags: firefox
+      when: firefox_enabled | bool
+    - role: flatpak
+      tags: flatpak
+      when: flatpak_enabled | bool
+    - role: gimp
+      tags: gimp
+      when: gimp_enabled | bool
+    - role: gparted
+      tags: gparted
+      when: gparted_enabled | bool
+    - role: graphics_drivers
+      tags: graphics_drivers
+      when: graphics_drivers_enabled | bool
+    - role: gsettings
+      tags: gsettings
+      when: gsettings_enabled | bool
+    - role: handbrake
+      tags: handbrake
+      when: handbrake_enabled | bool
+    - role: inkscape
+      tags: inkscape
+      when: inkscape_enabled | bool
+    - role: insync
+      tags: insync
+      when: insync_enabled | bool
+    - role: libreoffice
+      tags: libreoffice
+      when: libreoffice_enabled | bool
+    - role: mainline
+      tags: mainline
+      when: mainline_enabled | bool
+    - role: meld
+      tags: meld
+      when: meld_enabled | bool
+    - role: nautilus_plugins
+      tags: nautilus_plugins
+      when: nautilus_plugins_enabled | bool
+    - role: nordvpn
+      tags: nordvpn
+      when: nordvpn_enabled | bool
+    - role: openjre
+      tags:
+        - java
+        - openjre
+      when: openjre_enabled | bool
+    - role: sweethome3d
+      tags: sweethome3d
+      when: sweethome3d_enabled | bool
+    - role: timeshift
+      tags: timeshift
+      when: timeshift_enabled | bool
+    - role: ulauncher
+      tags: ulauncher
+      when: ulauncher_enabled | bool
+    - role: virtualbox
+      tags: virtualbox
+      when: virtualbox_enabled | bool
+    - role: vlc
+      tags: vlc
+      when: vlc_enabled | bool
+    - role: xfburn
+      tags: xfburn
+      when: xfburn_enabled | bool

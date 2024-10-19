@@ -1,0 +1,19 @@
+---
+mangohud_enabled: true
+mangohud:
+  version: "v0.7.2 "
+  dependencies:
+    - cmake
+    - git
+    - glslang-tools
+    - libdbus-1-dev
+    - libgl-dev
+    - libglew-dev
+    - libglfw3-dev
+    - libwayland-dev
+    - libx11-dev
+    - libxkbcommon-dev
+    - libxnvctrl-dev
+    - meson
+    - pkg-config
+    - python3-mako

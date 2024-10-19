@@ -1,0 +1,15 @@
+---
+desktop_enabled: true
+desktop:
+  packages:
+    - alacarte
+    - caffeine
+    - chrome-gnome-shell
+    - gnome-backgrounds
+    - gnome-browser-connector
+    - gnome-shell-extension-prefs
+    - gnome-system-tools
+    - synaptic
+    - ubuntu-restricted-extras
+    - vlc
+    - xclip

@@ -1,0 +1,32 @@
+---
+- name: Ubuntu Playbook Initialization
+  hosts: localhost
+
+  pre_tasks:
+    - name: Import pre_tasks
+      ansible.builtin.import_tasks: pre_tasks.yml
+
+- name: Import common tasks
+  import_playbook: common.yml
+  tags: common
+  when: common_enabled | bool
+
+- name: Import desktop tasks
+  import_playbook: desktop.yml
+  tags: desktop
+  when: desktop_enabled | bool
+
+- name: Import gaming tasks
+  import_playbook: gaming.yml
+  tags: gaming
+  when: gaming_enabled | bool
+
+- name: Import development tasks
+  import_playbook: development.yml
+  tags: development
+  when: development_enabled | bool
+
+- name: Import work tasks
+  import_playbook: work.yml
+  tags: work
+  when: work_enabled | bool

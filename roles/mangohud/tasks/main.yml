@@ -1,0 +1,104 @@
+---
+- name: Clone the MangoHud repository from GitHub
+  ansible.builtin.git:
+    repo: "https://github.com/flightlessmango/MangoHud.git"
+    dest: /tmp/MangoHud
+    version: "{{ mangohud.version }}"
+    force: true
+
+- name: Create build directory
+  ansible.builtin.file:
+    path: /tmp/MangoHud/build
+    state: directory
+    mode: "0755"
+
+- name: Ensure the apt package of MangoHud is absent
+  become: true
+  ansible.builtin.apt:
+    name: mangohud
+    state: absent
+    autoremove: true
+
+- name: Gather currently installed packages (build dependencies)
+  ansible.builtin.shell: "dpkg-query -W -f='${binary:Package}\n' {{ item }} 2>/dev/null || true"
+  loop: "{{ mangohud.dependencies }}"
+  register: pre_installed_packages
+  changed_when: false
+
+- name: Ensure pre_installed_packages is a list
+  ansible.builtin.set_fact:
+    pre_installed_packages_list: "{{ pre_installed_packages.results | map(attribute='stdout') | list }}"
+
+- name: Install build dependencies for MangoHud
+  become: true
+  ansible.builtin.apt:
+    name: "{{ mangohud.dependencies }}"
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"
+
+- name: Configure the build using Meson
+  ansible.builtin.command:
+    cmd: "meson setup build -Dmangoapp=true -Dmangohudctl=true -Dmangoapp_layer=true --wrap-mode=default"
+    chdir: /tmp/MangoHud
+  register: meson_setup_output
+  changed_when: true
+
+- name: Build MangoHud
+  ansible.builtin.command:
+    cmd: "meson compile -C build"
+    chdir: /tmp/MangoHud
+  register: build_output
+  changed_when: true
+
+- name: Install MangoHud
+  become: true
+  ansible.builtin.command:
+    cmd: "meson install -C build"
+    chdir: /tmp/MangoHud
+  register: install_output
+  changed_when: true
+
+- name: Ensure MangoHud is installed and available
+  ansible.builtin.command:
+    cmd: "mangohud --version"
+  changed_when: false
+
+- name: Clean up source code after installation
+  become: true
+  ansible.builtin.file:
+    path: /tmp/MangoHud
+    state: absent
+    force: true
+
+- name: Check if MangoHud.conf exists
+  ansible.builtin.stat:
+    path: "{{ xdg_config_home }}/MangoHud/MangoHud.conf"
+  register: mangohud_conf_stat
+
+- name: Create MangoHud directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ xdg_config_home }}/MangoHud"
+    state: directory
+    mode: "0755"
+
+- name: Copy MangoHud.conf only if it does not exist
+  ansible.builtin.copy:
+    src: MangoHud.conf
+    dest: "{{ xdg_config_home }}/MangoHud/MangoHud.conf"
+    mode: "0644"
+  when: not mangohud_conf_stat.stat.exists
+
+- name: Identify newly installed build dependencies
+  ansible.builtin.set_fact:
+    new_build_deps: "{{ new_build_deps | default([]) + [item] }}"
+  loop: "{{ mangohud.dependencies }}"
+  when: item not in pre_installed_packages_list
+
+- name: Remove newly installed build dependencies
+  become: true
+  ansible.builtin.apt:
+    name: "{{ new_build_deps }}"
+    state: absent
+    autoremove: true
+  when: new_build_deps | length > 0

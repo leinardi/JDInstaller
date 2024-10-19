@@ -1,0 +1,5 @@
+---
+- name: Install Steam
+  become: true
+  ansible.builtin.apt:
+    deb: "https://cdn.fastly.steamstatic.com/client/installer/steam.deb"

@@ -1,0 +1,8 @@
+---
+- name: Install Chromium
+  become: true
+  ansible.builtin.apt:
+    name: chromium-browser
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"

@@ -1,0 +1,8 @@
+---
+- name: Install common development packages
+  become: true
+  ansible.builtin.apt:
+    name: "{{ development.packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"

@@ -1,0 +1,18 @@
+---
+- name: Check if a CD/DVD burner is present
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      grep "write" /proc/sys/dev/cdrom/info | awk '{for (i=2; i<=NF; i++) if ($i == 1) {print "true"; exit}}'
+    executable: /bin/bash
+  register: cdrom_burner_check
+  changed_when: false
+
+- name: Install Xfburn if a CD/DVD burner is present
+  become: true
+  ansible.builtin.apt:
+    name: xfburn
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"
+  when: cdrom_burner_check.stdout == "true"

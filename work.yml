@@ -1,0 +1,13 @@
+---
+- name: Ubuntu Work Playbook
+  hosts: localhost
+  roles:
+    - role: globalprotect_openconnect
+      tags: globalprotect_openconnect
+      when: globalprotect_openconnect_enabled | bool
+    - role: mattermost
+      tags: mattermost
+      when: mattermost_enabled | bool
+    - role: zoom
+      tags: zoom
+      when: zoom_enabled | bool

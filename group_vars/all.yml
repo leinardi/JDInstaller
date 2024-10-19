@@ -1,0 +1,232 @@
+# Automatically generated from roles' defaults
+---
+# Variables from roles/chrome
+chrome_enabled: true
+
+# Variables from roles/chromium
+chromium_enabled: false
+
+# Variables from roles/common
+apt_cache_time: 3600
+locales:
+  locale: "it_IT.UTF-8"
+  timezone: "Europe/Berlin"
+common_enabled: true
+common:
+  packages:
+    - android-sdk-platform-tools-common
+    - aptitude
+    - autofs
+    - axel
+    - bash-completion
+    - build-essential
+    - bwm-ng
+    - bzip2
+    - curl
+    - diffutils
+    - ftp-ssl
+    - grep
+    - gzip
+    - htop
+    - iftop
+    - imagemagick
+    - inxi
+    - iotop
+    - less
+    - linux-headers-generic
+    - lm-sensors
+    - mc
+    - mtr
+    - ncdu
+    - nfs-common
+    - nfs-kernel-server
+    - nmap
+    - openssl
+    - p7zip
+    - ppa-purge
+    - pwgen
+    - ranger
+    - rar
+    - rsync
+    - screen
+    - silversearcher-ag
+    - smartmontools
+    - smbclient
+    - software-properties-common
+    - tar
+    - tig
+    - tofrodos
+    - trash-cli
+    - tree
+    - unzip
+    - vim
+    - wget
+    - whois
+    - zip
+
+# Variables from roles/desktop
+desktop_enabled: true
+desktop:
+  packages:
+    - alacarte
+    - caffeine
+    - chrome-gnome-shell
+    - gnome-backgrounds
+    - gnome-browser-connector
+    - gnome-shell-extension-prefs
+    - gnome-system-tools
+    - synaptic
+    - ubuntu-restricted-extras
+    - vlc
+    - xclip
+
+# Variables from roles/development
+development_enabled: true
+development:
+  packages:
+    - shellcheck
+    - ansible-lint
+    - sloccount
+
+# Variables from roles/discord
+discord_enabled: false
+
+# Variables from roles/doublecmd
+doublecmd_enabled: true
+
+# Variables from roles/earth
+earth_enabled: true
+
+# Variables from roles/edge
+edge_enabled: false
+
+# Variables from roles/filezilla
+filezilla_enabled: true
+
+# Variables from roles/firefox
+firefox_enabled: true
+
+# Variables from roles/flatpak
+flatpak_enabled: true
+
+# Variables from roles/gamemode
+gparted_enabled: true
+
+# Variables from roles/gaming
+gaming_enabled: true
+
+# Variables from roles/gimp
+gimp_enabled: true
+
+# Variables from roles/git
+git_enabled: true
+
+# Variables from roles/globalprotect_openconnect
+globalprotect_openconnect_enabled: true
+globalprotect_openconnect:
+  version: "2.3.7"
+
+# Variables from roles/gparted
+gamemode_enabled: true
+
+# Variables from roles/graphics_drivers
+graphics_drivers_enabled: true
+
+# Variables from roles/gsettings
+gsettings_enabled: true
+
+# Variables from roles/handbrake
+handbrake_enabled: false
+
+# Variables from roles/inkscape
+inkscape_enabled: true
+
+# Variables from roles/insync
+insync_enabled: true
+
+# Variables from roles/libreoffice
+libreoffice_enabled: true
+
+# Variables from roles/mainline
+mainline_enabled: true
+
+# Variables from roles/mangohud
+mangohud_enabled: true
+mangohud:
+  version: "v0.7.2 "
+  dependencies:
+    - cmake
+    - git
+    - glslang-tools
+    - libdbus-1-dev
+    - libgl-dev
+    - libglew-dev
+    - libglfw3-dev
+    - libwayland-dev
+    - libx11-dev
+    - libxkbcommon-dev
+    - libxnvctrl-dev
+    - meson
+    - pkg-config
+    - python3-mako
+
+# Variables from roles/mattermost
+mattermost_enabled: true
+
+# Variables from roles/meld
+meld_enabled: true
+
+# Variables from roles/nautilus_plugins
+nautilus_plugins_enabled: false
+
+# Variables from roles/nordvpn
+nordvpn_enabled: true
+
+# Variables from roles/openjdk
+openjdk_enabled: true
+
+# Variables from roles/openjre
+openjre_enabled: false
+
+# Variables from roles/python
+python_enabled: true
+
+# Variables from roles/slack
+slack_enabled: false
+
+# Variables from roles/snapd
+snapd_enabled: false
+
+# Variables from roles/steam
+steam_enabled: true
+
+# Variables from roles/sweethome3d
+sweethome3d_enabled: true
+
+# Variables from roles/timeshift
+timeshift_enabled: false
+
+# Variables from roles/ufw
+ufw_enabled: false
+
+# Variables from roles/ulauncher
+ulauncher_enabled: true
+
+# Variables from roles/virtualbox
+virtualbox_enabled: true
+virtualbox:
+  version: "7.0"
+
+# Variables from roles/vlc
+vlc_enabled: true
+
+# Variables from roles/work
+work_enabled: false
+
+# Variables from roles/xfburn
+xfburn_enabled: true
+
+# Variables from roles/zoom
+zoom_enabled: true
+zoom:
+  version: "6.2.3.2056"

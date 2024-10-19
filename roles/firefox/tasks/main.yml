@@ -1,0 +1,88 @@
+---
+- name: Add Mozilla Firefox repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: mozilla
+    types: deb
+    uris: https://packages.mozilla.org/apt
+    suites: mozilla
+    components: main
+    signed_by: https://packages.mozilla.org/apt/repo-signing-key.gpg
+
+- name: Set APT repository priority for Mozilla Firefox
+  become: true
+  ansible.builtin.blockinfile:
+    path: /etc/apt/preferences.d/mozilla
+    create: true
+    mode: "0644"
+    block: |
+      Package: firefox*
+      Pin: origin packages.mozilla.org
+      Pin-Priority: 1001
+    marker: "# {mark} Managed by Ansible - firefox role: APT repository priority"
+
+- name: Allow unattended upgrades for Mozilla repository
+  become: true
+  ansible.builtin.blockinfile:
+    path: /etc/apt/apt.conf.d/51unattended-upgrades-firefox
+    create: true
+    mode: "0644"
+    block: |
+      Unattended-Upgrade::Origins-Pattern { "archive=mozilla"; };
+    marker: "# {mark} Managed by Ansible - firefox role: Unattended upgrades"
+
+- name: Remove Firefox Snap package (if installed)
+  become: true
+  community.general.snap:
+    name: firefox
+    state: absent
+  failed_when: false # Do not fail regardless of the exit code
+
+- name: Remove Firefox APT package (if installed)
+  become: true
+  ansible.builtin.apt:
+    name: firefox
+    state: absent
+    autoremove: true
+  failed_when: false # Do not fail regardless of the exit code
+
+- name: Install Firefox from Mozilla repository
+  become: true
+  ansible.builtin.apt:
+    name: firefox
+    state: present
+    update_cache: true
+
+- name: Get system language from locale
+  ansible.builtin.set_fact:
+    firefox_lang: "{{ locales.locale | regex_replace('_.*', '') | lower }}"
+  failed_when: false # Do not fail regardless of the exit code
+
+- name: Install Firefox language pack based on system locale
+  become: true
+  ansible.builtin.apt:
+    name: "firefox-l10n-{{ firefox_lang }}"
+    state: present
+  failed_when: false # Do not fail regardless of the exit code
+  register: language_pack_result
+  when: firefox_lang is defined
+
+- name: Get current list of favorite apps in GNOME Shell
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      gsettings get org.gnome.shell favorite-apps | sed 's/[][]//g'
+    executable: /bin/bash
+  register: gnome_favorites
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  changed_when: false
+
+- name: Add Firefox to GNOME Shell dock
+  ansible.builtin.shell:
+    cmd: |
+      gsettings set org.gnome.shell favorite-apps "['firefox.desktop', {{ gnome_favorites.stdout }}]"
+    executable: /bin/bash
+  environment:
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+  changed_when: "'firefox.desktop' not in gnome_favorites.stdout"
