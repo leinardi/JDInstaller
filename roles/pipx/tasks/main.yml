@@ -1,0 +1,14 @@
+---
+- name: Install pipx package
+  become: true
+  ansible.builtin.apt:
+    name: pipx
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"
+
+- name: Ensure ~/.local/bin is in PATH
+  ansible.builtin.command:
+    cmd: "pipx ensurepath"
+  register: pipx_output
+  changed_when: "'Success!' in pipx_output.stdout"

@@ -1,0 +1,77 @@
+---
+- name: Install gnome-extensions-cli using pipx
+  community.general.pipx:
+    name: gnome-extensions-cli
+    state: present
+    executable: pipx
+
+- name: Install system-monitor-next dependencies
+  become: true
+  ansible.builtin.apt:
+    name: gir1.2-gtop-2.0
+    state: present
+
+- name: Install GNOME Shell extensions using gnome-extensions-cli
+  ansible.builtin.command:
+    cmd: "gnome-extensions-cli install {{ item }}"
+  loop: "{{ gnome_extensions.packages }}"
+  loop_control:
+    label: "{{ item }}"
+  environment:
+    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+  register: extension_install_result
+  changed_when: "'already installed' not in extension_install_result.stdout"
+
+- name: Compile schemas for Caffeine extension (if required)
+  ansible.builtin.command:
+    cmd: "glib-compile-schemas {{ xdg_data_home }}/gnome-shell/extensions/caffeine@patapon.info/schemas"
+    creates: "{{ xdg_data_home }}/gnome-shell/extensions/caffeine@patapon.info/schemas/gschemas.compiled"
+  when: "'caffeine@patapon.info' in gnome_extensions.packages"
+
+- name: Compile schemas for Night Theme Switcher extension (if required)
+  ansible.builtin.command:
+    cmd: "glib-compile-schemas {{ xdg_data_home }}/gnome-shell/extensions/nightthemeswitcher@romainvigier.fr/schemas"
+    creates: "{{ xdg_data_home }}/gnome-shell/extensions/nightthemeswitcher@romainvigier.fr/schemas/gschemas.compiled"
+  when: "'nightthemeswitcher@romainvigier.fr' in gnome_extensions.packages"
+
+- name: Set Night Theme Switcher sunrise to 7:00
+  ansible.builtin.command:
+    cmd: "gsettings --schemadir {{ xdg_data_home }}/gnome-shell/extensions/nightthemeswitcher@romainvigier.fr/schemas set org.gnome.shell.extensions.nightthemeswitcher.time sunrise 7.0"
+  when: "'nightthemeswitcher@romainvigier.fr' in gnome_extensions.packages"
+  changed_when: true
+
+- name: Set Night Theme Switcher sunset to 21:00
+  ansible.builtin.command:
+    cmd: "gsettings --schemadir {{ xdg_data_home }}/gnome-shell/extensions/nightthemeswitcher@romainvigier.fr/schemas set org.gnome.shell.extensions.nightthemeswitcher.time sunset 21.0"
+  when: "'nightthemeswitcher@romainvigier.fr' in gnome_extensions.packages"
+  changed_when: true
+
+- name: Set system-monitor-next settings
+  ansible.builtin.command:
+    cmd: "gsettings --schemadir {{ xdg_data_home }}/gnome-shell/extensions/system-monitor-next@paradoxxx.zero.gmail.com/schemas set org.gnome.shell.extensions.system-monitor {{ item.key }} {{ item.value }}"
+  loop:
+    - { key: "battery-refresh-time", value: "100000" }
+    - { key: "battery-show-text", value: "false" }
+    - { key: "cpu-graph-width", value: "50" }
+    - { key: "cpu-show-text", value: "false" }
+    - { key: "disk-display", value: "true" }
+    - { key: "disk-graph-width", value: "50" }
+    - { key: "disk-show-text", value: "false" }
+    - { key: "fan-refresh-time", value: "100000" }
+    - { key: "gpu-graph-width", value: "50" }
+    - { key: "gpu-refresh-time", value: "100000" }
+    - { key: "gpu-show-text", value: "false" }
+    - { key: "icon-display", value: "false" }
+    - { key: "memory-graph-width", value: "50" }
+    - { key: "memory-show-text", value: "false" }
+    - { key: "net-graph-width", value: "50" }
+    - { key: "net-show-text", value: "false" }
+    - { key: "swap-graph-width", value: "50" }
+    - { key: "swap-show-text", value: "false" }
+    - { key: "thermal-graph-width", value: "50" }
+    - { key: "thermal-refresh-time", value: "100000" }
+    - { key: "thermal-show-menu", value: "false" }
+    - { key: "thermal-show-text", value: "false" }
+    - { key: "thermal-threshold", value: "90" }
+  when: "'system-monitor-next@paradoxxx.zero.gmail.com' in gnome_extensions.packages"
+  changed_when: true

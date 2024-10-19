@@ -11,9 +11,3 @@
         - system
         - common
       when: ufw_enabled | bool
-    - role: snapd
-      tags:
-        - snapd
-        - system
-        - common
-      when: snapd_enabled | bool
