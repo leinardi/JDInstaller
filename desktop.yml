@@ -28,6 +28,9 @@
     - role: gimp
       tags: gimp
       when: gimp_enabled | bool
+    - role: gnome_extensions
+      tags: gnome_extensions
+      when: gnome_extensions_enabled | bool
     - role: gparted
       tags: gparted
       when: gparted_enabled | bool

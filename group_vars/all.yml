@@ -126,6 +126,16 @@ globalprotect_openconnect_enabled: true
 globalprotect_openconnect:
   version: "2.3.7"
 
+# Variables from roles/gnome_extensions
+gnome_extensions_enabled: true
+gnome_extensions:
+  packages:
+    - caffeine@patapon.info
+    - fq@megh
+    - freon@UshakovVasilii_Github.yahoo.com
+    - nightthemeswitcher@romainvigier.fr
+    - system-monitor-next@paradoxxx.zero.gmail.com
+
 # Variables from roles/gparted
 gamemode_enabled: true
 
@@ -187,6 +197,9 @@ openjdk_enabled: true
 
 # Variables from roles/openjre
 openjre_enabled: false
+
+# Variables from roles/pipx
+pipx_enabled: false
 
 # Variables from roles/python
 python_enabled: true

@@ -1,0 +1,9 @@
+---
+gnome_extensions_enabled: true
+gnome_extensions:
+  packages:
+    - caffeine@patapon.info
+    - fq@megh
+    - freon@UshakovVasilii_Github.yahoo.com
+    - nightthemeswitcher@romainvigier.fr
+    - system-monitor-next@paradoxxx.zero.gmail.com

@@ -12,4 +12,4 @@
 - name: Install GlobalProtect-openconnect {{ globalprotect_openconnect.version }}
   become: true
   ansible.builtin.apt:
-    deb: "https://github.com/yuezk/GlobalProtect-openconnect/releases/download/v{{ globalprotect_openconnect.version }}/globalprotect-openconnect_{{ globalprotect_openconnect.version }}-1_amd64.deb" # noqa yaml[line-length]
+    deb: "https://github.com/yuezk/GlobalProtect-openconnect/releases/download/v{{ globalprotect_openconnect.version }}/globalprotect-openconnect_{{ globalprotect_openconnect.version }}-1_amd64.deb"

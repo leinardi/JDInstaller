@@ -10,9 +10,17 @@
           ===========================================================================
       when: ansible_distribution == 'Ubuntu' and ansible_distribution_version not in ['24.04']
 
+    - name: Determine XDG_DATA_HOME value for current installation
+      ansible.builtin.set_fact:
+        xdg_data_home: "{{ lookup('env', 'XDG_DATA_HOME') | default(ansible_env.HOME + '/.local/share', true) }}"
+
     - name: Determine XDG_CONFIG_HOME value for current installation
       ansible.builtin.set_fact:
         xdg_config_home: "{{ lookup('env', 'XDG_CONFIG_HOME') | default(ansible_env.HOME + '/.config', true) }}"
+
+    - name: Determine XDG_STATE_HOME value for current installation
+      ansible.builtin.set_fact:
+        xdg_state_home: "{{ lookup('env', 'XDG_STATE_HOME') | default(ansible_env.HOME + '/.local/state', true) }}"
 
     - name: Check for NVIDIA VGA GPU presence
       ansible.builtin.shell:
