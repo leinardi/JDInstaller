@@ -64,6 +64,26 @@ common:
     - whois
     - zip
 
+# Variables from roles/davinci_resolve
+davinci_resolve_enabled: false
+davinci_resolve:
+  install_studio: false # Set to true to install the Studio version
+  free:
+    download_referid: b18a01b5460b4c6f867bb007e9861543
+    product: DaVinci Resolve
+    package: davinci-resolve
+  studio:
+    download_referid: cbccd0fb44684be3a2dace78a0ad7b20
+    product: DaVinci Resolve Studio
+    package: davinci-resolve-studio
+  country: us
+  email: someone@canonical.com
+  phone: 202-555-0194
+  state: DE
+  city: Dover
+  street: 838 Walker Road
+  user_agent: "Mozilla/5.0 (X11; Linux {{ ansible_architecture }}; rv:131.0) Gecko/20100101 Firefox/131.0"
+
 # Variables from roles/desktop
 desktop_enabled: true
 desktop:

@@ -1,0 +1,499 @@
+---
+# Based on the AUR PKGBUILD https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=davinci-resolve
+
+- name: "Set facts for install_studio = {{ davinci_resolve.install_studio }}"
+  ansible.builtin.set_fact:
+    download_referid: "{{ davinci_resolve.studio.download_referid if davinci_resolve.install_studio else davinci_resolve.free.download_referid }}"
+    product: "{{ davinci_resolve.studio.product if davinci_resolve.install_studio else davinci_resolve.free.product }}"
+    package: "{{ davinci_resolve.studio.package if davinci_resolve.install_studio else davinci_resolve.free.package }}"
+
+- name: Install required dependencies
+  become: true
+  ansible.builtin.apt:
+    name:
+      - libapr1t64
+      - libaprutil1t64
+      - libasound2t64
+      - libc++-dev
+      - libfuse2
+      - libglib2.0-0t64
+      - libqt5x11extras5
+      - ocl-icd-libopencl1
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"
+
+- name: Install OpenCL headers for AMD GPU
+  become: true
+  ansible.builtin.apt:
+    name:
+      - mesa-opencl-icd
+      - opencl-headers
+    state: present
+  when: has_amd_gpu
+
+- name: Install OpenCL ICD for Intel GPU
+  become: true
+  ansible.builtin.apt:
+    name: intel-opencl-icd
+    state: present
+  when: has_intel_gpu
+
+- name: Install OpenCL development package for NVIDIA GPU
+  become: true
+  ansible.builtin.apt:
+    name: nvidia-opencl-dev
+    state: present
+  when: has_nvidia_gpu
+
+- name: Fetch the download_id and version info from the source URL
+  ansible.builtin.uri:
+    url: "https://www.blackmagicdesign.com/api/support/latest-stable-version/{{ package }}/linux"
+    return_content: true
+  register: release_info
+
+- name: Parse download_id and version numbers from release info
+  ansible.builtin.set_fact:
+    download_id: "{{ release_info.json.linux.downloadId }}"
+    major_version: "{{ release_info.json.linux.major }}"
+    minor_version: "{{ release_info.json.linux.minor }}"
+    release_version: "{{ release_info.json.linux.releaseNum }}"
+
+- name: Set pkgver
+  ansible.builtin.set_fact:
+    pkgver: "{{ major_version }}.{{ minor_version }}.{{ release_version }}"
+
+# First step: Register to get the actual download URL
+- name: Register to get the download URL
+  ansible.builtin.uri:
+    url: "https://www.blackmagicdesign.com/api/register/us/download/{{ download_id }}"
+    method: POST
+    headers:
+      Host: "www.blackmagicdesign.com"
+      Accept: "application/json, text/plain, */*"
+      Origin: "https://www.blackmagicdesign.com"
+      Referer: "https://www.blackmagicdesign.com/support/download/{{ download_referid }}/Linux"
+      "User-Agent": "{{ davinci_resolve.user_agent }}"
+      "Content-Type": "application/json;charset=UTF-8"
+      "Accept-Encoding": "gzip, deflate, br"
+      "Accept-Language": "en-US,en;q=0.9"
+      Authority: "www.blackmagicdesign.com"
+      Cookie: "_ga=GA1.2.1849503966.1518103294; _gid=GA1.2.953840595.1518103294"
+    body:
+      platform: "Linux"
+      firstname: "{{ ansible_distribution }}"
+      lastname: "{{ ansible_distribution_version }}"
+      email: "{{ davinci_resolve.email }}"
+      phone: "{{ davinci_resolve.phone }}"
+      country: "{{ davinci_resolve.country }}"
+      state: "{{ davinci_resolve.state }}"
+      city: "{{ davinci_resolve.city }}"
+      street: "{{ davinci_resolve.street }}"
+      policy: true
+      hasAgreedToTerms: true
+      product: "{{ product }}"
+    body_format: json
+    return_content: true
+  register: register_response
+
+- name: Download DaVinci Resolve from the provided URL
+  ansible.builtin.uri:
+    url: "{{ register_response.content | trim }}"
+    method: GET
+    dest: "/tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
+    creates: "/tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
+    follow_redirects: all
+    status_code: 200
+
+- name: "Create directory /opt/{{ package }}"
+  become: true
+  ansible.builtin.file:
+    path: "/opt/{{ package }}"
+    state: directory
+    mode: "0755"
+
+# Unzip DaVinci Resolve
+- name: Unzip downloaded archive
+  become: true
+  ansible.builtin.unarchive:
+    src: "/tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
+    dest: "/opt/{{ package }}"
+    remote_src: true
+
+- name: Remove downloaded archive
+  become: true
+  ansible.builtin.file:
+    path: "/tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
+    state: absent
+
+- name: Set permissions for the installer
+  become: true
+  ansible.builtin.file:
+    path: "/opt/{{ package }}/{{ product | replace(' ', '_') }}_{{ pkgver }}_Linux.run"
+    mode: "0755"
+
+- name: Extract AppImage
+  become: true
+  ansible.builtin.command: "/opt/{{ package }}/{{ product | replace(' ', '_') }}_{{ pkgver }}_Linux.run --appimage-extract"
+  args:
+    chdir: "/opt/{{ package }}/"
+  changed_when: true
+
+- name: Remove AppImage
+  become: true
+  ansible.builtin.file:
+    path: "/opt/{{ package }}/{{ product | replace(' ', '_') }}_{{ pkgver }}_Linux.run"
+    state: absent
+
+- name: Set permissions for extracted files
+  become: true
+  ansible.builtin.file:
+    path: "/opt/{{ package }}/squashfs-root"
+    recurse: true
+    mode: "u=rwX,g=rX,o=rX"
+
+- name: Create panels directory
+  become: true
+  ansible.builtin.file:
+    path: "/opt/{{ package }}/squashfs-root/share/panels"
+    state: directory
+    mode: "0755"
+
+- name: Extract panel libraries
+  become: true
+  ansible.builtin.unarchive:
+    src: "/opt/{{ package }}/squashfs-root/share/panels/dvpanel-framework-linux-x86_64.tgz"
+    dest: "/opt/{{ package }}/squashfs-root/share/panels"
+    remote_src: true
+
+- name: Set permissions for extracted files
+  become: true
+  ansible.builtin.file:
+    path: "/opt/{{ package }}/squashfs-root/share/panels/lib"
+    recurse: true
+    mode: "u=rwX,g=rX,o=rX"
+
+- name: Copy panel libraries to the main libs directory
+  become: true
+  ansible.builtin.copy:
+    src: "/opt/{{ package }}/squashfs-root/share/panels/"
+    dest: "/opt/{{ package }}/squashfs-root/libs/"
+    remote_src: true
+    mode: "0644"
+  with_fileglob:
+    - "/opt/{{ package }}/squashfs-root/share/panels/*.so"
+
+- name: Copy extracted panel libraries to the main libs directory
+  become: true
+  ansible.posix.synchronize:
+    src: "/opt/{{ package }}/squashfs-root/share/panels/lib/"
+    dest: "/opt/{{ package }}/squashfs-root/libs/"
+    recursive: true
+    delete: false
+
+- name: Remove unnecessary installer files
+  become: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  with_fileglob:
+    - "/opt/{{ package }}/squashfs-root/installer*"
+    - "/opt/{{ package }}/squashfs-root/AppRun*"
+
+- name: Set permissions for directories in squashfs-root
+  become: true
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      find /opt/{{ package }}/squashfs-root -type d -exec chmod 0755 {} \;
+    executable: /bin/bash
+  changed_when: true
+
+- name: Set permissions for ELF files in squashfs-root
+  become: true
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      find /opt/{{ package }}/squashfs-root -type f -exec sh -c 'if [ "$(od -t x1 -N 4 "$1" | head -n1)" = "0000000 7f 45 4c 46" ]; then chmod 0755 "$1"; fi' sh {} \;
+    executable: /bin/bash
+  changed_when: true
+
+- name: Set RPATH for ELF files smaller than 32M in squashfs-root
+  become: true
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      find /opt/{{ package }}/squashfs-root -type f -size -32M -exec sh -c '
+        if [ "$(od -t x1 -N 4 "$1" | head -n1)" = "0000000 7f 45 4c 46" ]; then
+          patchelf --set-rpath \
+          /opt/{{ package }}/libs:\
+          /opt/{{ package }}/libs/plugins/sqldrivers:\
+          /opt/{{ package }}/libs/plugins/xcbglintegrations:\
+          /opt/{{ package }}/libs/plugins/imageformats:\
+          /opt/{{ package }}/libs/plugins/platforms:\
+          /opt/{{ package }}/libs/Fusion:\
+          /opt/{{ package }}/plugins:\
+          /opt/{{ package }}/bin:\
+          /opt/{{ package }}/BlackmagicRAWSpeedTest/BlackmagicRawAPI:\
+          /opt/{{ package }}/BlackmagicRAWSpeedTest/plugins/platforms:\
+          /opt/{{ package }}/BlackmagicRAWSpeedTest/plugins/imageformats:\
+          /opt/{{ package }}/BlackmagicRAWSpeedTest/plugins/mediaservice:\
+          /opt/{{ package }}/BlackmagicRAWSpeedTest/plugins/audio:\
+          /opt/{{ package }}/BlackmagicRAWSpeedTest/plugins/xcbglintegrations:\
+          /opt/{{ package }}/BlackmagicRAWPlayer/BlackmagicRawAPI:\
+          /opt/{{ package }}/BlackmagicRAWPlayer/plugins/mediaservice:\
+          /opt/{{ package }}/BlackmagicRAWPlayer/plugins/imageformats:\
+          /opt/{{ package }}/BlackmagicRAWPlayer/plugins/audio:\
+          /opt/{{ package }}/BlackmagicRAWPlayer/plugins/platforms:\
+          /opt/{{ package }}/BlackmagicRAWPlayer/plugins/xcbglintegrations:\
+          /opt/{{ package }}/BlackmagicRAWPlayer/plugins/bearer:\
+          /opt/{{ package }}/Onboarding/plugins/xcbglintegrations:\
+          /opt/{{ package }}/Onboarding/plugins/qtwebengine:\
+          /opt/{{ package }}/Onboarding/plugins/platforms:\
+          /opt/{{ package }}/Onboarding/plugins/imageformats:\
+          /opt/{{ package }}/DaVinci Control Panels Setup/plugins/platforms:\
+          /opt/{{ package }}/DaVinci Control Panels Setup/plugins/imageformats:\
+          /opt/{{ package }}/DaVinci Control Panels Setup/plugins/bearer:\
+          /opt/{{ package }}/DaVinci Control Panels Setup/AdminUtility/PlugIns/DaVinciKeyboards:\
+          /opt/{{ package }}/DaVinci Control Panels Setup/AdminUtility/PlugIns/DaVinciPanels:\
+          $ORIGIN "$1";
+        fi' sh {} \;
+    executable: /bin/bash
+  changed_when: true
+
+- name: Find .desktop, .directory, and .menu files in squashfs-root
+  become: true
+  ansible.builtin.find:
+    paths: "/opt/{{ package }}/squashfs-root"
+    recurse: true
+    patterns: "*.desktop, *.directory, *.menu"
+    file_type: file
+  register: desktop_files
+
+- name: Replace placeholder RESOLVE_INSTALL_LOCATION with actual path
+  become: true
+  ansible.builtin.replace:
+    path: "{{ item.path }}"
+    regexp: "RESOLVE_INSTALL_LOCATION"
+    replace: "/opt/{{ package }}"
+  loop: "{{ desktop_files.files }}"
+
+- name: Create symlink for BlackmagicRawAPI to bin
+  become: true
+  ansible.builtin.file:
+    src: "/opt/{{ package }}/squashfs-root/BlackmagicRAWPlayer/BlackmagicRawAPI"
+    dest: "/opt/{{ package }}/squashfs-root/bin/BlackmagicRawAPI"
+    state: link
+
+- name: Copy libc++.so.1 to libc++.so.1.orig
+  become: true
+  ansible.builtin.copy:
+    src: "/opt/{{ package }}/squashfs-root/libs/libc++.so.1"
+    dest: "/opt/{{ package }}/squashfs-root/libs/libc++.so.1.orig"
+    mode: "0644"
+
+- name: Remove original libc++.so.1
+  become: true
+  ansible.builtin.file:
+    path: "/opt/{{ package }}/squashfs-root/libs/libc++.so.1"
+    state: absent
+
+- name: Create symlink for libc++.so.1
+  become: true
+  ansible.builtin.file:
+    src: "/usr/lib/x86_64-linux-gnu/libc++.so.1"
+    dest: "/opt/{{ package }}/squashfs-root/libs/libc++.so.1"
+    state: link
+
+- name: Copy libglib-2.0.so.0 to libglib-2.0.so.0.orig
+  become: true
+  ansible.builtin.copy:
+    src: "/opt/{{ package }}/squashfs-root/libs/libglib-2.0.so.0"
+    dest: "/opt/{{ package }}/squashfs-root/libs/libglib-2.0.so.0.orig"
+    mode: "0644"
+
+- name: Remove original libglib-2.0.so.0
+  become: true
+  ansible.builtin.file:
+    path: "/opt/{{ package }}/squashfs-root/libs/libglib-2.0.so.0"
+    state: absent
+
+- name: Create symlink for libglib-2.0.so.0
+  become: true
+  ansible.builtin.file:
+    src: "/usr/lib/x86_64-linux-gnu/libglib-2.0.so.0"
+    dest: "/opt/{{ package }}/squashfs-root/libs/libglib-2.0.so.0"
+    state: link
+
+- name: Copy libgio-2.0.so.0 to libgio-2.0.so.0.orig
+  become: true
+  ansible.builtin.copy:
+    src: "/opt/{{ package }}/squashfs-root/libs/libgio-2.0.so.0"
+    dest: "/opt/{{ package }}/squashfs-root/libs/libgio-2.0.so.0.orig"
+    mode: "0644"
+
+- name: Remove original libgio-2.0.so.0
+  become: true
+  ansible.builtin.file:
+    path: "/opt/{{ package }}/squashfs-root/libs/libgio-2.0.so.0"
+    state: absent
+
+- name: Create symlink for libgio-2.0.so.0
+  become: true
+  ansible.builtin.file:
+    src: "/usr/lib/x86_64-linux-gnu/libgio-2.0.so.0"
+    dest: "/opt/{{ package }}/squashfs-root/libs/libgio-2.0.so.0"
+    state: link
+
+- name: Copy libgmodule-2.0.so.0 to libgmodule-2.0.so.0.orig
+  become: true
+  ansible.builtin.copy:
+    src: "/opt/{{ package }}/squashfs-root/libs/libgmodule-2.0.so.0"
+    dest: "/opt/{{ package }}/squashfs-root/libs/libgmodule-2.0.so.0.orig"
+    mode: "0644"
+
+- name: Remove original libgmodule-2.0.so.0
+  become: true
+  ansible.builtin.file:
+    path: "/opt/{{ package }}/squashfs-root/libs/libgmodule-2.0.so.0"
+    state: absent
+
+- name: Create symlink for libgmodule-2.0.so.0
+  become: true
+  ansible.builtin.file:
+    src: "/usr/lib/x86_64-linux-gnu/libgmodule-2.0.so.0"
+    dest: "/opt/{{ package }}/squashfs-root/libs/libgmodule-2.0.so.0"
+    state: link
+
+- name: Create symlink for libgdk_pixbuf-2.0.so.0
+  become: true
+  ansible.builtin.file:
+    src: "/usr/lib/x86_64-linux-gnu/libgdk_pixbuf-2.0.so.0"
+    dest: "/opt/{{ package }}/squashfs-root/libs/libgdk_pixbuf-2"
+    state: link
+
+- name: Append StartupWMClass to DaVinciResolve.desktop
+  become: true
+  ansible.builtin.lineinfile:
+    path: "/opt/{{ package }}/squashfs-root/share/DaVinciResolve.desktop"
+    line: "StartupWMClass=resolve"
+    create: true
+    mode: "0644"
+
+- name: Create udev rule for Davinci Panel
+  become: true
+  ansible.builtin.copy:
+    dest: "/opt/{{ package }}/squashfs-root/share/etc/udev/rules.d/99-DavinciPanel.rules"
+    content: 'SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTRS{idVendor}=="096e", MODE="0666"'
+    mode: "0644"
+
+- name: Move contents of squashfs-root to the target directory
+  become: true
+  ansible.builtin.shell:
+    cmd: "mv /opt/{{ package }}/squashfs-root/* /opt/{{ package }}/"
+  changed_when: true
+
+- name: Ensure required directories exist
+  become: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "/opt/{{ package }}/configs"
+    - "/opt/{{ package }}/DolbyVision"
+    - "/opt/{{ package }}/easyDCP"
+    - "/opt/{{ package }}/Fairlight"
+    - "/opt/{{ package }}/GPUCache"
+    - "/opt/{{ package }}/logs"
+    - "/opt/{{ package }}/Media"
+    - "/opt/{{ package }}/Resolve Disk Database"
+    - "/opt/{{ package }}/.crashreport"
+    - "/opt/{{ package }}/.license"
+    - "/opt/{{ package }}/.LUT"
+
+- name: Copy share/default-config.dat to configs directory
+  become: true
+  ansible.builtin.copy:
+    src: "/opt/{{ package }}/share/default-config.dat"
+    dest: "/opt/{{ package }}/configs"
+    mode: "0644"
+
+- name: Copy share/log-conf.xml to configs directory
+  become: true
+  ansible.builtin.copy:
+    src: "/opt/{{ package }}/share/log-conf.xml"
+    dest: "/opt/{{ package }}/configs"
+    mode: "0644"
+
+- name: Copy share/default_cm_config.bin to DolbyVision directory
+  become: true
+  ansible.builtin.copy:
+    src: "/opt/{{ package }}/share/default_cm_config.bin"
+    dest: "/opt/{{ package }}/DolbyVision"
+    mode: "0644"
+
+- name: Copy desktop files to /usr/share/applications directory
+  become: true
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/usr/share/applications"
+    mode: "0644"
+  loop:
+    - "/opt/{{ package }}/share/DaVinciResolve.desktop"
+    - "/opt/{{ package }}/share/DaVinciControlPanelsSetup.desktop"
+    - "/opt/{{ package }}/share/DaVinciResolveInstaller.desktop"
+    - "/opt/{{ package }}/share/DaVinciResolveCaptureLogs.desktop"
+    - "/opt/{{ package }}/share/blackmagicraw-player.desktop"
+    - "/opt/{{ package }}/share/blackmagicraw-speedtest.desktop"
+
+- name: Copy DaVinciResolve.directory to /usr/share/desktop-directories
+  become: true
+  ansible.builtin.copy:
+    src: "/opt/{{ package }}/share/DaVinciResolve.directory"
+    dest: "/usr/share/desktop-directories"
+    mode: "0644"
+
+- name: Copy DaVinciResolve.menu to /etc/xdg/menus
+  become: true
+  ansible.builtin.copy:
+    src: "/opt/{{ package }}/share/DaVinciResolve.menu"
+    dest: "/etc/xdg/menus"
+    mode: "0644"
+
+- name: Copy DV_Resolve.png to /usr/share/icons/hicolor/64x64/apps
+  become: true
+  ansible.builtin.copy:
+    src: "/opt/{{ package }}/graphics/DV_Resolve.png"
+    dest: "/usr/share/icons/hicolor/64x64/apps"
+    mode: "0644"
+
+- name: Copy DV_ResolveProj.png to /usr/share/icons/hicolor/64x64/apps
+  become: true
+  ansible.builtin.copy:
+    src: "/opt/{{ package }}/graphics/DV_ResolveProj.png"
+    dest: "/usr/share/icons/hicolor/64x64/apps"
+    mode: "0644"
+
+- name: Copy resolve.xml to /usr/share/mime/packages
+  become: true
+  ansible.builtin.copy:
+    src: "/opt/{{ package }}/share/resolve.xml"
+    dest: "/usr/share/mime/packages"
+    mode: "0644"
+
+- name: Copy udev rules files to /usr/lib/udev/rules.d
+  become: true
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/usr/lib/udev/rules.d"
+    mode: "0644"
+  loop:
+    - "/opt/{{ package }}/share/etc/udev/rules.d/99-BlackmagicDevices.rules"
+    - "/opt/{{ package }}/share/etc/udev/rules.d/99-ResolveKeyboardHID.rules"
+    - "/opt/{{ package }}/share/etc/udev/rules.d/99-DavinciPanel.rules"
+
+- name: Cleanup temporary squashfs-root directory
+  become: true
+  ansible.builtin.file:
+    path: "/opt/{{ package }}/squashfs-root/"
+    state: absent

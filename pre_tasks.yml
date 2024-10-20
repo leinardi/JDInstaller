@@ -22,20 +22,7 @@
       ansible.builtin.set_fact:
         xdg_state_home: "{{ lookup('env', 'XDG_STATE_HOME') | default(ansible_env.HOME + '/.local/state', true) }}"
 
-    - name: Check for NVIDIA VGA GPU presence
-      ansible.builtin.shell:
-        cmd: "lspci | grep -i 'vga' | grep -i 'nvidia'"
-        executable: /bin/bash
-      register: lspci_output
-      ignore_errors: true
-      changed_when: false
-      failed_when: false
-
-    - name: Set has_nvidia_gpu fact based on lspci output
-      ansible.builtin.set_fact:
-        has_nvidia_gpu: "{{ 'true' if lspci_output.stdout != '' else 'false' }}"
-
-    - name: Check for AMD VGA GPU presence
+    - name: Check for AMD GPU presence
       ansible.builtin.shell:
         cmd: "lspci | grep -i 'vga' | grep -i 'amd'"
         executable: /bin/bash
@@ -47,5 +34,31 @@
     - name: Set has_amd_gpu fact based on lspci output
       ansible.builtin.set_fact:
         has_amd_gpu: "{{ 'true' if lspci_output_amd.stdout != '' else 'false' }}"
+
+    - name: Check for Intel GPU presence
+      ansible.builtin.shell:
+        cmd: "lspci | grep -i 'vga' | grep -i 'intel'"
+        executable: /bin/bash
+      register: lspci_output_intel
+      ignore_errors: true
+      changed_when: false
+      failed_when: false
+
+    - name: Set has_intel_gpu fact based on lspci output
+      ansible.builtin.set_fact:
+        has_intel_gpu: "{{ 'true' if lspci_output_intel.stdout != '' else 'false' }}"
+
+    - name: Check for NVIDIA GPU presence
+      ansible.builtin.shell:
+        cmd: "lspci | grep -i 'vga' | grep -i 'nvidia'"
+        executable: /bin/bash
+      register: lspci_output
+      ignore_errors: true
+      changed_when: false
+      failed_when: false
+
+    - name: Set has_nvidia_gpu fact based on lspci output
+      ansible.builtin.set_fact:
+        has_nvidia_gpu: "{{ 'true' if lspci_output.stdout != '' else 'false' }}"
 
   tags: always
