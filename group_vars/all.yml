@@ -68,7 +68,7 @@ common:
     - zip
 
 # Variables from roles/davinci_resolve
-davinci_resolve_enabled: false
+davinci_resolve_enabled: true
 davinci_resolve:
   install_studio: false # Set to true to install the Studio version
   free:
