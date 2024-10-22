@@ -5,8 +5,8 @@ Any HTML comment will be stripped when the markdown is rendered, so you don't ne
 ### Pull request checklist
 
 <!-- replace the empty checkboxes [ ] below with checked ones [x] accordingly -->
-
-- [ ] I have **rebased** this branch on top of the destination branch (usually `master`)
+- [ ] I am targeting the `master` branch (and **not** the `release` branch)
+- [ ] I have **rebased** this branch on top of the destination branch
 - [ ] I have executed locally `make check` *before creating the commit* and it has run successfully
 - [ ] My contribution is fully baked and ready to be merged as is
 - [ ] I have performed a self-review of my own code
