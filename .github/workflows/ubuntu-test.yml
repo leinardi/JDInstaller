@@ -1,0 +1,40 @@
+name: Ubuntu test
+
+on:
+  push:
+    branches:
+      - master
+      - release
+  schedule:
+    - cron: "0 4 * * 6" # Runs every Saturday at 4:00 AM
+  workflow_dispatch:
+
+# This allows a subsequently queued workflow run to interrupt previous runs
+concurrency:
+  group: "${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  run-on-ubuntu-2404:
+    name: Run on Ubuntu 24.04
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      TERM: dumb
+
+    steps:
+      - name: Change APT mirror to archive.ubuntu.com to avoid 404 Not Found error
+        run: |
+          sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources
+          sudo apt-get update
+
+      - name: Setup Ubuntu desktop minimal
+        run: |
+          sudo apt-get install -y ubuntu-desktop-minimal
+
+      - name: Reproduce install instructions from README.md
+        run: |
+          sudo apt install git make
+          git clone https://github.com/leinardi/JDInstaller.git
+          cd JDInstaller
+          make install OTHER_PARAMS=-vvv
