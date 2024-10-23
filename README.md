@@ -1,3 +1,5 @@
+[![Ubuntu test](https://github.com/leinardi/JDInstaller/actions/workflows/ubuntu-test.yml/badge.svg?branch=release)](https://github.com/leinardi/JDInstaller/actions/workflows/ubuntu-test.yml) [![CI release](https://github.com/leinardi/JDInstaller/actions/workflows/ci.yml/badge.svg?branch=release)](https://github.com/leinardi/JDInstaller/actions/workflows/ci.yml)
+
 # JDInstaller
 
 This Ansible playbook is designed to initialize a fresh Ubuntu installation with packages and configurations that suit my personal preferences. While it is
