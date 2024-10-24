@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  run-on-ubuntu-2404:
-    name: Run on Ubuntu 24.04
+  test-default-packages:
+    name: Test default set of packages
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
@@ -37,4 +37,38 @@ jobs:
           sudo apt install git make
           git clone https://github.com/leinardi/JDInstaller.git
           cd JDInstaller
-          make install OTHER_PARAMS=-vvv
+          git checkout $GITHUB_SHA
+          make install
+
+  test-all-packages-besides-davinci:
+    name: Test all packages besides DaVinci Resolve
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      TERM: dumb
+
+    steps:
+      - name: Change APT mirror to archive.ubuntu.com to avoid 404 Not Found error
+        run: |
+          sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources
+          sudo apt-get update
+
+      - name: Setup Ubuntu desktop minimal
+        run: |
+          sudo apt-get install -y ubuntu-desktop-minimal
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install ansible from PPA
+        run: |
+          sudo apt-add-repository --yes --update ppa:ansible/ansible
+          sudo apt-get install -y ansible
+          ansible-galaxy collection install -r requirements.yml
+
+      - name: Enable all disabled packages except DaVinci Resolve
+        run: |
+          sed -i '/davinci_resolve_enabled: false/!s/_enabled: false/_enabled: true/' group_vars/all.yml
+
+      - name: Run playbook
+        run: ansible-playbook ubuntu-setup.yml -vvv

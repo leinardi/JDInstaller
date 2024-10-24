@@ -6,6 +6,7 @@
     state: present
 
 - name: Configure UFW defaults
+  become: true
   community.general.ufw:
     direction: "{{ item.direction }}"
     policy: "{{ item.policy }}"
@@ -16,5 +17,6 @@
     - Restart UFW
 
 - name: Enable UFW
+  become: true
   community.general.ufw:
     state: enabled
