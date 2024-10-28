@@ -15,6 +15,7 @@ its respective value in `group_vars/all.yml`.
     - [Run Single Roles](#run-single-roles)
 - [Playbooks](#playbooks)
 - [Roles](#roles)
+- [DaVinci Resolve](#davinci-resolve)
 - [Contributions](#contributions)
 - [Acknowledgements](#acknowledgements)
 
@@ -200,6 +201,20 @@ Default" column shows whether the role is active by default. Even if a role is e
 
 Each playbook can be customized, and roles enabled or disabled as required via `group_vars/all.yml`. By default, the playbook `work.yml` is disabled,
 but can be easily enabled if needed by changing the `work_enabled` in `group_vars/all.yml`.
+
+## DaVinci Resolve
+
+The DaVinci Resolve section of this script automates the entire installation process on Ubuntu 24.04, making it straightforward to get the software up and running without requiring older system dependencies or containers.
+
+This part of the script:
+- Downloads the official DaVinci Resolve archive and installs it in `/opt/`
+- Sets up necessary symlinks to avoid downgrading dependencies
+- Installs udev rules for USB peripherals like DaVinci Panels
+- Auto-detects and installs the correct OpenCL libraries for AMD, Intel, or Nvidia GPUs
+- Sets up system icons, MIME files, and desktop entries
+
+By default, **the installation of DaVinci Resolve is disabled**. Please refer to [DaVinciResolve.md](roles/davinci_resolve/DaVinciResolve.md) for detailed instructions on enabling the installation, as well as uninstallation steps.
+
 
 ## Contributions
 

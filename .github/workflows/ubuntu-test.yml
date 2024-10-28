@@ -5,6 +5,8 @@ on:
     branches:
       - master
       - release
+    paths-ignore:
+      - "**/*.md"
   schedule:
     - cron: "0 4 * * 6" # Runs every Saturday at 4:00 AM
   workflow_dispatch:
