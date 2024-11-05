@@ -144,7 +144,7 @@ git_enabled: true
 # Variables from roles/globalprotect_openconnect
 globalprotect_openconnect_enabled: true
 globalprotect_openconnect:
-  version: "2.3.7"
+  version: "2.3.9"
 
 # Variables from roles/gnome_extensions
 gnome_extensions_enabled: true
