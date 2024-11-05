@@ -1,4 +1,4 @@
 ---
 globalprotect_openconnect_enabled: true
 globalprotect_openconnect:
-  version: "2.3.7"
+  version: "2.3.9"
