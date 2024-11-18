@@ -60,7 +60,12 @@
 
 - name: Set pkgver
   ansible.builtin.set_fact:
-    pkgver: "{{ major_version }}.{{ minor_version }}.{{ release_version }}"
+    pkgver: >-
+      {{
+        major_version
+        + ('.' + minor_version if minor_version | int != 0 or release_version | int != 0 else '')
+        + ('.' + release_version if release_version | int != 0 else '')
+      }}
 
 # First step: Register to get the actual download URL
 - name: Register to get the download URL
