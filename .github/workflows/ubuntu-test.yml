@@ -27,7 +27,14 @@ jobs:
     steps:
       - name: Change APT mirror to archive.ubuntu.com to avoid 404 Not Found error
         run: |
-          sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources
+          # Remove the existing ubuntu.sources file
+          sudo rm -f /etc/apt/sources.list.d/ubuntu.sources
+
+          # Download the new ubuntu.sources file from the specific commit
+          sudo curl -o /etc/apt/sources.list.d/ubuntu.sources \
+            "https://raw.githubusercontent.com/leinardi/JDInstaller/$GITHUB_SHA/.github/ubuntu.sources"
+
+          # Update package lists
           sudo apt-get update
 
       - name: Setup Ubuntu desktop minimal
@@ -52,7 +59,14 @@ jobs:
     steps:
       - name: Change APT mirror to archive.ubuntu.com to avoid 404 Not Found error
         run: |
-          sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources
+          # Remove the existing ubuntu.sources file
+          sudo rm -f /etc/apt/sources.list.d/ubuntu.sources
+
+          # Download the new ubuntu.sources file from the specific commit
+          sudo curl -o /etc/apt/sources.list.d/ubuntu.sources \
+            "https://raw.githubusercontent.com/leinardi/JDInstaller/$GITHUB_SHA/.github/ubuntu.sources"
+
+          # Update package lists
           sudo apt-get update
 
       - name: Setup Ubuntu desktop minimal
