@@ -2,4 +2,5 @@ exclude_paths:
   - .github/
 
 skip_list:
+  - var-naming[no-role-prefix]
   - yaml[line-length]

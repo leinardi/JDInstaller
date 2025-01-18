@@ -9,7 +9,7 @@ generate-group-vars:
 # Task to run shellcheck on all shell scripts
 shellcheck:
 	@echo "Running shellcheck..."
-	find . -name "*.sh" | xargs shellcheck
+	find . -path "./.galaxy" -prune -o -name "*.sh" -print | xargs -r shellcheck
 
 # Task to run prettier on all .yml files
 prettier:
