@@ -44,8 +44,9 @@ jobs:
       - name: Reproduce install instructions from README.md
         run: |
           sudo apt install git make
-          git clone https://github.com/leinardi/JDInstaller.git
+          git clone --no-checkout https://github.com/leinardi/JDInstaller.git
           cd JDInstaller
+          git fetch origin $GITHUB_SHA
           git checkout $GITHUB_SHA
           make install
 
