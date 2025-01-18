@@ -502,3 +502,42 @@
   ansible.builtin.file:
     path: "/opt/{{ package }}/squashfs-root/"
     state: absent
+
+- name: Create the 'davinci' group
+  become: true
+  ansible.builtin.group:
+    name: davinci
+    state: present
+
+- name: Ensure .license directory exists with correct permissions
+  become: true
+  ansible.builtin.file:
+    path: "/opt/{{ package }}/.license"
+    state: directory
+    owner: root
+    group: davinci
+    mode: "0770"
+
+- name: Check current groups of the user
+  ansible.builtin.command:
+    cmd: "id -nG {{ ansible_env.USER }}"
+  register: current_groups
+  changed_when: false
+
+- name: Add the current user to the 'davinci' group
+  become: true
+  ansible.builtin.user:
+    name: "{{ ansible_env.USER }}"
+    groups: davinci
+    append: true
+
+- name: Re-check groups of the user
+  ansible.builtin.command:
+    cmd: "id -nG {{ ansible_env.USER }}"
+  register: updated_groups
+  changed_when: false
+
+- name: Notify user to re-login if newly added to the 'davinci' group
+  ansible.builtin.debug:
+    msg: "You have been added to the 'davinci' group. Please log out and log back in for the changes to take effect."
+  when: "'davinci' not in current_groups.stdout.split() and 'davinci' in updated_groups.stdout.split()"
