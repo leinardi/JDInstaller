@@ -1,5 +1,13 @@
 ---
+- name: Check if Steam is properly installed
+  ansible.builtin.shell:
+    cmd: "dpkg-query -W -f='${db:Status-Status}' steam-launcher || echo 'not-installed'"
+    executable: /bin/bash
+  register: steam_status
+  changed_when: false
+
 - name: Install Steam
   become: true
   ansible.builtin.apt:
     deb: "https://cdn.fastly.steamstatic.com/client/installer/steam.deb"
+  when: steam_status.stdout.strip() != "installed"
