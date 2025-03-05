@@ -6,7 +6,7 @@
     download_referid: "{{ davinci_resolve.studio.download_referid if davinci_resolve.install_studio else davinci_resolve.free.download_referid }}"
     product: "{{ davinci_resolve.studio.product if davinci_resolve.install_studio else davinci_resolve.free.product }}"
     package: "{{ davinci_resolve.studio.package if davinci_resolve.install_studio else davinci_resolve.free.package }}"
-
+    
 - name: Install required dependencies
   become: true
   ansible.builtin.apt:
@@ -99,6 +99,19 @@
     body_format: json
     return_content: true
   register: register_response
+  when: davinci_resolve_zip_file is undefined
+
+- name: Validate existing DaVinci Resolve ZIP archive
+  command: "unzip -t /tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
+  register: zip_test
+  failed_when: zip_test.rc != 0
+  ignore_errors: true  # Ensure we proceed to deletion if this fails
+
+- name: Remove invalid ZIP archive
+  file:
+    path: "/tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
+    state: absent
+  when: zip_test.failed  # Delete only if the validation failed
 
 - name: Download DaVinci Resolve from the provided URL
   ansible.builtin.uri:
@@ -108,6 +121,16 @@
     creates: "/tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
     follow_redirects: all
     status_code: 200
+  when: davinci_resolve_zip_file is undefined
+
+# Uses the predownload zipfile instead of downloading it from the internet
+- name: /tmp/ Hardlink to pre-downloaded DaVinci Resolve zipfile
+  ansible.builtin.file:
+    src: "{{ davinci_resolve_zip_file }}"
+    dest: "/tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
+    state: hard
+    mode: "0755"
+  when:  davinci_resolve_zip_file is defined
 
 - name: "Create directory /opt/{{ package }}"
   become: true
