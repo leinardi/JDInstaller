@@ -17,3 +17,4 @@ davinci_resolve:
   city: Dover
   street: 838 Walker Road
   user_agent: "Mozilla/5.0 (X11; Linux {{ ansible_architecture }}; rv:131.0) Gecko/20100101 Firefox/131.0"
+# davinci_resolve_zip_file: '/path/to/davinciresoolve.zip' # <- enable it explicitly in `ansible-playbook` 
