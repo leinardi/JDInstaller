@@ -39,7 +39,7 @@
 
 - name: Configure the build using Meson
   ansible.builtin.command:
-    cmd: "meson setup build -Dmangoapp=true -Dmangohudctl=true -Dmangoapp_layer=true --wrap-mode=default"
+    cmd: "meson setup build -Dmangoapp=true -Dmangohudctl=true --wrap-mode=default"
     chdir: /tmp/MangoHud
   register: meson_setup_output
   changed_when: true
