@@ -183,7 +183,7 @@ mainline_enabled: true
 # Variables from roles/mangohud
 mangohud_enabled: true
 mangohud:
-  version: "v0.7.2 "
+  version: "v0.8.1 "
   dependencies:
     - cmake
     - git
