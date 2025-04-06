@@ -147,7 +147,7 @@ git_enabled: true
 # Variables from roles/globalprotect_openconnect
 globalprotect_openconnect_enabled: true
 globalprotect_openconnect:
-  version: "2.3.9"
+  version: "2.4.4"
 
 # Variables from roles/gnome_extensions
 gnome_extensions_enabled: true
@@ -265,4 +265,4 @@ xfburn_enabled: true
 # Variables from roles/zoom
 zoom_enabled: true
 zoom:
-  version: "6.2.3.2056"
+  version: "6.4.3.827"
