@@ -2,6 +2,9 @@
 - name: Ubuntu Desktop Playbook
   hosts: localhost
   roles:
+    - role: anydesk
+      tags: anydesk
+      when: anydesk_enabled | bool
     - role: davinci_resolve
       tags: davinci_resolve
       when: davinci_resolve_enabled | bool

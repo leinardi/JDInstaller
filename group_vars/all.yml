@@ -1,5 +1,8 @@
 # Automatically generated from roles' defaults
 ---
+# Variables from roles/anydesk
+anydesk_enabled: true
+
 # Variables from roles/chrome
 chrome_enabled: true
 
