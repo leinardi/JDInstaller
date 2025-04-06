@@ -1,5 +1,8 @@
 # Automatically generated from roles' defaults
 ---
+# Variables from roles/anydesk
+anydesk_enabled: true
+
 # Variables from roles/chrome
 chrome_enabled: true
 
@@ -172,7 +175,7 @@ handbrake_enabled: false
 inkscape_enabled: true
 
 # Variables from roles/insync
-insync_enabled: true
+insync_enabled: false
 
 # Variables from roles/libreoffice
 libreoffice_enabled: true
@@ -210,7 +213,7 @@ meld_enabled: true
 nautilus_plugins_enabled: false
 
 # Variables from roles/nordvpn
-nordvpn_enabled: true
+nordvpn_enabled: false
 
 # Variables from roles/openjdk
 openjdk_enabled: true

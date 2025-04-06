@@ -1,0 +1,17 @@
+---
+- name: Add AnyDesk repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: anydesk
+    types: deb
+    uris: https://deb.anydesk.com
+    suites: all
+    components: main
+    signed_by: https://keys.anydesk.com/repos/DEB-GPG-KEY
+
+- name: Install AnyDesk
+  become: true
+  ansible.builtin.apt:
+    name: anydesk
+    state: present
+    update_cache: true
