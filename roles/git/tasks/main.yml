@@ -9,12 +9,30 @@
     components: main
     signed_by: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF911AB184317630C59970973E363C90F8F1B6217
 
-- name: Install git
+- name: Install git and libsecret-1-dev
   become: true
   ansible.builtin.apt:
-    name: git
+    name:
+      - git
+      - libsecret-1-dev
     state: present
     update_cache: true
+
+- name: Build git-credential-libsecret helper
+  become: true
+  ansible.builtin.command:
+    cmd: make
+    chdir: /usr/share/doc/git/contrib/credential/libsecret
+    creates: /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
+  changed_when: false # idempotent via the `creates` check
+
+- name: Install git-credential-libsecret helper into git core dir
+  become: true
+  ansible.builtin.copy:
+    src: /usr/share/doc/git/contrib/credential/libsecret/git-credential-libsecret
+    dest: /usr/lib/git-core/git-credential-libsecret
+    remote_src: true
+    mode: "0755"
 
 - name: Install tig
   become: true
