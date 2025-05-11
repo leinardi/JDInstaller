@@ -4,6 +4,7 @@
   ansible.builtin.apt:
     name:
       - nautilus-image-converter
+      - nautilus-share
       - nautilus-wipe
     state: present
     update_cache: true
