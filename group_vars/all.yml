@@ -210,7 +210,7 @@ mattermost_enabled: true
 meld_enabled: true
 
 # Variables from roles/nautilus_plugins
-nautilus_plugins_enabled: false
+nautilus_plugins_enabled: true
 
 # Variables from roles/nordvpn
 nordvpn_enabled: false
