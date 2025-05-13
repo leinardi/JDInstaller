@@ -24,6 +24,12 @@ The DaVinci Resolve installation is disabled by default. To enable it:
    ```bash
    make install TAGS=davinci_resolve
    ```
+   or, if you have already downloaded the Davinci Resolve ZIP archive, you can avoid re-downloading it by pointing the script to the existing file like this:
+   
+   ```bash
+      make install TAGS=davinci_resolve EXTRA_VARS="davinci_resolve_zip_file=/path/to/davinci_resolve_file.zip"
+   ```
+
 
 This process will automate the download and installation of DaVinci Resolve, setting up all necessary libraries, udev rules, desktop icons, and MIME files.
 
