@@ -6,7 +6,7 @@
     download_referid: "{{ davinci_resolve.studio.download_referid if davinci_resolve.install_studio else davinci_resolve.free.download_referid }}"
     product: "{{ davinci_resolve.studio.product if davinci_resolve.install_studio else davinci_resolve.free.product }}"
     package: "{{ davinci_resolve.studio.package if davinci_resolve.install_studio else davinci_resolve.free.package }}"
-    
+
 - name: Install required dependencies
   become: true
   ansible.builtin.apt:
