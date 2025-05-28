@@ -17,3 +17,5 @@ ij_wrap_on_typing = false
 [*.yml]
 indent_size = 2
 
+[*.md]
+trim_trailing_whitespace = false  # Allow trailing spaces for line breaks
