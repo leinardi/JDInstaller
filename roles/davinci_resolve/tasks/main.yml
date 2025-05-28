@@ -102,13 +102,14 @@
   when: davinci_resolve_zip_file is undefined
 
 - name: Validate existing DaVinci Resolve ZIP archive
-  command: "unzip -t /tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
+  ansible.builtin.command: "unzip -t /tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip" # noqa command-instead-of-module
   register: zip_test
   failed_when: zip_test.rc != 0
+  changed_when: false
   ignore_errors: true # Ensure we proceed to deletion if this fails
 
 - name: Remove invalid ZIP archive
-  file:
+  ansible.builtin.file:
     path: "/tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
     state: absent
   when: zip_test.failed # Delete only if the validation failed
