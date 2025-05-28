@@ -105,13 +105,13 @@
   command: "unzip -t /tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
   register: zip_test
   failed_when: zip_test.rc != 0
-  ignore_errors: true  # Ensure we proceed to deletion if this fails
+  ignore_errors: true # Ensure we proceed to deletion if this fails
 
 - name: Remove invalid ZIP archive
   file:
     path: "/tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
     state: absent
-  when: zip_test.failed  # Delete only if the validation failed
+  when: zip_test.failed # Delete only if the validation failed
 
 - name: Download DaVinci Resolve from the provided URL
   ansible.builtin.uri:
@@ -130,7 +130,7 @@
     dest: "/tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
     state: hard
     mode: "0755"
-  when:  davinci_resolve_zip_file is defined
+  when: davinci_resolve_zip_file is defined
 
 - name: "Create directory /opt/{{ package }}"
   become: true
