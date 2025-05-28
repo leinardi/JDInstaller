@@ -204,17 +204,19 @@ but can be easily enabled if needed by changing the `work_enabled` in `group_var
 
 ## DaVinci Resolve
 
-The DaVinci Resolve section of this script automates the entire installation process on Ubuntu 24.04, making it straightforward to get the software up and running without requiring older system dependencies or containers.
+The DaVinci Resolve section of this script automates the entire installation process on Ubuntu 24.04, making it straightforward to get the software up and
+running without requiring older system dependencies or containers.
 
 This part of the script:
+
 - Downloads the official DaVinci Resolve archive and installs it in `/opt/`
 - Sets up necessary symlinks to avoid downgrading dependencies
 - Installs udev rules for USB peripherals like DaVinci Panels
 - Auto-detects and installs the correct OpenCL libraries for AMD, Intel, or Nvidia GPUs
 - Sets up system icons, MIME files, and desktop entries
 
-By default, **the installation of DaVinci Resolve is disabled**. Please refer to [DaVinciResolve.md](roles/davinci_resolve/DaVinciResolve.md) for detailed instructions on enabling the installation, as well as uninstallation steps.
-
+By default, **the installation of DaVinci Resolve is disabled**. Please refer to [DaVinciResolve.md](roles/davinci_resolve/DaVinciResolve.md) for detailed
+instructions on enabling the installation, as well as uninstallation steps.
 
 ## Contributions
 
@@ -224,16 +226,31 @@ personal preferences. I will accept pull requests adding roles for software that
 **Before opening a pull request, please create an issue to describe the feature you would like to add and wait for my approval.** This helps avoid unnecessary
 work.
 
-You can run static analysis on shell and YAML files with:
+This project uses the [pre-commit framework](https://pre-commit.com/) to ensure consistent formatting and basic static analysis across commits.
+
+To enable it:
+
+1. Install `pre-commit` system-wide (e.g., via APT):
+
+    ```bash
+    sudo apt install pre-commit
+    ````
+
+2. Set it up for this repository:
+
+   ```bash
+   make install-pre-commit
+   ```
+
+After that, checks will automatically run before each commit. You can also run the checks manually with:
 
 ```bash
 make check
 ```
 
-This command will also regenerate the `group_vars/all.yml` file.
+This command performs static analysis on shell and YAML files and regenerates the `group_vars/all.yml` file.
 
 ## Acknowledgements
 
 This project is inspired by [ansible-ubuntu-desktop](https://github.com/sys0dm1n/ansible-ubuntu-desktop). Many thanks
 to [@sys0dm1n](https://github.com/sys0dm1n) for sharing their playbook.
-
