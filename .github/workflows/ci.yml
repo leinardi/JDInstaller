@@ -14,35 +14,406 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ansible-lint:
-    name: Ansible Lint
-    runs-on: ubuntu-24.04
+  actionlint:
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
       TERM: dumb
+      FROM_REF: ${{ github.event.pull_request.base.sha }}
+      TO_REF: ${{ github.event.pull_request.head.sha }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      ## Install dependencies
-      - name: Setup Python
-        uses: actions/setup-python@v4
         with:
-          python-version: "3.x"
+          fetch-depth: 0
 
-      - name: Install Ansible and Tools
+      - name: Cache pre-commit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit|${{ runner.os }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install Python deps + pre-commit
         run: |
-          python -m pip install --upgrade pip
-          pip install ansible-core ansible-lint
-          ansible-galaxy collection install -r requirements.yml
+          pip install --no-cache-dir pre-commit
+
+      - name: Setup Reviewdog binary
+        uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
+        with:
+          reviewdog_version: latest
+
+      - name: Run actionlint
+        id: actionlint-lint
+        run: |
+          # Run the hook and capture output without failing the step
+          set +e
+          set -o pipefail
+
+          pre-commit run actionlint-oneline \
+            --hook-stage manual \
+            --from-ref "$FROM_REF" \
+            --to-ref   "$TO_REF" \
+            --color=never \
+            | tee >(grep -Ev '^\[INFO\]' | tail -n +5 > actionlint-report.txt)
+
+          exitcode=${PIPESTATUS[0]}
+          echo "exitcode=$exitcode" >> "$GITHUB_OUTPUT"
+
+          exit 0
+
+      - name: Report actionlint via reviewdog
+        if: steps.actionlint-lint.outputs.exitcode != '0'
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Strip header, reformat output, and pass to reviewdog
+          cat actionlint-report.txt \
+            | while read -r r; do
+                # default to error
+                severity=e
+
+                # if this line is actually a shellcheck-like message, extract its severity
+                if echo "$r" | grep -q " shellcheck reported issue in this script:"; then
+                  s=$(echo "$r" |
+                        sed -E 's/^.* shellcheck reported issue in this script:[^:]*:([^:]).*$/\1/')
+                  case "$s" in e|w|i|n) severity="$s" ;; esac
+                fi
+
+                # prefix for reviewdog’s %t:%f:%l:%c:%m efm
+                echo "$severity:$r"
+              done \
+            | reviewdog \
+                -efm="%t:%f:%l:%c: %m" \
+                -name="actionlint" \
+                -reporter=github-pr-review \
+                -filter-mode=nofilter \
+                -fail-level=info
+          exit 1
+
+  ansible-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TERM: dumb
+      FROM_REF: ${{ github.event.pull_request.base.sha }}
+      TO_REF: ${{ github.event.pull_request.head.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache pre-commit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit|${{ runner.os }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install Python deps + pre-commit
+        run: |
+          pip install --no-cache-dir pre-commit
+
+      - name: Setup Reviewdog binary
+        uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
+        with:
+          reviewdog_version: latest
+
+      - name: Run ansible-lint
+        id: ansible-lint-lint
+        run: |
+          # Run the hook and capture output without failing the step
+          set +e
+          set -o pipefail
+
+          pre-commit run ansible-lint-parseable \
+            --hook-stage manual \
+            --from-ref "$FROM_REF" \
+            --to-ref   "$TO_REF" \
+            --color=never \
+            | tee >(grep -Ev '^\[INFO\]' | tail -n +5 > ansible-lint-report.txt)
+
+          exitcode=${PIPESTATUS[0]}
+          echo "exitcode=$exitcode" >> "$GITHUB_OUTPUT"
+
+          exit 0
+
+      - name: Report ansible-lint via reviewdog
+        if: steps.ansible-lint-lint.outputs.exitcode != '0'
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Strip header, reformat output, and pass to reviewdog
+          cat ansible-lint-report.txt \
+            | reviewdog \
+                -efm="%f:%l: %m" \
+                -name="ansible-lint" \
+                -reporter=github-pr-review \
+                -filter-mode=nofilter \
+                -fail-level=info
+          exit 1
+
+  check-group-vars:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TERM: dumb
+      FROM_REF: ${{ github.event.pull_request.base.sha }}
+      TO_REF: ${{ github.event.pull_request.head.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache pre-commit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit|${{ runner.os }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install Python deps + pre-commit
+        run: pip install --no-cache-dir pre-commit
+
+      - name: Setup Reviewdog binary
+        uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
+        with:
+          reviewdog_version: latest
+
+      - name: Run generate-group-vars
+        id: generate-group-vars
+        run: |
+          # Run the hook and capture exit code without failing the step
+          set +e
+          set -o pipefail
+
+          pre-commit run generate-group-vars
+          echo "exitcode=$?" >> "$GITHUB_OUTPUT"
+
+          exit 0
+
+      - name: Generate diff for reviewdog
+        if: steps.generate-group-vars.outputs.exitcode != '0'
+        run: git diff > generate-group-vars.diff
+
+      - name: Report generate-group-vars suggestions via reviewdog
+        if: steps.generate-group-vars.outputs.exitcode != '0'
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          reviewdog \
+            -name="generate-group-vars" \
+            -f=diff \
+            -f.diff.strip=1 \
+            -reporter=github-pr-review \
+            -filter-mode=nofilter < generate-group-vars.diff
+
+          exit 1
+
+  prettier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TERM: dumb
+      FROM_REF: ${{ github.event.pull_request.base.sha }}
+      TO_REF: ${{ github.event.pull_request.head.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache pre-commit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit|${{ runner.os }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install Python deps + pre-commit
+        run: pip install --no-cache-dir pre-commit
+
+      - name: Setup Reviewdog binary
+        uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
+        with:
+          reviewdog_version: latest
+
+      - name: Run prettier YAML formatter
+        id: prettier
+        run: |
+          # Run the hook and capture exit code without failing the step
+          set +e
+          set -o pipefail
+
+          pre-commit run prettier-yaml \
+            --from-ref "$FROM_REF" \
+            --to-ref   "$TO_REF"
+
+          echo "exitcode=$?" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Generate diff for reviewdog
+        if: steps.prettier.outputs.exitcode != '0'
+        run: git diff > prettier.diff
+
+      - name: Report prettier suggestions via reviewdog
+        if: steps.prettier.outputs.exitcode != '0'
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          reviewdog \
+            -name="prettier" \
+            -f=diff \
+            -f.diff.strip=1 \
+            -reporter=github-pr-review \
+            -filter-mode=nofilter < prettier.diff
+
+          exit 1
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TERM: dumb
+      FROM_REF: ${{ github.event.pull_request.base.sha }}
+      TO_REF: ${{ github.event.pull_request.head.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache pre-commit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit|${{ runner.os }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Install shellcheck
         run: sudo apt-get install -y shellcheck
 
-      - name: Install Prettier
-        run: npm install --global prettier
+      - name: Install Python deps + pre-commit
+        run: |
+          pip install --no-cache-dir pre-commit
 
-      ## Actual tasks
-      - name: Lint
-        run: make check
+      - name: Setup Reviewdog binary
+        uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
+        with:
+          reviewdog_version: latest
+
+      - name: Run shellcheck
+        id: shellcheck-lint
+        run: |
+          # Run diagnostics hook and capture output without failing the step
+          set +e
+          set -o pipefail
+
+          pre-commit run shellcheck-json-output \
+            --hook-stage manual \
+            --from-ref "$FROM_REF" \
+            --to-ref   "$TO_REF" \
+            --color=never \
+            | tee >(grep -Ev '^\[INFO\]' | tail -n +5 > shellcheck.json)
+          exitcode=${PIPESTATUS[0]}
+          echo "exitcode=$exitcode" >> "$GITHUB_OUTPUT"
+
+          exit 0
+
+      - name: Report shellcheck suggestions via reviewdog
+        if: steps.shellcheck-lint.outputs.exitcode != '0'
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        run: |
+          pre-commit run shellcheck-diff-output \
+            --hook-stage manual \
+            --from-ref "$FROM_REF" \
+            --to-ref   "$TO_REF" \
+            --color=never \
+            | grep -Ev '^\[INFO\]' \
+            | tail -n +5 \
+            | reviewdog \
+                -name="shellcheck (suggestion)" \
+                -f=diff \
+                -f.diff.strip=1 \
+                -reporter=github-pr-review \
+                -filter-mode=nofilter \
+                -fail-level=error
+
+      - name: Report shellcheck via reviewdog (diagnostics)
+        if: steps.shellcheck-lint.outputs.exitcode != '0'
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          jq -r '.[] | "\(.file):\(.line):\(.column):\(.level):\(.message) [SC\(.code)](https://github.com/koalaman/shellcheck/wiki/SC\(.code))"' shellcheck.json \
+            | reviewdog \
+                -efm="%f:%l:%c:%t%*[^:]:%m" \
+                -name="shellcheck" \
+                -reporter=github-pr-review \
+                -filter-mode=nofilter \
+                -fail-level=error
+
+  yamllint:
+    needs: [actionlint, prettier]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TERM: dumb
+      FROM_REF: ${{ github.event.pull_request.base.sha }}
+      TO_REF: ${{ github.event.pull_request.head.sha }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache pre-commit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit|${{ runner.os }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install Python deps + pre-commit
+        run: pip install --no-cache-dir pre-commit
+
+      - name: Setup Reviewdog binary
+        uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
+        with:
+          reviewdog_version: latest
+
+      - name: Run yamllint
+        id: yamllint-lint
+        run: |
+          # Run the hook and capture output without failing the step
+          set +e
+          set -o pipefail
+
+          pre-commit run yamllint-parsable \
+            --hook-stage manual \
+            --from-ref "$FROM_REF" \
+            --to-ref   "$TO_REF" \
+            --color=never \
+            | tee >(grep -Ev '^\[INFO\]' | tail -n +5 > yamllint-report.txt)
+
+          exitcode=${PIPESTATUS[0]}
+          echo "exitcode=$exitcode" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Report yamllint via reviewdog
+        if: steps.yamllint-lint.outputs.exitcode != '0'
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat yamllint-report.txt \
+            | reviewdog \
+                -efm="%f:%l:%c: %m" \
+                -name="yamllint" \
+                -reporter=github-pr-review \
+                -filter-mode=nofilter \
+                -fail-level=info
+          exit 1

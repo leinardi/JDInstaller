@@ -1,0 +1,73 @@
+repos:
+  - repo: local
+    hooks:
+      - id: generate-group-vars
+        name: generate-group-vars
+        entry: ./generate-group-vars.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: shellcheck
+        name: shellcheck
+        entry: shellcheck
+        language: system
+        types: [shell]
+        args: ["-e", "SC2148"]
+      - id: shellcheck
+        alias: shellcheck-diff-output
+        name: shellcheck (diff output)
+        entry: shellcheck
+        language: system
+        types: [shell]
+        args: ["-f", "diff", "-e", "SC2148"]
+        stages: [manual]
+      - id: shellcheck
+        alias: shellcheck-json-output
+        name: shellcheck (json output)
+        entry: shellcheck
+        language: system
+        types: [shell]
+        args: ["-f", "json", "-e", "SC2148"]
+        stages: [manual]
+      - id: prettier-yaml
+        name: prettier-yaml
+        entry: prettier
+        language: node
+        additional_dependencies: ["prettier@3.5.3"]
+        files: \.(yml|yaml)$
+        args: ["--write"]
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.7
+    hooks:
+      - id: actionlint
+        name: actionlint
+        files: ^\.github/workflows/.*\.(yml|yaml)$
+        args: ["-shellcheck", "shellcheck -S error"]
+      - id: actionlint
+        alias: actionlint-oneline
+        name: actionlint (one line per one error)
+        files: ^\.github/workflows/.*\.(yml|yaml)$
+        args: ["-oneline", "-shellcheck", "shellcheck -S error"]
+        stages: [manual]
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v25.5.0
+    hooks:
+      - id: ansible-lint
+        name: ansible-lint
+        always_run: false
+        files: \.(yml|yaml)$
+        exclude: ^\.github/.*
+      - id: ansible-lint
+        alias: ansible-lint-parseable
+        name: "ansible-lint (parseable output)"
+        args: ["-p"]
+        stages: [manual]
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+      - id: yamllint
+        alias: yamllint-parsable
+        name: "yamllint (parsable output)"
+        args: ["--format", "parsable"]
+        stages: [manual]
