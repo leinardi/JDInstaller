@@ -63,7 +63,7 @@
     pkgver: >-
       {{
         major_version
-        + ('.' + minor_version if minor_version | int != 0 or release_version | int != 0 else '')
+        + '.' + minor_version
         + ('.' + release_version if release_version | int != 0 else '')
       }}
 
@@ -101,18 +101,26 @@
   register: register_response
   when: davinci_resolve_zip_file is undefined
 
+- name: Check if DaVinci Resolve ZIP archive exists
+  ansible.builtin.stat:
+    path: "/tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
+  register: zip_file_stat
+
 - name: Validate existing DaVinci Resolve ZIP archive
   ansible.builtin.command: "unzip -t /tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip" # noqa command-instead-of-module
   register: zip_test
   failed_when: zip_test.rc != 0
   changed_when: false
-  ignore_errors: true # Ensure we proceed to deletion if this fails
+  ignore_errors: true
+  when: zip_file_stat.stat.exists
 
 - name: Remove invalid ZIP archive
   ansible.builtin.file:
     path: "/tmp/{{ product | replace(' ', '_') }}_{{ pkgver }}.zip"
     state: absent
-  when: zip_test.failed # Delete only if the validation failed
+  when:
+    - zip_file_stat.stat.exists
+    - zip_test.failed
 
 - name: Download DaVinci Resolve from the provided URL
   ansible.builtin.uri:
