@@ -1,0 +1,22 @@
+---
+- name: Add Docker repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: deb
+    uris: https://download.docker.com/linux/ubuntu
+    suites: "{{ ansible_distribution_release }}"
+    components: stable
+    architectures: amd64
+    signed_by: https://download.docker.com/linux/ubuntu/gpg
+
+- name: Install Docker
+  become: true
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true

@@ -114,6 +114,9 @@ development:
 # Variables from roles/discord
 discord_enabled: false
 
+# Variables from roles/docker
+docker_enabled: true
+
 # Variables from roles/doublecmd
 doublecmd_enabled: true
 
