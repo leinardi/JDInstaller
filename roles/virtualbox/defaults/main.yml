@@ -1,4 +1,4 @@
 ---
 virtualbox_enabled: true
 virtualbox:
-  version: "7.0"
+  version: "7.1"

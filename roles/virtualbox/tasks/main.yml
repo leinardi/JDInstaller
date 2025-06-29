@@ -51,8 +51,8 @@
   become: true
   ansible.builtin.get_url:
     url: |
-      https://download.virtualbox.org/virtualbox/{{ virtualbox_major_version }}/Oracle_VM_VirtualBox_Extension_Pack-{{ virtualbox_major_version }}.vbox-extpack
-    dest: "/tmp/Oracle_VM_VirtualBox_Extension_Pack-{{ virtualbox_major_version }}.vbox-extpack"
+      https://download.virtualbox.org/virtualbox/{{ virtualbox_major_version }}/Oracle_VirtualBox_Extension_Pack-{{ virtualbox_major_version }}.vbox-extpack
+    dest: "/tmp/Oracle_VirtualBox_Extension_Pack-{{ virtualbox_major_version }}.vbox-extpack"
     mode: "0644"
 
 - name: Install VirtualBox Extension Pack
@@ -60,15 +60,18 @@
   ansible.builtin.shell:
     cmd: |
       set -o pipefail
-      echo "y" | VBoxManage extpack install --replace /tmp/Oracle_VM_VirtualBox_Extension_Pack-{{ virtualbox_major_version }}.vbox-extpack
+      echo "y" | VBoxManage extpack install --replace /tmp/Oracle_VirtualBox_Extension_Pack-{{ virtualbox_major_version }}.vbox-extpack
     executable: /bin/bash
   args:
-    creates: /usr/lib/virtualbox/ExtensionPacks/Oracle_VM_VirtualBox_Extension_Pack
+    creates: /usr/lib/virtualbox/ExtensionPacks/Oracle_VirtualBox_Extension_Pack
+  environment:
+    DISPLAY: ":0"
+    XAUTHORITY: "/home/{{ ansible_user_id }}/.Xauthority"
 
 - name: Remove downloaded Extension Pack
   become: true
   ansible.builtin.file:
-    path: /tmp/Oracle_VM_VirtualBox_Extension_Pack-{{ virtualbox_major_version }}.vbox-extpack
+    path: /tmp/Oracle_VirtualBox_Extension_Pack-{{ virtualbox_major_version }}.vbox-extpack
     state: absent
 
 - name: Add current user to vboxusers group

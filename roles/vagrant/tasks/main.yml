@@ -1,0 +1,19 @@
+---
+- name: Add Vagrant repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: vagrant
+    types: deb
+    uris: https://apt.releases.hashicorp.com
+    suites: "{{ ansible_distribution_release }}"
+    components: main
+    architectures: amd64
+    signed_by: https://apt.releases.hashicorp.com/gpg
+
+- name: Install Vagrant
+  become: true
+  ansible.builtin.apt:
+    name:
+      - vagrant
+    state: present
+    update_cache: true
