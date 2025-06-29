@@ -257,7 +257,7 @@ vagrant_enabled: true
 # Variables from roles/virtualbox
 virtualbox_enabled: true
 virtualbox:
-  version: "7.0"
+  version: "7.1"
 
 # Variables from roles/vlc
 vlc_enabled: true
