@@ -24,3 +24,6 @@
     - role: slack
       tags: slack
       when: slack_enabled | bool
+    - role: vagrant
+      tags: vagrant
+      when: vagrant_enabled | bool

@@ -251,6 +251,9 @@ ufw_enabled: false
 # Variables from roles/ulauncher
 ulauncher_enabled: true
 
+# Variables from roles/vagrant
+vagrant_enabled: true
+
 # Variables from roles/virtualbox
 virtualbox_enabled: true
 virtualbox:
