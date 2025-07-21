@@ -1,0 +1,23 @@
+---
+- name: Install KVM and virtualization packages
+  become: true
+  ansible.builtin.apt:
+    name:
+      - qemu-kvm
+      - libvirt-daemon-system
+      - libvirt-clients
+      - bridge-utils
+      - virt-manager
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"
+  notify: Verify KVM installation
+
+- name: Add current user to libvirt groups
+  become: true
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    groups:
+      - libvirt
+      - kvm
+    append: true

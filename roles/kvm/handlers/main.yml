@@ -1,0 +1,36 @@
+---
+- name: Verify KVM installation
+  ansible.builtin.block:
+    - name: Check if libvirtd service is running
+      ansible.builtin.service_facts:
+      register: service_state
+
+    - name: Assert libvirtd service is running
+      ansible.builtin.assert:
+        that:
+          - "'libvirtd.service' in service_state.ansible_facts.services"
+          - "service_state.ansible_facts.services['libvirtd.service'].state == 'running'"
+        fail_msg: "libvirtd service is not running"
+        success_msg: "libvirtd service is running correctly"
+
+    - name: Check if virsh command exists
+      ansible.builtin.command: which virsh
+      register: virsh_check
+      changed_when: false
+      failed_when: virsh_check.rc != 0
+
+    - name: Check if virtualization is properly set up
+      ansible.builtin.command: virsh list --all
+      register: virsh_list
+      changed_when: false
+      failed_when: virsh_list.rc != 0
+
+    - name: Verify KVM acceleration is available
+      ansible.builtin.command: grep -c 'kvm' /proc/cpuinfo
+      register: kvm_check
+      changed_when: false
+      failed_when: kvm_check.rc != 0 and kvm_check.stdout == "0"
+
+    - name: Print KVM installation verification results
+      ansible.builtin.debug:
+        msg: "KVM is successfully installed and properly configured"
