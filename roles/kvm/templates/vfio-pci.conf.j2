@@ -1,0 +1,3 @@
+# VFIO PCI configuration
+options vfio-pci ids={{ all_gpu_group_ids | join(',') }}
+options vfio_iommu_type1 allow_unsafe_interrupts=1

@@ -28,3 +28,10 @@ Keep in mind that, most computers would have 2 GPUs: integrated GPU (iGPU) and d
 
 
 > Note taht, for each dedicated GPU, a new entry in your bootscreen will be added. Only 1 entry per GPU. You are going to see in your boot screen something as: ubuntu, ubuntu with virtualized <dGPU1_name>, ubuntu with virtualized <dGPU2_name>... etc
+
+
+### Credits
+
+Special thanks to bryansteiner for providing a clear [gpu-passthrough-tutorial](https://github.com/bryansteiner/gpu-passthrough-tutorial) guide for KVM.
+
+> Note that this playbook does not support realtime GPU drivers unbinding (unlike bryan's tutorial). I faced some issues while trying to unbind/bind my Nvidia GPU at runtime

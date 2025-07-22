@@ -1,149 +1,30 @@
 ---
 
 ##
-# Configure IOMMU support in bootloader
+# Chooses the right bootloader tasks or delete the packages
 ##
-- name: Detect CPU vendor
-  ansible.builtin.command: grep -m1 vendor_id /proc/cpuinfo
-  register: cpu_vendor
-  changed_when: false
-  check_mode: false
-
-- name: Set IOMMU parameter based on CPU vendor
-  ansible.builtin.set_fact:
-    iommu_param: "{{ 'intel_iommu=on' if 'intel' in cpu_vendor.stdout.lower() else 'amd_iommu=on' }}"
 
 - name: Check if systemd-boot is used
   ansible.builtin.stat:
     path: /boot/efi/EFI/systemd
   register: systemd_boot
 
+- name: Include systemd-boot configuration tasks
+  ansible.builtin.include_tasks: systemd.yml
+  when: systemd_boot.stat.exists
+
 - name: Check if GRUB is used
   ansible.builtin.stat:
     path: /etc/default/grub
   register: grub_config
 
-- name: Configure IOMMU for systemd-boot
-  become: true
-  ansible.builtin.command: kernelstub --add-options "{{ iommu_param }}"
-  when: systemd_boot.stat.exists
-  register: kernelstub_result
-  changed_when: kernelstub_result.rc == 0
-  failed_when: kernelstub_result.rc != 0
-
-- name: Configure IOMMU for GRUB
-  become: true
+- name: Include GRUB configuration tasks
+  ansible.builtin.include_tasks: grub.yml
   when: grub_config.stat.exists
-  block:
-    - name: Check if IOMMU is already enabled in GRUB
-      ansible.builtin.command: grep -q "{{ iommu_param }}" /etc/default/grub
-      register: grub_iommu_check
-      failed_when: false
-      changed_when: false
-
-    - name: Skip GRUB modification if IOMMU is already enabled
-      ansible.builtin.debug:
-        msg: "IOMMU parameter {{ iommu_param }} is already enabled in GRUB configuration"
-      when: grub_iommu_check.rc == 0
-
-    - name: Configure IOMMU in GRUB
-      when: grub_iommu_check.rc != 0
-      block:
-        # Step 1: Create backup with timestamp
-        - name: Get current timestamp
-          ansible.builtin.command: date +%Y%m%d_%H%M%S
-          register: timestamp
-          changed_when: false
-
-        - name: Set backup filename
-          ansible.builtin.set_fact:
-            backup_filename: "/etc/default/grub.bak.{{ timestamp.stdout }}"
-
-        - name: Backup GRUB configuration
-          ansible.builtin.copy:
-            src: /etc/default/grub
-            dest: "{{ backup_filename }}"
-            remote_src: true
-            mode: preserve
-          register: grub_backup
-
-        # Step 2: Update the configuration file
-        - name: Edit GRUB configuration
-          ansible.builtin.lineinfile:
-            path: /etc/default/grub
-            regexp: '^GRUB_CMDLINE_LINUX_DEFAULT="((?!{{ iommu_param | regex_escape }}).)*"'
-            backrefs: yes
-            line: 'GRUB_CMDLINE_LINUX_DEFAULT="\1 {{ iommu_param }}"'
-          register: grub_updated
-
-        # Step 3: Show diff between original and updated file
-        - name: Show diff between original and updated GRUB configuration
-          ansible.builtin.shell: diff -u {{ backup_filename }} /etc/default/grub || true
-          register: grub_diff
-          changed_when: false
-
-        # Step 4: Prompt for user confirmation with yes/no
-        - name: Prompt for confirmation before applying changes
-          ansible.builtin.vars:
-            prompt_text: |
-              Changes to GRUB configuration:
-
-              {{ grub_diff.stdout }}
-
-              A backup has been created at: {{ backup_filename }}
-
-              Apply these changes? [yes/no]
-          ansible.builtin.pause:
-            prompt: "{{ prompt_text }}"
-            echo: yes
-          register: user_confirmation
-
-        - name: Set user decision
-          ansible.builtin.set_fact:
-            user_approved: "{{ user_confirmation.user_input | lower == 'yes' or user_confirmation.user_input | lower == 'y' }}"
-
-        # Step 5a: Apply changes if user confirmed
-        - name: Update GRUB
-          ansible.builtin.command: update-grub
-          register: update_grub_result
-          failed_when: false
-          when: user_approved | bool
-
-        - name: Restore GRUB configuration
-          ansible.builtin.copy:
-            src: "{{ backup_filename }}"
-            dest: /etc/default/grub
-            remote_src: true
-            mode: preserve
-          when: not user_approved | bool or update_grub_result.rc != 0
-
-        - name: Show message when update-grub fails or is rejected
-          ansible.builtin.fail:
-            msg: "Failed to update GRUB. Configuration has been restored from backup at {{ backup_filename }}."
-          when: not user_approved | bool or update_grub_result.rc != 0
-
 
 - name: Delete KVM Because of Failures
   when: not systemd_boot.stat.exists and not grub_config.stat.exists
   block:
   - name: Warn if no supported bootloader was detected
-    ansible.builtin.debug:
-      msg: "Warning: Neither systemd-boot nor GRUB was detected. IOMMU configuration was not applied. KVM will be removed..."
-
-  - name: Remove KVM and virtualization packages
-    become: true
-    ansible.builtin.apt:
-      name:
-        - qemu-kvm                # KVM hypervisor
-        - qemu-utils              # QEMU utilities (e.g., qemu-img)
-        - libvirt-daemon-system   # libvirt system background service
-        - libvirt-clients         # libvirt client utilities
-        - bridge-utils            # network bridging utilities
-        - virt-manager            # GUI wrapper
-        - ovmf                    # Enables custom UEFIs in VMs
-      state: absent
-      update_cache: true
-
-  - name: Exit
     ansible.builtin.fail:
-      msg: "INSTALLATION FAILED"
+      msg: "Warning: Neither systemd-boot nor GRUB was detected. IOMMU configuration was not applied. KVM will be removed..."

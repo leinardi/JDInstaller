@@ -1,0 +1,12 @@
+---
+
+##
+# Configure IOMMU support for systemd-boot
+##
+
+- name: Configure IOMMU for systemd-boot
+  become: true
+  ansible.builtin.command: kernelstub --add-options "{{ iommu_param }}"
+  register: kernelstub_result
+  changed_when: kernelstub_result.rc == 0
+  failed_when: kernelstub_result.rc != 0

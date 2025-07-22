@@ -1,0 +1,18 @@
+#!/bin/sh
+exec tail -n +3 $0
+# This file provides an easy way to add custom menu entries.  Simply type the
+# menu entries you want to add after this comment.  Be careful not to change
+# the 'exec tail' line above.
+
+{% set group_id = gpu_iommu_groups[idx] %}
+{% set group_devices = gpu_groups_map[group_id] %}
+
+menuentry 'Ubuntu with GPU Group {{ group_id }} Passthrough' {
+    set gfxpayload=keep
+    insmod gzio
+    insmod part_gpt
+    insmod ext2
+    search --no-floppy --fs-uuid --set=root {{ ansible_facts['ansible_mounts'] | selectattr('mount', 'equalto', '/boot') | map(attribute='uuid') | first | default(ansible_facts['ansible_mounts'] | selectattr('mount', 'equalto', '/') | map(attribute='uuid') | first) }}
+    linux /boot/vmlinuz-$(uname -r) root=UUID={{ ansible_facts['ansible_mounts'] | selectattr('mount', 'equalto', '/') | map(attribute='uuid') | first }} ro quiet splash intel_iommu=on iommu=pt vfio-pci.ids={{ group_devices | join(',') }}
+    initrd /boot/initrd.img-$(uname -r)
+}
