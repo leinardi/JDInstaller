@@ -1,4 +1,4 @@
-
+---
 
 - name: List GPU Groups
   ansible.builtin.shell: |
@@ -50,10 +50,5 @@
       vfio_virqfd
     mode: '0644'
 
-# TODO: Fix the modprobe.d to not disable everything!
-- name: Create VFIO configuration file
-  ansible.builtin.template:
-    src: vfio-pci.conf.j2
-    dest: /etc/modprobe.d/vfio-pci.conf
-    mode: '0644'
-  register: vfio_conf
+# NOTE: The vfio-pci IDs are supplied on the kernel command line via custom GRUB menu entries.
+# No additional modprobe.d configuration is necessary.

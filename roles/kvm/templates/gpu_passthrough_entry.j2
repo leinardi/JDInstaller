@@ -4,15 +4,32 @@ exec tail -n +3 $0
 # menu entries you want to add after this comment.  Be careful not to change
 # the 'exec tail' line above.
 
-{% set group_id = gpu_iommu_groups[idx] %}
-{% set group_devices = gpu_groups_map[group_id] %}
+{# ------------------------------------------------------------------ #
+# Template for a custom GRUB menuentry that activates VFIO passthrough
+# for a specific IOMMU group.
+#
+# Variables available:
+#   * item            → ['group_id', 'vendor', 'vga_id(,audio_id)'] as produced
+#                       by roles/kvm/tasks/passthrough.yml
+#   * iommu_param     → 'intel_iommu=on' or 'amd_iommu=on' (set in tasks/main)
+# ------------------------------------------------------------------ #}
 
-menuentry 'Ubuntu with GPU Group {{ group_id }} Passthrough' {
+{% set group_id    = item[0] %}
+{% set vendor    = item[1] %}
+{% set device_ids  = item[2] %}
+
+#   Determine UUIDs for / (root) and /boot filesystems. If /boot is a separate
+#   partition its UUID is used for the GRUB `search` command, otherwise we
+#   fall back to the root UUID.
+{% set root_uuid = ansible_facts['ansible_mounts'] | selectattr('mount', 'equalto', '/') | map(attribute='uuid') | first %}
+{% set boot_uuid = (ansible_facts['ansible_mounts'] | selectattr('mount', 'equalto', '/boot') | map(attribute='uuid') | first) | default(root_uuid) %}
+
+menuentry 'Ubuntu with {{ vendor }} GPU Group {{ group_id }} Passthrough' {
     set gfxpayload=keep
     insmod gzio
     insmod part_gpt
     insmod ext2
-    search --no-floppy --fs-uuid --set=root {{ ansible_facts['ansible_mounts'] | selectattr('mount', 'equalto', '/boot') | map(attribute='uuid') | first | default(ansible_facts['ansible_mounts'] | selectattr('mount', 'equalto', '/') | map(attribute='uuid') | first) }}
-    linux /boot/vmlinuz-$(uname -r) root=UUID={{ ansible_facts['ansible_mounts'] | selectattr('mount', 'equalto', '/') | map(attribute='uuid') | first }} ro quiet splash intel_iommu=on iommu=pt vfio-pci.ids={{ group_devices | join(',') }}
+    search --no-floppy --fs-uuid --set=root {{ boot_uuid }}
+    linux /boot/vmlinuz-$(uname -r) root=UUID={{ root_uuid }} ro quiet splash {{ iommu_param }} iommu=pt vfio-pci.ids={{ device_ids }} vfio_iommu_type1.allow_unsafe_interrupts=1
     initrd /boot/initrd.img-$(uname -r)
 }

@@ -1,37 +1,72 @@
-# KVM Installation Guide
+# KVM Role – Installation & GPU-Passthrough Guide
 
-This document provides detailed instructions for installing and uninstalling KVM on Ubuntu 24.04 using this Ansible script.
+This document explains how to install KVM and, optionally, enable GPU passthrough on Ubuntu 24.04 using this Ansible role.
 
+## Prerequisites
 
-### Pre-requisites
-
-You must manually enable the virtualization capability for your CPU in the BIOS.
-
-1. Reboot your computer
-2. press `f12` or `f11` or `delete` to enter the BIOS/UEFI depending on your motherboard vendor
-3. Search for an option called `VT-d (Intel)` or `AMD IOMMU` (AMD) in the settings
-
-> Some AMD motherboards call the CPU virtualization setting: "SVM Mode"
-
-### Enabling KVM Installation
-
-By default, kvm is disabled. Thus, to install KVM, you must enable it by overwriting the `kvm_enabled` variable in the `roles/kvm/defaults/main.yaml`.
+1. **Enable hardware virtualisation in firmware (BIOS/UEFI)**
+   • Intel: look for “VT-d” and enable it.
+   • AMD  : look for “SVM” *and* “IOMMU” and enable both.
 
 
-### GPU Passthrough
+---
 
-This role also enables GPU passthrough if your computer is capable of it. When you start your computer, the bootloader menu shows you an extra option that dedicates the device's GPU to Virtual Machines. By default the bootloader will **NOT** choose this option after the few seconds.
+## Enabling the role
 
-> Note that dedicating a GPU for a virtual machine will disable the GPU on your computer
+The KVM role is disabled by default. Enable it in either of two ways:
 
-Keep in mind that, most computers would have 2 GPUs: integrated GPU (iGPU) and dedicated GPU (dGPU). The integrated GPU mostly is attached to the CPU and can do minimum screen-rendering tasks. In other words, it is not your gaming or AI GPU. The dedicated GPU on the other hand, is used for heavy tasks. This playbook will only consider the dedicated GPUs for virtualization.
+* **Temporarily (via CLI)**
+  ```bash
+  make install TAGS="kvm" EXTRA_VARS="kvm_enabled=true"
+  ```
+
+* **Permanently (via vars file)**
+  Edit `group_vars/all.yml` and set
+  ```yaml
+  kvm_enabled: true
+  ```
+
+---
+
+## GPU Passthrough (optional)
+
+If your system has at least two IOMMU-isolated GPUs (typically an integrated GPU plus a dedicated one), the role can add extra GRUB [other bootloader may be supported in the future] menu entries that bind the chosen dedicated GPU to `vfio-pci` at boot.
+
+> Note that GPUs must not belong to the same pci group. If a single group is found, then the installation exits.
 
 
-> Note taht, for each dedicated GPU, a new entry in your bootscreen will be added. Only 1 entry per GPU. You are going to see in your boot screen something as: ubuntu, ubuntu with virtualized <dGPU1_name>, ubuntu with virtualized <dGPU2_name>... etc
+* One menu entry is generated per GPU, e.g.
 
+  ```
+  Ubuntu
+  Ubuntu with NVIDIA GPU Group 5 Passthrough
+  Ubuntu with AMD GPU Group 2 Passthrough
+  ```
 
-### Credits
+  The default menu entry remains the standard “Ubuntu” which keeps all GPUs on the host.
 
-Special thanks to bryansteiner for providing a clear [gpu-passthrough-tutorial](https://github.com/bryansteiner/gpu-passthrough-tutorial) guide for KVM.
+* Selecting a passthrough entry hands the specified GPU (and its HDMI-audio function, if present) to virtual machines. The host can still boot using the integrated GPU.
 
-> Note that this playbook does not support realtime GPU drivers unbinding (unlike bryan's tutorial). I faced some issues while trying to unbind/bind my Nvidia GPU at runtime
+> Note that this role doesn't configure your virtual machines. You must pass the GPU PCI manually to it (add hardware button on virt-manager)
+
+### Runtime un-/re-binding
+
+This role sets up passthrough **at boot**. It does not attempt runtime rebinding of GPUs. For hot-plug style switching see Bryan Steiner’s excellent [gpu-passthrough-tutorial](https://github.com/bryansteiner/gpu-passthrough-tutorial).
+
+---
+
+## Uninstalling KVM
+
+To remove the packages installed by this role run:
+
+```bash
+sudo apt remove --purge qemu-kvm libvirt-daemon-system libvirt-clients \
+                virt-manager ovmf bridge-utils qemu-utils
+sudo systemctl disable --now libvirtd
+```
+
+---
+
+## Credits
+
+Inspired by Bryan Steiner’s GPU passthrough tutorial.

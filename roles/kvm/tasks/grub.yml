@@ -1,4 +1,9 @@
 ---
+
+##
+# Configures grub menu entry and handles GPU.
+##
+
 - name: Create GRUB iommu.cfg configuration file
   ansible.builtin.copy:
     dest: /etc/default/grub.d/iommu.cfg
@@ -23,7 +28,7 @@
   loop: "{{ gpus_passthrough }}"
   when: kvm_gpu_passthrough == 'bootbased'
   loop_control:
-    index_var: gpu_group_el # ['group_id', 'vendor', 'vga_id,audio_id']
+    loop_var: gpu_group_el # ['group_id', 'vendor', 'vga_id,audio_id']
 
 - name: Update GRUB
   ansible.builtin.command: update-grub

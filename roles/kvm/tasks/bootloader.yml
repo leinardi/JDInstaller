@@ -1,30 +1,35 @@
 ---
 
 ##
-# Chooses the right bootloader tasks or delete the packages
+# Chooses the right bootloader tasks based on `supported_bootloaders`
 ##
 
-- name: Check if systemd-boot is used
+- name: Define bootloader lookup map
+  ansible.builtin.set_fact:
+    bootloader_map:
+      grub:
+        path: /etc/default/grub
+        tasks: grub.yml
+      systemd:
+        path: /boot/efi/EFI/systemd
+        tasks: systemd.yml
+
+- name: Gather bootloader presence information
   ansible.builtin.stat:
-    path: /boot/efi/EFI/systemd
-  register: systemd_boot
+    path: "{{ bootloader_map[bootloader_key].path }}"
+  loop: "{{ supported_bootloaders }}"
+  loop_control:
+    loop_var: bootloader_key
+  register: bootloader_stats
 
-- name: Include systemd-boot configuration tasks
-  ansible.builtin.include_tasks: systemd.yml
-  when: systemd_boot.stat.exists
+- name: Include detected bootloader configuration tasks
+  ansible.builtin.include_tasks: "{{ bootloader_map[item.item].tasks }}"
+  loop: "{{ bootloader_stats.results }}"
+  loop_control:
+    loop_var: item
+  when: item.stat.exists
 
-- name: Check if GRUB is used
-  ansible.builtin.stat:
-    path: /etc/default/grub
-  register: grub_config
-
-- name: Include GRUB configuration tasks
-  ansible.builtin.include_tasks: grub.yml
-  when: grub_config.stat.exists
-
-- name: Delete KVM Because of Failures
-  when: not systemd_boot.stat.exists and not grub_config.stat.exists
-  block:
-  - name: Warn if no supported bootloader was detected
-    ansible.builtin.fail:
-      msg: "Warning: Neither systemd-boot nor GRUB was detected. IOMMU configuration was not applied. KVM will be removed..."
+- name: Fail if no supported bootloader was detected
+  ansible.builtin.fail:
+    msg: "Warning: None of the supported bootloaders ({{ supported_bootloaders | join(', ') }}) were detected. IOMMU configuration was not applied. KVM will be removed..."
+  when: (bootloader_stats.results | selectattr('stat.exists') | list | length) == 0

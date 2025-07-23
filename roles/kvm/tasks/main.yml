@@ -1,5 +1,7 @@
 ---
+
 # Verification
+
 - name: Check for hardware virtualization support
   become: true
   ansible.builtin.shell: dmesg | grep -E -i "(VT-d|AMD-Vi)"
@@ -31,7 +33,6 @@
       - bridge-utils            # network bridging utilities
       - virt-manager            # GUI wrapper
       - ovmf                    # Enables custom UEFIs in VMs
-      - diffutils               # Needed to show GRUB difference during installation
     state: present
     update_cache: true
   notify: Verify KVM installation
