@@ -1,10 +1,9 @@
 ---
-
 # Verification
 
 - name: Check for hardware virtualization support
   become: true
-  ansible.builtin.shell: dmesg | grep -E -i "(VT-d|AMD-Vi)"
+  ansible.builtin.shell: set -o pipefail && dmesg | grep -E -i "(VT-d|AMD-Vi)"
   register: virt_check
   changed_when: false
   failed_when: false
@@ -26,13 +25,13 @@
   become: true
   ansible.builtin.apt:
     name:
-      - qemu-kvm                # KVM hypervisor
-      - qemu-utils              # QEMU utilities (e.g., qemu-img)
-      - libvirt-daemon-system   # libvirt system background service
-      - libvirt-clients         # libvirt client utilities
-      - bridge-utils            # network bridging utilities
-      - virt-manager            # GUI wrapper
-      - ovmf                    # Enables custom UEFIs in VMs
+      - qemu-kvm # KVM hypervisor
+      - qemu-utils # QEMU utilities (e.g., qemu-img)
+      - libvirt-daemon-system # libvirt system background service
+      - libvirt-clients # libvirt client utilities
+      - bridge-utils # network bridging utilities
+      - virt-manager # GUI wrapper
+      - ovmf # Enables custom UEFIs in VMs
     state: present
     update_cache: true
   notify: Verify KVM installation

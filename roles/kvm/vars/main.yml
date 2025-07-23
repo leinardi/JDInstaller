@@ -1,3 +1,2 @@
 ---
-
-supported_bootloaders: ['grub']
+supported_bootloaders: ["grub"]

@@ -2,4 +2,4 @@
 kvm_enabled: false
 
 # Can be disabled | runtime | bootbased
-kvm_gpu_passthrough: 'bootbased'
+kvm_gpu_passthrough: "bootbased"

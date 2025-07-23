@@ -1,6 +1,6 @@
 ---
 - name: Verify KVM installation
-  ansible.builtin.block:
+  block:
     - name: Check if libvirtd service is running
       ansible.builtin.service_facts:
       register: service_state

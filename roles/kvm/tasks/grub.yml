@@ -1,5 +1,4 @@
 ---
-
 ##
 # Configures grub menu entry and handles GPU.
 ##
@@ -10,7 +9,7 @@
     content: |
       # IOMMU configuration added by Ansible
       GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT {{ iommu_param }}"
-    mode: '0644'
+    mode: "0644"
   register: grub_updated
 
 - name: Create GRUB config directory for GPU passthrough
@@ -18,13 +17,13 @@
   ansible.builtin.file:
     path: /etc/grub.d/60_gpu_passthrough
     state: directory
-    mode: '0755'
+    mode: "0755"
 
 - name: Create custom GRUB entries for each GPU group
   ansible.builtin.template:
     src: gpu_passthrough_entry.j2
     dest: "/etc/grub.d/60_gpu_passthrough/gpu{{ gpu_group_el[2] }}"
-    mode: '0755'
+    mode: "0755"
   loop: "{{ gpus_passthrough }}"
   when: kvm_gpu_passthrough == 'bootbased'
   loop_control:
@@ -32,3 +31,4 @@
 
 - name: Update GRUB
   ansible.builtin.command: update-grub
+  changed_when: false

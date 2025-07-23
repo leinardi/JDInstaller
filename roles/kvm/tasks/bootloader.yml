@@ -1,5 +1,4 @@
 ---
-
 ##
 # Chooses the right bootloader tasks based on `supported_bootloaders`
 ##

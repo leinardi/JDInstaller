@@ -180,6 +180,12 @@ inkscape_enabled: true
 # Variables from roles/insync
 insync_enabled: false
 
+# Variables from roles/kvm
+kvm_enabled: false
+
+# Can be disabled | runtime | bootbased
+kvm_gpu_passthrough: "bootbased"
+
 # Variables from roles/libreoffice
 libreoffice_enabled: true
 
