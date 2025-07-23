@@ -11,7 +11,7 @@
 
 - name: Identify GPU IOMMU groups (containing VGA/Display/3D controllers)
   ansible.builtin.set_fact:
-    gpu_iommu_groups: "{{ gpu_groups.stdout_lines | select('search', 'VGA|Display|3D') | map('regex_search', 'IOMMU Group ([0-9]+)', '\\1') | list }}"
+    gpu_iommu_groups: "{{ gpu_groups.stdout_lines | select('search', 'VGA|Display|3D') | map('regex_search', 'IOMMU Group ([0-9]+)', '\\1') | flatten }}"
 
 - name: Ensure at least two GPU IOMMU groups are present for passthrough
   ansible.builtin.assert:
@@ -23,22 +23,40 @@
 # Each item will look like: ['<group_idx>', '<vendor>', '<vga_id>,<audio_id>']
 - name: Construct GPU passthrough fact list
   ansible.builtin.set_fact:
-    gpus_passthrough: "{{ (gpus_passthrough | default([])) + [ [ group_id,
-      ( ('nvidia' if ('NVIDIA' in vga_line or 'Nvidia' in vga_line) else ( 'intel' if 'Intel' in vga_line else ( 'amd' if ('AMD' in vga_line or 'Advanced' in vga_line) else 'unknown'))) ),
-      vga_id ~ (',' ~ audio_id if audio_id else '') ] ] }}"
+    gpus_passthrough: "{{ (gpus_passthrough | default([])) + new_entry }}"
   loop: "{{ gpu_iommu_groups }}"
   loop_control:
     loop_var: group_id
   vars:
-    # All lines belonging to the current IOMMU group
-    group_lines: "{{ gpu_groups.stdout_lines | select('search', 'IOMMU Group ' + group_id) | list }}"
-    # First VGA/Display/3D line in this group
+    # lines of specific group.
+    group_lines: "{{ gpu_groups.stdout_lines | select('search', 'IOMMU Group ' + group_id) | list }}" # [string]
+    # NOTE: select always return a list of strings.
+    # string
     vga_line: "{{ group_lines | select('search', 'VGA|Display|3D') | first }}"
-    # First Audio line (class 0403) in this group, if any
-    audio_line: "{{ (group_lines | select('search', 'Audio|0403') | list) | default([]) | first | default('') }}"
-    # Extract vendor:device IDs (e.g. 10de:1d01)
-    vga_id: "{{ vga_line | regex_search('[0-9a-f]{4}:[0-9a-f]{4}', '\\0') }}"
-    audio_id: "{{ (audio_line | regex_search('[0-9a-f]{4}:[0-9a-f]{4}', '\\0') | default('')) }}"
+    # string
+    vga_id: "{{ vga_line | regex_search('[0-9a-f]{4}:[0-9a-f]{4}') }}"
+    # first audio id [if found]
+    # string
+    audio_line: "{{ group_lines | select('search', 'Audio|0403') }}"
+    audio_id: >-
+      {%- if audio_line | length > 0 -%}
+        {{ audio_line | first | regex_search('[0-9a-f]{4}:[0-9a-f]{4}') }}
+      {%- endif %}
+    # string
+    pci_ids: "{{ vga_id + (',' + audio_id if audio_id | length > 0 else '') }}"
+    # string
+    vendor: >-
+      {% if 'NVIDIA' in vga_line or 'Nvidia' in vga_line -%}
+      nvidia
+      {%- elif 'Intel' in vga_line -%}
+      intel
+      {%- elif 'AMD' in vga_line or 'Advanced' in vga_line -%}
+      amd
+      {%- else -%}
+      unknown
+      {%- endif %}
+    # [string*3]
+    new_entry: ["{{ group_id }}", "{{ vendor }}", "{{ pci_ids }}"]
 
 - name: Enable required kernel modules
   ansible.builtin.copy:

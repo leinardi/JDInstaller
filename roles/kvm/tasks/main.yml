@@ -3,7 +3,9 @@
 
 - name: Check for hardware virtualization support
   become: true
-  ansible.builtin.shell: set -o pipefail && dmesg | grep -E -i "(VT-d|AMD-Vi)"
+  ansible.builtin.shell:
+    cmd: "set -o pipefail && dmesg | grep -E -i '(VT-d|VT-x|AMD-Vi)'"
+    executable: /bin/bash
   register: virt_check
   changed_when: false
   failed_when: false
@@ -12,7 +14,7 @@
 - name: Verify virtualization is enabled
   ansible.builtin.assert:
     that: virt_check.rc == 0
-    fail_msg: "Hardware virtualization (Intel VT-d or AMD-Vi) is not enabled in BIOS/UEFI"
+    fail_msg: "Hardware virtualization (Intel VT-d/x or AMD-Vi) is not enabled in BIOS/UEFI. register output: {{ virt_check }}"
     success_msg: "Hardware virtualization is enabled"
 
 - name: Set IOMMU parameter based on CPU vendor
