@@ -14,15 +14,15 @@ exec tail -n +3 $0
 #   * iommu_param     → 'intel_iommu=on' or 'amd_iommu=on' (set in tasks/main)
 # ------------------------------------------------------------------ #}
 
-{% set group_id    = item[0] %}
-{% set vendor    = item[1] %}
-{% set device_ids  = item[2] %}
+{% set group_id    = gpu_group_el[0] %}
+{% set vendor    = gpu_group_el[1] %}
+{% set device_ids  = gpu_group_el[2] %}
 
 #   Determine UUIDs for / (root) and /boot filesystems. If /boot is a separate
 #   partition its UUID is used for the GRUB `search` command, otherwise we
 #   fall back to the root UUID.
-{% set root_uuid = ansible_facts['ansible_mounts'] | selectattr('mount', 'equalto', '/') | map(attribute='uuid') | first %}
-{% set boot_uuid = (ansible_facts['ansible_mounts'] | selectattr('mount', 'equalto', '/boot') | map(attribute='uuid') | first) | default(root_uuid) %}
+{% set root_uuid = ansible_facts['mounts'] | selectattr('mount', 'equalto', '/') | map(attribute='uuid') | first %}
+{% set boot_uuid = (ansible_facts['mounts'] | selectattr('mount', 'equalto', '/boot') | map(attribute='uuid') | first) | default(root_uuid) %}
 
 menuentry 'Ubuntu with {{ vendor }} GPU Group {{ group_id }} Passthrough' {
     set gfxpayload=keep

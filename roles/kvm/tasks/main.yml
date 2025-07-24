@@ -20,7 +20,11 @@
 - name: Set IOMMU parameter based on CPU vendor
   ansible.builtin.set_fact:
     iommu_param: >-
-      {{ 'intel_iommu=on' if 'Intel' in ansible_processor[0] else 'amd_iommu=on' }}
+      {%- if ansible_facts['processor'] | select('search', 'GenuineIntel') | length > 0 -%}
+        intel_iommu=on
+      {%- elif ansible_facts['processor'] | select('search', 'AuthenticAMD') | length > 0 -%}
+        amd_iommu=on
+      {%- endif %}
 
 # Installation
 - name: Install KVM and virtualization packages

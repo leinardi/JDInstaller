@@ -23,7 +23,7 @@
 # Each item will look like: ['<group_idx>', '<vendor>', '<vga_id>,<audio_id>']
 - name: Construct GPU passthrough fact list
   ansible.builtin.set_fact:
-    gpus_passthrough: "{{ (gpus_passthrough | default([])) + new_entry }}"
+    gpus_passthrough: "{{ (gpus_passthrough | default([])) + [ new_entry ] }}"
   loop: "{{ gpu_iommu_groups }}"
   loop_control:
     loop_var: group_id
@@ -59,6 +59,7 @@
     new_entry: ["{{ group_id }}", "{{ vendor }}", "{{ pci_ids }}"]
 
 - name: Enable required kernel modules
+  become: true
   ansible.builtin.copy:
     dest: /etc/modules-load.d/vfio.conf
     content: |

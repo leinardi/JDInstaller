@@ -22,7 +22,7 @@
   register: bootloader_stats
 
 - name: Include detected bootloader configuration tasks
-  ansible.builtin.include_tasks: "{{ bootloader_map[item.item].tasks }}"
+  ansible.builtin.include_tasks: "{{ bootloader_map[item.bootloader_key].tasks }}"
   loop: "{{ bootloader_stats.results }}"
   loop_control:
     loop_var: item
