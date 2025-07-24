@@ -30,6 +30,6 @@ menuentry 'Ubuntu with {{ vendor }} GPU Group {{ group_id }} Passthrough' {
     insmod part_gpt
     insmod ext2
     search --no-floppy --fs-uuid --set=root {{ boot_uuid }}
-    linux /boot/vmlinuz-$(uname -r) root=UUID={{ root_uuid }} ro quiet splash {{ iommu_param }} iommu=pt vfio-pci.ids={{ device_ids }} vfio_iommu_type1.allow_unsafe_interrupts=1
-    initrd /boot/initrd.img-$(uname -r)
+    linux /boot/vmlinuz-{{ ansible_kernel }} root=UUID={{ root_uuid }} ro quiet splash {{ iommu_param }} iommu=pt vfio-pci.ids={{ device_ids }} vfio_iommu_type1.allow_unsafe_interrupts=1
+    initrd /boot/initrd.img-{{ ansible_kernel }}
 }

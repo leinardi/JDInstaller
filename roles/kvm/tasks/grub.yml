@@ -10,22 +10,16 @@
     content: |
       # IOMMU configuration added by Ansible
       GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT {{ iommu_param }}"
+      GRUB_TIMEOUT=20
+      GRUB_TIMEOUT_STYLE=menu
     mode: "0644"
   register: grub_updated
-
-- name: Create GRUB config directory for GPU passthrough
-  when: kvm_gpu_passthrough == 'bootbased'
-  become: true
-  ansible.builtin.file:
-    path: /etc/grub.d/gpu_passthrough
-    state: directory
-    mode: "0755"
 
 - name: Create custom GRUB entries for each GPU group
   become: true
   ansible.builtin.template:
     src: gpu_passthrough_entry.j2
-    dest: "/etc/grub.d/gpu_passthrough/gpu{{ gpu_group_el[1] }}"
+    dest: "/etc/grub.d/6{{ gpu_group_el[0] }}_gpu-{{ gpu_group_el[1] }}" # 60_gpu-nvidia
     mode: "0755"
   loop: "{{ gpus_passthrough }}"
   when: kvm_gpu_passthrough == 'bootbased'
