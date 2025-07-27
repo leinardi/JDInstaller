@@ -5,8 +5,15 @@ This document explains how to install KVM and, optionally, enable GPU passthroug
 ## Prerequisites
 
 1. **Enable hardware virtualisation in firmware (BIOS/UEFI)**
-   • Intel: look for “VT-d” and enable it.
-   • AMD  : look for “SVM” *and* “IOMMU” and enable both.
+* • Intel: look for “VT-d” and enable it.
+* • AMD  : look for “SVM” *and* “IOMMU” and enable both.
+
+
+2. **GRUB as a bootloader**
+* This role supports only **GRUB** for now.
+
+3. **Ubuntu as Host OS**
+* This role supports **ubuntu** for now.
 
 
 ---
@@ -25,6 +32,9 @@ The KVM role is disabled by default. Enable it in either of two ways:
   ```yaml
   kvm_enabled: true
   ```
+
+> Note that GPU passthrough is enabled by default. If you don't have 2 GPUs, then you must run the installation as follows:
+> `make install TAGS="kvm" EXTRA_VARS="kvm_enabled=true,kvm_gpu_passthrough='disabled'"`
 
 ---
 
