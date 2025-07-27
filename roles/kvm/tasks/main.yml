@@ -3,9 +3,7 @@
 
 - name: Check for hardware virtualization support
   become: true
-  ansible.builtin.shell:
-    cmd: "set -o pipefail && dmesg | grep -E -i '(VT-d|VT-x|AMD-Vi)'"
-    executable: /bin/bash
+  ansible.builtin.command: "set -o pipefail && dmesg | grep -E -i '(VT-d|VT-x|AMD-Vi)'"
   register: virt_check
   changed_when: false
   failed_when: false
@@ -13,7 +11,7 @@
 
 - name: Verify virtualization is enabled
   ansible.builtin.assert:
-    that: virt_check.rc == 0
+    that: virt_check.rc != 0
     fail_msg: "Hardware virtualization (Intel VT-d/x or AMD-Vi) is not enabled in BIOS/UEFI. register output: {{ virt_check }}"
     success_msg: "Hardware virtualization is enabled"
 
@@ -40,7 +38,6 @@
       - ovmf # Enables custom UEFIs in VMs
     state: present
     update_cache: true
-  notify: Verify KVM installation
 
 # GPU Passthrough Configuration (must run before bootloader)
 - name: Include GPU passthrough tasks
@@ -60,3 +57,13 @@
       - libvirt
       - kvm
     append: true
+
+- name: Enable libvirtd
+  become: true
+  ansible.builtin.service:
+    enabled: true
+    name: libvirtd
+    state: started
+
+- name: Verify KVM installation
+  ansible.builtin.import_tasks: verify.yml

@@ -5,13 +5,9 @@
 
 - name: Create GRUB iommu.cfg configuration file
   become: true
-  ansible.builtin.copy:
+  ansible.builtin.template:
     dest: /etc/default/grub.d/iommu.cfg
-    content: |
-      # IOMMU configuration added by Ansible
-      GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT {{ iommu_param }}"
-      GRUB_TIMEOUT=20
-      GRUB_TIMEOUT_STYLE=menu
+    src: iommu.cfg.j2
     mode: "0644"
   register: grub_updated
 
