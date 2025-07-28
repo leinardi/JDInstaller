@@ -1,0 +1,35 @@
+#!/bin/sh
+exec tail -n +3 $0
+# This file provides an easy way to add custom menu entries.  Simply type the
+# menu entries you want to add after this comment.  Be careful not to change
+# the 'exec tail' line above.
+
+{# ------------------------------------------------------------------ #
+# Template for a custom GRUB menuentry that activates VFIO passthrough
+# for a specific IOMMU group.
+#
+# Variables available:
+#   * item            → ['group_id', 'vendor', 'vga_id(,audio_id)'] as produced
+#                       by roles/kvm/tasks/passthrough.yml
+#   * iommu_param     → 'intel_iommu=on' or 'amd_iommu=on' (set in tasks/main)
+# ------------------------------------------------------------------ #}
+
+{% set group_id    = gpu_group_el[0] %}
+{% set vendor    = gpu_group_el[1] %}
+{% set device_ids  = gpu_group_el[2] %}
+
+#   Determine UUIDs for / (root) and /boot filesystems. If /boot is a separate
+#   partition its UUID is used for the GRUB `search` command, otherwise we
+#   fall back to the root UUID.
+{% set root_uuid = ansible_facts['mounts'] | selectattr('mount', 'equalto', '/') | map(attribute='uuid') | first %}
+{% set boot_uuid = (ansible_facts['mounts'] | selectattr('mount', 'equalto', '/boot') | map(attribute='uuid') | first) | default(root_uuid) %}
+
+menuentry 'Ubuntu with {{ vendor }} GPU Group {{ group_id }} Passthrough' {
+    set gfxpayload=keep
+    insmod gzio
+    insmod part_gpt
+    insmod ext2
+    search --no-floppy --fs-uuid --set=root {{ boot_uuid }}
+    linux /boot/vmlinuz-{{ ansible_kernel }} root=UUID={{ root_uuid }} ro quiet splash {{ iommu_param }} iommu=pt vfio-pci.ids={{ device_ids }} vfio_iommu_type1.allow_unsafe_interrupts=1
+    initrd /boot/initrd.img-{{ ansible_kernel }}
+}

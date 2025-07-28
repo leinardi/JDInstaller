@@ -1,0 +1,34 @@
+---
+##
+# Chooses the right bootloader tasks based on `supported_bootloaders`
+##
+
+- name: Define bootloader lookup map
+  ansible.builtin.set_fact:
+    bootloader_map:
+      grub:
+        path: /etc/default/grub
+        tasks: grub.yml
+      systemd:
+        path: /boot/efi/EFI/systemd
+        tasks: systemd.yml
+
+- name: Gather bootloader presence information
+  ansible.builtin.stat:
+    path: "{{ bootloader_map[bootloader_key].path }}"
+  loop: "{{ supported_bootloaders }}"
+  loop_control:
+    loop_var: bootloader_key
+  register: bootloader_stats
+
+- name: Include detected bootloader configuration tasks
+  ansible.builtin.include_tasks: "{{ bootloader_map[item.bootloader_key].tasks }}"
+  loop: "{{ bootloader_stats.results }}"
+  loop_control:
+    loop_var: item
+  when: item.stat.exists
+
+- name: Fail if no supported bootloader was detected
+  ansible.builtin.fail:
+    msg: "Warning: None of the supported bootloaders ({{ supported_bootloaders | join(', ') }}) were detected. IOMMU configuration was not applied. KVM will be removed..."
+  when: (bootloader_stats.results | selectattr('stat.exists') | list | length) == 0

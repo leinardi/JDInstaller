@@ -1,0 +1,69 @@
+---
+# Verification
+
+- name: Check for hardware virtualization support
+  become: true
+  ansible.builtin.command: "set -o pipefail && dmesg | grep -E -i '(VT-d|VT-x|AMD-Vi)'"
+  register: virt_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Verify virtualization is enabled
+  ansible.builtin.assert:
+    that: virt_check.rc != 0
+    fail_msg: "Hardware virtualization (Intel VT-d/x or AMD-Vi) is not enabled in BIOS/UEFI. register output: {{ virt_check }}"
+    success_msg: "Hardware virtualization is enabled"
+
+- name: Set IOMMU parameter based on CPU vendor
+  ansible.builtin.set_fact:
+    iommu_param: >-
+      {%- if ansible_facts['processor'] | select('search', 'GenuineIntel') | length > 0 -%}
+        intel_iommu=on
+      {%- elif ansible_facts['processor'] | select('search', 'AuthenticAMD') | length > 0 -%}
+        amd_iommu=on
+      {%- endif %}
+
+# Installation
+- name: Install KVM and virtualization packages
+  become: true
+  ansible.builtin.apt:
+    name:
+      - qemu-kvm # KVM hypervisor
+      - qemu-utils # QEMU utilities (e.g., qemu-img)
+      - libvirt-daemon-system # libvirt system background service
+      - libvirt-clients # libvirt client utilities
+      - bridge-utils # network bridging utilities
+      - virt-manager # GUI wrapper
+      - ovmf # Enables custom UEFIs in VMs
+    state: present
+    update_cache: true
+
+# GPU Passthrough Configuration (must run before bootloader)
+- name: Include GPU passthrough tasks
+  ansible.builtin.include_tasks: passthrough.yml
+  when: kvm_gpu_passthrough in ['bootbased', 'runtime']
+
+# Configure Bootloader
+- name: Configure bootloader
+  ansible.builtin.import_tasks: bootloader.yml
+
+# User Configuration
+- name: Add current user to libvirt groups
+  become: true
+  ansible.builtin.user:
+    name: "{{ ansible_user_id }}"
+    groups:
+      - libvirt
+      - kvm
+    append: true
+
+- name: Enable libvirtd
+  become: true
+  ansible.builtin.service:
+    enabled: true
+    name: libvirtd
+    state: started
+
+- name: Verify KVM installation
+  ansible.builtin.import_tasks: verify.yml

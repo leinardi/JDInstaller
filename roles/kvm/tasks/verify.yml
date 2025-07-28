@@ -1,0 +1,25 @@
+- name: Check if libvirtd service is running
+  ansible.builtin.service_facts:
+  register: service_state
+
+- name: Assert libvirtd service is running
+  ansible.builtin.assert:
+    that:
+      - "'libvirtd.service' in service_state.ansible_facts.services"
+      - "service_state.ansible_facts.services['libvirtd.service'].state == 'running'"
+    fail_msg: "libvirtd service is not running"
+    success_msg: "libvirtd service is running correctly"
+
+- name: Check if virsh command exists
+  ansible.builtin.command: which virsh
+  register: virsh_check
+  changed_when: false
+
+- name: Check if virtualization is properly set up
+  ansible.builtin.command: virsh list --all
+  register: virsh_list
+  changed_when: false
+
+- name: Print KVM installation verification results
+  ansible.builtin.debug:
+    msg: "KVM is successfully installed and properly configured"

@@ -1,0 +1,28 @@
+---
+##
+# Configures grub menu entry and handles GPU.
+##
+
+- name: Create GRUB iommu.cfg configuration file
+  become: true
+  ansible.builtin.template:
+    dest: /etc/default/grub.d/iommu.cfg
+    src: iommu.cfg.j2
+    mode: "0644"
+  register: grub_updated
+
+- name: Create custom GRUB entries for each GPU group
+  become: true
+  ansible.builtin.template:
+    src: gpu_passthrough_entry.j2
+    dest: "/etc/grub.d/6{{ gpu_group_el[0] }}_gpu-{{ gpu_group_el[1] }}" # 60_gpu-nvidia
+    mode: "0755"
+  loop: "{{ gpus_passthrough }}"
+  when: kvm_gpu_passthrough == 'bootbased'
+  loop_control:
+    loop_var: gpu_group_el # ['group_id', 'vendor', 'vga_id,audio_id']
+
+- name: Update GRUB
+  become: true
+  ansible.builtin.command: update-grub
+  changed_when: false

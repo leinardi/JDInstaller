@@ -1,0 +1,68 @@
+---
+- name: List GPU Groups
+  ansible.builtin.shell: |
+    for d in /sys/kernel/iommu_groups/*/devices/*; do
+        n=${d#*/iommu_groups/*}; n=${n%%/*}
+        printf 'IOMMU Group %s ' "$n"
+        lspci -nns "${d##*/}"
+    done
+  register: gpu_groups
+  changed_when: false
+
+- name: Identify GPU IOMMU groups (containing VGA/Display/3D controllers)
+  ansible.builtin.set_fact:
+    gpu_iommu_groups: "{{ gpu_groups.stdout_lines | select('search', 'VGA|Display|3D') | map('regex_search', 'IOMMU Group ([0-9]+)', '\\1') | flatten }}"
+
+- name: Ensure at least two GPU IOMMU groups are present for passthrough
+  ansible.builtin.assert:
+    that:
+      - "gpu_iommu_groups | length >= 2"
+    fail_msg: "At least two distinct GPU IOMMU groups are required for GPU passthrough."
+
+# Build the gpus_passthrough structure requested by downstream roles/tasks.
+# Each item will look like: ['<group_idx>', '<vendor>', '<vga_id>,<audio_id>']
+- name: Construct GPU passthrough fact list
+  ansible.builtin.set_fact:
+    gpus_passthrough: "{{ (gpus_passthrough | default([])) + [new_entry] }}"
+  loop: "{{ gpu_iommu_groups }}"
+  loop_control:
+    loop_var: group_id
+  vars:
+    # lines of specific group.
+    group_lines: "{{ gpu_groups.stdout_lines | select('search', 'IOMMU Group ' + group_id) | list }}" # [string]
+
+    vga_line: "{{ group_lines | select('search', 'VGA|Display|3D') | first }}" # string
+    vga_id: "{{ vga_line | regex_search('[0-9a-f]{4}:[0-9a-f]{4}') }}" # string
+
+    audio_line: "{{ group_lines | select('search', 'Audio|0403') }}" # string
+    audio_id: >-
+      {%- if audio_line | length > 0 -%}
+        {{ audio_line | first | regex_search('[0-9a-f]{4}:[0-9a-f]{4}') }}
+      {%- endif %}
+
+    pci_ids: "{{ vga_id + (',' + audio_id if audio_id | length > 0 else '') }}" # string
+    vendor: >-
+      {% if 'NVIDIA' in vga_line or 'Nvidia' in vga_line -%}
+      nvidia
+      {%- elif 'Intel' in vga_line -%}
+      intel
+      {%- elif 'AMD' in vga_line or 'Advanced' in vga_line -%}
+      amd
+      {%- else -%}
+      unknown
+      {%- endif %}
+
+    new_entry: ["{{ group_id }}", "{{ vendor }}", "{{ pci_ids }}"] # [string*3]
+
+- name: Enable required kernel modules
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/vfio.conf
+    content: |
+      vfio
+      vfio_iommu_type1
+      vfio_pci
+      vfio_virqfd
+    mode: "0644"
+# NOTE: The vfio-pci IDs are supplied on the kernel command line via custom GRUB menu entries.
+# No additional modprobe.d configuration is necessary.

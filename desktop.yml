@@ -93,3 +93,6 @@
     - role: xfburn
       tags: xfburn
       when: xfburn_enabled | bool
+    - role: kvm
+      tags: kvm
+      when: kvm_enabled | bool
