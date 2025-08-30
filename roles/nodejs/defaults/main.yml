@@ -1,0 +1,5 @@
+---
+nodejs_enabled: true
+nodejs_version_major: 22
+nodejs_repo_name: "nodesource-node{{ nodejs_version_major }}"
+nodejs_repo_uri: "https://deb.nodesource.com/node_{{ nodejs_version_major }}.x"

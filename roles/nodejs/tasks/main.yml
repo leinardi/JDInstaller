@@ -1,0 +1,18 @@
+---
+- name: Add Node.js repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: "{{ nodejs_repo_name }}"
+    types: deb
+    uris: "{{ nodejs_repo_uri }}"
+    suites: nodistro
+    components: main
+    architectures: amd64
+    signed_by: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+
+- name: Install Node.js {{ nodejs_version_major }}
+  become: true
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: true

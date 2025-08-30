@@ -18,6 +18,9 @@
         - java
         - openjdk
       when: openjdk_enabled | bool
+    - role: nodejs
+      tags: nodejs
+      when: nodejs_enabled | bool
     - role: python
       tags: python
       when: python_enabled | bool
