@@ -1,0 +1,15 @@
+---
+- name: Restart udev
+  become: true
+  ansible.builtin.service:
+    name: udev
+    state: restarted
+- name: Move trezor extracted payload into place
+  become: true
+  ansible.builtin.shell:
+    cmd: |
+      shopt -s dotglob nullglob
+      mv "{{ trezor_suite.install_dir }}/squashfs-root/"* "{{ trezor_suite.install_dir }}/"
+    executable: /bin/bash
+  # Handlers run only when notified; mark as changed when executed
+  changed_when: true
