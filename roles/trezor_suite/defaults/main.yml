@@ -1,0 +1,13 @@
+---
+trezor_suite_enabled: true
+trezor_suite:
+  version: "25.9.3"
+  arch: "x86_64"
+  install_dir: "/opt/trezor-suite"
+  gpg_key_url: "https://trezor.io/security/satoshilabs-2021-signing-key.asc"
+  gpg_expected_fpr: "EB48 3B26 B078 A4AA 1B6F 425E E21B 6950 A2EC B65C"
+  cache_dir: "/tmp/trezor-suite"
+  desktop_install: true
+  udev_rules_url: "https://data.trezor.io/udev/51-trezor.rules"
+  udev_rules_path: "/etc/udev/rules.d/51-trezor.rules"
+  bin_symlink: "/usr/local/bin/trezor-suite"

@@ -81,6 +81,9 @@
     - role: timeshift
       tags: timeshift
       when: timeshift_enabled | bool
+    - role: trezor_suite
+      tags: trezor_suite
+      when: trezor_suite_enabled | bool
     - role: ulauncher
       tags: ulauncher
       when: ulauncher_enabled | bool
