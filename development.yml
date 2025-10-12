@@ -7,12 +7,15 @@
     - role: docker
       tags: docker
       when: docker_enabled | bool
-    - role: git
-      tags: git
-      when: git_enabled | bool
     - role: filezilla
       tags: filezilla
       when: filezilla_enabled | bool
+    - role: git
+      tags: git
+      when: git_enabled | bool
+    - role: hadolint
+      tags: hadolint
+      when: hadolint_enabled | bool
     - role: openjdk
       tags:
         - java

@@ -1,0 +1,7 @@
+---
+hadolint_enabled: true
+
+hadolint:
+  # Use "latest" (default) or a specific version like "2.14.0"
+  version: latest
+  install_path: /usr/local/bin/hadolint
