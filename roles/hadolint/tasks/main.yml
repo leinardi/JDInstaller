@@ -1,0 +1,127 @@
+---
+- name: "Hadolint | Map architecture token"
+  ansible.builtin.set_fact:
+    _arch_rx: >-
+      {{
+        'x86_64' if ansible_architecture in ['x86_64','amd64']
+        else 'arm64|aarch64' if ansible_architecture in ['aarch64','arm64']
+        else None
+      }}
+  failed_when: _arch_rx is none
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+
+- name: "Hadolint | Fetch release JSON"
+  ansible.builtin.uri:
+    url: >-
+      {{
+        'https://api.github.com/repos/hadolint/hadolint/releases/latest'
+        if hadolint.version | lower == 'latest'
+        else ('https://api.github.com/repos/hadolint/hadolint/releases/tags/v' ~ hadolint.version)
+      }}
+    return_content: true
+    headers:
+      Accept: application/vnd.github+json
+      User-Agent: "ansible-hadolint-installer"
+  register: _gh_release
+
+- name: "Hadolint | Ensure release JSON has assets"
+  ansible.builtin.assert:
+    that:
+      - _gh_release.json is defined
+      - _gh_release.json.assets is defined
+      - _gh_release.json.assets | length > 0
+    fail_msg: "GitHub release API did not return any assets."
+
+- name: "Hadolint | Collect assets list"
+  ansible.builtin.set_fact:
+    _assets: "{{ _gh_release.json.assets }}"
+
+- name: "Hadolint | Pick binary asset for Linux/{{ _arch_rx }}"
+  ansible.builtin.set_fact:
+    _bin_candidates: >-
+      {{
+        _assets
+        | selectattr('name', 'equalto', 'hadolint-linux-' ~ _arch_rx)
+        | list
+      }}
+    _tag_name: "{{ _gh_release.json.tag_name }}"
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python | default(omit) }}"
+
+- name: "Hadolint | Fail if matching binary not found"
+  ansible.builtin.fail:
+    msg: "Could not find hadolint binary asset for Linux/{{ _arch_rx }}."
+  when: _bin_candidates | length == 0
+
+- name: "Hadolint | Use first matching binary asset"
+  ansible.builtin.set_fact:
+    _bin_asset: "{{ _bin_candidates[0] }}"
+
+# Optional matching .sha256 asset (not strictly required if digest present)
+- name: "Hadolint | Find matching .sha256 asset (optional)"
+  ansible.builtin.set_fact:
+    _sha_candidates: >-
+      {{
+        _assets
+        | selectattr('name', 'equalto', _bin_asset.name ~ '.sha256')
+        | list
+      }}
+
+- name: "Hadolint | Pick .sha256 asset if present"
+  ansible.builtin.set_fact:
+    _sha_asset: "{{ _sha_candidates[0] }}"
+  when:
+    - _sha_candidates is defined
+    - _sha_candidates | length > 0
+
+# Prefer checksum from API digest (e.g., 'sha256:<hex>')
+- name: "Hadolint | Compute SHA256 from API digest if available"
+  ansible.builtin.set_fact:
+    _sha256: "{{ (_bin_asset.digest | default('') ).split(':') | last }}"
+  when: _bin_asset.digest is defined and (_bin_asset.digest | length > 0)
+
+# Fallback to fetching .sha256 file
+- name: "Hadolint | Build .sha256 URL (fallback)"
+  ansible.builtin.set_fact:
+    _sha_url: >-
+      {{
+        (_sha_asset.browser_download_url
+         if (_sha_asset is defined)
+         else
+         ('https://github.com/hadolint/hadolint/releases/download/' ~ _tag_name ~ '/' ~ _bin_asset.name ~ '.sha256'))
+      }}
+  when: _sha256 is not defined
+
+- name: "Hadolint | Download .sha256 (fallback)"
+  ansible.builtin.uri:
+    url: "{{ _sha_url }}"
+    return_content: true
+    headers:
+      User-Agent: ansible-hadolint-role
+  register: _sha_resp
+  when: _sha256 is not defined
+
+- name: "Hadolint | Parse SHA256 from file content (fallback)"
+  ansible.builtin.set_fact:
+    _sha256: "{{ (_sha_resp.content | trim).split()[0] | lower }}"
+  when: _sha256 is not defined
+
+- name: "Hadolint | Install binary to /usr/local/bin/hadolint"
+  become: true
+  ansible.builtin.get_url:
+    url: "{{ _bin_asset.browser_download_url }}"
+    dest: /usr/local/bin/hadolint
+    mode: "0755"
+    owner: root
+    group: root
+    checksum: "sha256:{{ _sha256 }}"
+
+- name: "Hadolint | Verify it runs"
+  ansible.builtin.command: /usr/local/bin/hadolint --version
+  register: _hadolint_ver
+  changed_when: false
+
+- name: "Hadolint | Show installed version"
+  ansible.builtin.debug:
+    msg: "{{ _hadolint_ver.stdout | default('hadolint installed') }}"
