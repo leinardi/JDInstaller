@@ -107,8 +107,9 @@ desktop:
 development_enabled: true
 development:
   packages:
-    - shellcheck
     - ansible-lint
+    - python3-passlib
+    - shellcheck
     - sloccount
 
 # Variables from roles/discord
