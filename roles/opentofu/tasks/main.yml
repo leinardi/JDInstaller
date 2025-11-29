@@ -1,0 +1,19 @@
+---
+- name: Add OpenTofu repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: opentofu
+    types:
+      - deb
+      - deb-src
+    uris: https://packages.opentofu.org/opentofu/tofu/any/
+    suites: any
+    components: main
+    signed_by: https://packages.opentofu.org/opentofu/tofu/gpgkey
+
+- name: Install OpenTofu
+  become: true
+  ansible.builtin.apt:
+    name: tofu
+    state: present
+    update_cache: true
