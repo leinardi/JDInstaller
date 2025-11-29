@@ -18,6 +18,9 @@
         - java
         - openjdk
       when: openjdk_enabled | bool
+    - role: opentofu
+      tags: opentofu
+      when: opentofu_enabled | bool
     - role: nodejs
       tags: nodejs
       when: nodejs_enabled | bool
@@ -27,6 +30,9 @@
     - role: slack
       tags: slack
       when: slack_enabled | bool
+    - role: tflint
+      tags: tflint
+      when: tflint_enabled | bool
     - role: vagrant
       tags: vagrant
       when: vagrant_enabled | bool

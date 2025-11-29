@@ -1,0 +1,6 @@
+---
+- name: Install tflint
+  become: true
+  community.general.snap:
+    name: tflint
+    state: present

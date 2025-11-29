@@ -237,6 +237,9 @@ openjdk_enabled: true
 # Variables from roles/openjre
 openjre_enabled: false
 
+# Variables from roles/opentofu
+opentofu_enabled: true
+
 # Variables from roles/pipx
 pipx_enabled: false
 
@@ -254,6 +257,9 @@ steam_enabled: true
 
 # Variables from roles/sweethome3d
 sweethome3d_enabled: true
+
+# Variables from roles/tflint
+tflint_enabled: true
 
 # Variables from roles/timeshift
 timeshift_enabled: false
