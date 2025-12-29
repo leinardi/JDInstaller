@@ -29,21 +29,21 @@
       - mesa-opencl-icd
       - opencl-headers
     state: present
-  when: has_amd_gpu
+  when: has_amd_gpu | length > 0
 
 - name: Install OpenCL ICD for Intel GPU
   become: true
   ansible.builtin.apt:
     name: intel-opencl-icd
     state: present
-  when: has_intel_gpu
+  when: has_intel_gpu | length > 0
 
 - name: Install OpenCL development package for NVIDIA GPU
   become: true
   ansible.builtin.apt:
     name: nvidia-opencl-dev
     state: present
-  when: has_nvidia_gpu
+  when: has_nvidia_gpu | length > 0
 
 - name: Fetch the download_id and version info from the source URL
   ansible.builtin.uri:
@@ -62,9 +62,9 @@
   ansible.builtin.set_fact:
     pkgver: >-
       {{
-        major_version
-        + '.' + minor_version
-        + ('.' + release_version if release_version | int != 0 else '')
+        major_version | ansible.builtin.string
+        + '.' + minor_version | ansible.builtin.string
+        + ('.' + release_version | ansible.builtin.string if release_version | int != 0 else '')
       }}
 
 # First step: Register to get the actual download URL
