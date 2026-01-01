@@ -33,7 +33,7 @@
 
     - name: Set has_amd_gpu fact based on lspci output
       ansible.builtin.set_fact:
-        has_amd_gpu: "{{ 'true' if lspci_output_amd.stdout != '' else 'false' }}"
+        has_amd_gpu: "{{ lspci_output_amd.stdout | length > 0 }}"
 
     - name: Check for Intel GPU presence
       ansible.builtin.shell:
@@ -46,7 +46,7 @@
 
     - name: Set has_intel_gpu fact based on lspci output
       ansible.builtin.set_fact:
-        has_intel_gpu: "{{ 'true' if lspci_output_intel.stdout != '' else 'false' }}"
+        has_intel_gpu: "{{ lspci_output_intel.stdout | length > 0 }}"
 
     - name: Check for NVIDIA GPU presence
       ansible.builtin.shell:
@@ -59,6 +59,6 @@
 
     - name: Set has_nvidia_gpu fact based on lspci output
       ansible.builtin.set_fact:
-        has_nvidia_gpu: "{{ 'true' if lspci_output.stdout != '' else 'false' }}"
+        has_nvidia_gpu: "{{ lspci_output.rc | default(1) == 0 }}"
 
   tags: always
