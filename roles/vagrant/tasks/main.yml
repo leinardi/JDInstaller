@@ -17,3 +17,22 @@
       - vagrant
     state: present
     update_cache: true
+
+- name: List installed Vagrant plugins
+  ansible.builtin.command: vagrant plugin list
+  register: vagrant_plugins
+  changed_when: false
+
+- name: Install vagrant-vbguest plugin if not present
+  ansible.builtin.command: vagrant plugin install vagrant-vbguest
+  register: install_vbguest
+  when: "'vagrant-vbguest' not in vagrant_plugins.stdout"
+  changed_when: "'Installed the plugin' in install_vbguest.stdout"
+  failed_when: install_vbguest.rc != 0
+
+- name: Install vagrant-none-communicator plugin if not present
+  ansible.builtin.command: vagrant plugin install vagrant-none-communicator
+  register: install_none
+  when: "'vagrant-none-communicator' not in vagrant_plugins.stdout"
+  changed_when: "'Installed the plugin' in install_none.stdout"
+  failed_when: install_none.rc != 0
