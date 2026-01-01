@@ -8,7 +8,7 @@
     suites: "{{ ansible_distribution_release }}"
     components: main
     signed_by: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2388FF3BE10A76F638F80723FCAE110B1118213C
-  when: has_nvidia_gpu == 'true'
+  when: has_nvidia_gpu | bool
 
 - name: Upgrade installed packages
   become: true
