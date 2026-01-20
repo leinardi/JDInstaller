@@ -14,3 +14,14 @@
     state: present
     update_cache: true
     cache_valid_time: "{{ apt_cache_time | default(3600) }}"
+
+- name: Install desktop snap packages
+  become: true
+  community.general.snap:
+    name: "{{ item.name }}"
+    state: present
+    classic: "{{ item.classic | default(false) }}"
+    channel: "{{ item.channel | default(omit) }}"
+  loop: "{{ desktop.snaps | default([]) }}"
+  loop_control:
+    label: "{{ item.name }}"
