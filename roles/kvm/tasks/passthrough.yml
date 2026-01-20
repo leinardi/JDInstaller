@@ -41,16 +41,7 @@
       {%- endif %}
 
     pci_ids: "{{ vga_id + (',' + audio_id if audio_id | length > 0 else '') }}" # string
-    vendor: >-
-      {% if 'NVIDIA' in vga_line or 'Nvidia' in vga_line -%}
-      nvidia
-      {%- elif 'Intel' in vga_line -%}
-      intel
-      {%- elif 'AMD' in vga_line or 'Advanced' in vga_line -%}
-      amd
-      {%- else -%}
-      unknown
-      {%- endif %}
+    vendor: "{% if 'NVIDIA' in vga_line or 'Nvidia' in vga_line -%} nvidia{%- elif 'Intel' in vga_line -%} intel{%- elif 'AMD' in vga_line or 'Advanced' in vga_line -%} amd{%- else -%} unknown{%- endif %}"
 
     new_entry: ["{{ group_id }}", "{{ vendor }}", "{{ pci_ids }}"] # [string*3]
 

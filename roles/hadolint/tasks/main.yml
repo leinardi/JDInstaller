@@ -78,7 +78,7 @@
 # Prefer checksum from API digest (e.g., 'sha256:<hex>')
 - name: "Hadolint | Compute SHA256 from API digest if available"
   ansible.builtin.set_fact:
-    _sha256: "{{ (_bin_asset.digest | default('') ).split(':') | last }}"
+    _sha256: "{{ (_bin_asset.digest | default('')).split(':') | last }}"
   when: _bin_asset.digest is defined and (_bin_asset.digest | length > 0)
 
 # Fallback to fetching .sha256 file

@@ -13,3 +13,15 @@ desktop:
     - ubuntu-restricted-extras
     - vlc
     - xclip
+
+  # Snap packages to install.
+  # Each item can optionally set:
+  # - classic: true|false
+  # - channel: e.g. latest/stable, latest/edge, 2.0/stable, etc.
+  snaps:
+    - name: bw
+    - name: chezmoi
+      classic: true
+      # examples:
+      # - name: some-snap
+      #   channel: latest/edge
