@@ -1,0 +1,17 @@
+---
+- name: Add FreeCAD PPA
+  become: true
+  ansible.builtin.deb822_repository:
+    name: "freecad-maintainers-ubuntu-freecad-stable-{{ ansible_distribution_release }}"
+    types: deb
+    uris: "https://ppa.launchpadcontent.net/freecad-maintainers/freecad-stable/ubuntu/"
+    suites: "{{ ansible_distribution_release }}"
+    components: main
+    signed_by: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x9F0E375806520BD65BC61B18A728AE60A790F0EB
+
+- name: Install FreeCAD
+  become: true
+  ansible.builtin.apt:
+    name: freecad
+    state: present
+    update_cache: true

@@ -1,0 +1,10 @@
+---
+- name: Ubuntu 3D Printing Playbook
+  hosts: localhost
+  roles:
+    - role: freecad
+      tags: freecad
+      when: freecad_enabled | bool
+    - role: orcaslicer
+      tags: orcaslicer
+      when: orcaslicer_enabled | bool
