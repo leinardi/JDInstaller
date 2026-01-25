@@ -26,6 +26,11 @@
   tags: development
   when: development_enabled | bool
 
+- name: Import 3D printing tasks
+  import_playbook: three_d_printing.yaml
+  tags: three_d_printing
+  when: three_d_printing_enabled | bool
+
 - name: Import work tasks
   import_playbook: work.yaml
   tags: work
