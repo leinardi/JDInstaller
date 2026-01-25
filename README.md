@@ -1,10 +1,10 @@
-[![Ubuntu test](https://github.com/leinardi/JDInstaller/actions/workflows/ubuntu-test.yml/badge.svg?branch=release)](https://github.com/leinardi/JDInstaller/actions/workflows/ubuntu-test.yml) [![CI release](https://github.com/leinardi/JDInstaller/actions/workflows/ci.yml/badge.svg?branch=release)](https://github.com/leinardi/JDInstaller/actions/workflows/ci.yml)
+[![Ubuntu test](https://github.com/leinardi/JDInstaller/actions/workflows/ubuntu-test.yaml/badge.svg?branch=release)](https://github.com/leinardi/JDInstaller/actions/workflows/ubuntu-test.yaml) [![CI release](https://github.com/leinardi/JDInstaller/actions/workflows/ci.yaml/badge.svg?branch=release)](https://github.com/leinardi/JDInstaller/actions/workflows/ci.yaml)
 
 # JDInstaller
 
 This Ansible playbook is designed to initialize a fresh Ubuntu installation with packages and configurations that suit my personal preferences. While it is
 specifically tailored to my needs, it can be easily adapted to different setups. Every major Ansible role can be individually enabled or disabled by modifying
-its respective value in `group_vars/all.yml`.
+its respective value in `inventory/group_vars/all.yaml`.
 
 ## Table of Contents
 
@@ -21,9 +21,9 @@ its respective value in `group_vars/all.yml`.
 
 ## Introduction
 
-This project uses [Ansible](https://www.ansible.com/) to automate the setup of Ubuntu installations. By running the main playbook (`ubuntu-setup.yml`), the
+This project uses [Ansible](https://www.ansible.com/) to automate the setup of Ubuntu installations. By running the main playbook (`playbooks/ubuntu-setup.yaml`), the
 system will be configured with a range of packages and settings that I prefer. You can easily customize the playbook by enabling or disabling specific roles in
-`group_vars/all.yml`.
+`inventory/group_vars/all.yaml`.
 
 ### What is a Role?
 
@@ -78,13 +78,13 @@ make install
 This command will:
 
 1. Automatically install Ansible if it’s not already installed.
-2. Launch the main playbook (`ubuntu-setup.yml`) to configure the system.
+2. Launch the main playbook (`playbooks/ubuntu-setup.yaml`) to configure the system.
 3. Prompt for the sudo password of the current user.
 
 Alternatively, you can run the playbook manually:
 
 ```bash
-ansible-playbook ubuntu-setup.yml --ask-become-pass
+ansible-playbook playbooks/ubuntu-setup.yaml --ask-become-pass
 ```
 
 ### Run Single Roles
@@ -98,12 +98,12 @@ make install TAGS=virtualbox
 Or manually run the playbook with specific tags:
 
 ```bash
-ansible-playbook ubuntu-setup.yml --ask-become-pass --tags=virtualbox
+ansible-playbook playbooks/ubuntu-setup.yaml --ask-become-pass --tags=virtualbox
 ```
 
 ### Reset Configuration
 
-To generate/reset the `group_vars/all.yml` file to the default values, run:
+To generate/reset the `inventory/group_vars/all.yaml` file to the default values, run:
 
 ```bash
 ./generate-group-vars.sh
@@ -112,24 +112,24 @@ To generate/reset the `group_vars/all.yml` file to the default values, run:
 ## Playbooks
 
 Below is a list of the playbooks that are included in this project. You can enable or disable each one by modifying the respective variable in
-`group_vars/all.yml`.
+`inventory/group_vars/all.yaml`.
 
 | Playbook          | Enabled by Default | Description                               |
 |-------------------|--------------------|-------------------------------------------|
-| `common.yml`      | ✅                  | Sets up common packages and settings.     |
-| `desktop.yml`     | ✅                  | Installs desktop-specific applications.   |
-| `development.yml` | ✅                  | Installs development tools and libraries. |
-| `gaming.yml`      | ✅                  | Installs gaming-related tools.            |
-| `work.yml`        | ⛔                  | Installs work-related applications.       |
+| `common.yaml`      | ✅                  | Sets up common packages and settings.     |
+| `desktop.yaml`     | ✅                  | Installs desktop-specific applications.   |
+| `development.yaml` | ✅                  | Installs development tools and libraries. |
+| `gaming.yaml`      | ✅                  | Installs gaming-related tools.            |
+| `work.yaml`        | ⛔                  | Installs work-related applications.       |
 
 ## Roles
 
-The tables below provide an overview of the roles included in this project. Each role can be enabled or disabled via `group_vars/all.yml`. The "Enabled by
+The tables below provide an overview of the roles included in this project. Each role can be enabled or disabled via `inventory/group_vars/all.yaml`. The "Enabled by
 Default" column shows whether the role is active by default. Even if a role is enabled by default, if the relative playbook is disabled via
-`group_vars/all.yml`, the role will not be executed. To run a specific playbook or role, make sure both the playbook and the role are enabled in
-`group_vars/all.yml`.
+`inventory/group_vars/all.yaml`, the role will not be executed. To run a specific playbook or role, make sure both the playbook and the role are enabled in
+`inventory/group_vars/all.yaml`.
 
-### Playbook: `common.yml`
+### Playbook: `common.yaml`
 
 | Role     | Enabled by Default | Source | Description                                                    |
 |----------|--------------------|--------|----------------------------------------------------------------|
@@ -137,7 +137,7 @@ Default" column shows whether the role is active by default. Even if a role is e
 | `snapd`  | ⛔                  | apt    | Installs snapd for managing Snap packages.                     |
 | `ufw`    | ⛔                  | apt    | Installs and configures Uncomplicated Firewall (UFW).          |
 
-### Playbook: `desktop.yml`
+### Playbook: `desktop.yaml`
 
 | Role               | Enabled by Default | Source                | Description                                                                                    |
 |--------------------|--------------------|-----------------------|------------------------------------------------------------------------------------------------|
@@ -171,7 +171,7 @@ Default" column shows whether the role is active by default. Even if a role is e
 | `vlc`              | ✅                  | apt                   | Installs VLC media player.                                                                     |
 | `xfburn`           | ✅                  | apt                   | Installs Xfburn, a tool for burning CDs and DVDs.                                              |
 
-### Playbook: `development.yml`
+### Playbook: `development.yaml`
 
 | Role          | Enabled by Default | Source | Description                                                           |
 |---------------|--------------------|--------|-----------------------------------------------------------------------|
@@ -182,7 +182,7 @@ Default" column shows whether the role is active by default. Even if a role is e
 | `python`      | ✅                  | apt    | Installs Python.                                                      |
 | `slack`       | ⛔                  | snap   | Installs Slack for team communication.                                |
 
-### Playbook: `gaming.yml`
+### Playbook: `gaming.yaml`
 
 | Role       | Enabled by Default | Source | Description                                      |
 |------------|--------------------|--------|--------------------------------------------------|
@@ -191,7 +191,7 @@ Default" column shows whether the role is active by default. Even if a role is e
 | `mangohud` | ✅                  | github | Installs MangoHud, a gaming performance overlay. |
 | `steam`    | ✅                  | deb    | Installs Steam, a gaming platform.               |
 
-### Playbook: `work.yml`
+### Playbook: `work.yaml`
 
 | Role                        | Enabled by Default | Source                | Description                                   |
 |-----------------------------|--------------------|-----------------------|-----------------------------------------------|
@@ -199,8 +199,8 @@ Default" column shows whether the role is active by default. Even if a role is e
 | `mattermost`                | ✅                  | apt (mattermost repo) | Installs Mattermost, a team chat application. |
 | `zoom`                      | ✅                  | deb                   | Installs Zoom, a video conferencing tool.     |
 
-Each playbook can be customized, and roles enabled or disabled as required via `group_vars/all.yml`. By default, the playbook `work.yml` is disabled,
-but can be easily enabled if needed by changing the `work_enabled` in `group_vars/all.yml`.
+Each playbook can be customized, and roles enabled or disabled as required via `inventory/group_vars/all.yaml`. By default, the playbook `work.yaml` is disabled,
+but can be easily enabled if needed by changing the `work_enabled` in `inventory/group_vars/all.yaml`.
 
 ## DaVinci Resolve
 
@@ -221,7 +221,7 @@ instructions on enabling the installation, as well as uninstallation steps.
 ## Contributions
 
 Bug fixes and improvements to the Ansible code are welcome. However, please note that the list of default software installations is strictly based on my
-personal preferences. I will accept pull requests adding roles for software that I don't use, but they must be disabled by default via `group_vars/all.yml`.
+personal preferences. I will accept pull requests adding roles for software that I don't use, but they must be disabled by default via `inventory/group_vars/all.yaml`.
 
 **Before opening a pull request, please create an issue to describe the feature you would like to add and wait for my approval.** This helps avoid unnecessary
 work.
@@ -248,7 +248,7 @@ After that, checks will automatically run before each commit. You can also run t
 make check
 ```
 
-This command performs static analysis on shell and YAML files and regenerates the `group_vars/all.yml` file.
+This command performs static analysis on shell and YAML files and regenerates the `inventory/group_vars/all.yaml` file.
 
 ## Acknowledgements
 

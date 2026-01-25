@@ -14,7 +14,7 @@ The DaVinci Resolve installation is disabled by default. To enable it:
    ```
 
 3. To install the standard (non-Studio) version, move to the next step. If you want, instead, to install the Studio version, update the configuration by setting
-   `davinci_resolve.install_studio` to `true` in `group_vars/all.yml`:
+   `davinci_resolve.install_studio` to `true` in `group_vars/all.yaml`:
    ```yaml
    davinci_resolve:
      install_studio: true

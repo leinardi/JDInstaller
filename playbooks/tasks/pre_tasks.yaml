@@ -1,5 +1,7 @@
 ---
-- block:
+- name: Ubuntu setup pre-task
+  tags: always
+  block:
     - name: Check Ubuntu version
       ansible.builtin.pause:
         prompt: |
@@ -60,5 +62,3 @@
     - name: Set has_nvidia_gpu fact based on lspci output
       ansible.builtin.set_fact:
         has_nvidia_gpu: "{{ lspci_output.rc | default(1) == 0 }}"
-
-  tags: always

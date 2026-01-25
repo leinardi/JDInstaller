@@ -41,12 +41,12 @@
 
 # GPU Passthrough Configuration (must run before bootloader)
 - name: Include GPU passthrough tasks
-  ansible.builtin.include_tasks: passthrough.yml
+  ansible.builtin.include_tasks: passthrough.yaml
   when: kvm_gpu_passthrough in ['bootbased', 'runtime']
 
 # Configure Bootloader
 - name: Configure bootloader
-  ansible.builtin.import_tasks: bootloader.yml
+  ansible.builtin.import_tasks: bootloader.yaml
 
 # User Configuration
 - name: Add current user to libvirt groups
@@ -66,4 +66,4 @@
     state: started
 
 - name: Verify KVM installation
-  ansible.builtin.import_tasks: verify.yml
+  ansible.builtin.import_tasks: verify.yaml

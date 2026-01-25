@@ -1,8 +1,8 @@
 # Ansible
 /.galaxy/
 *.retry
-group_vars/_*.yml
-group_vars/local.yml
+group_vars/_*.yaml
+group_vars/local.yaml
 .lock
 
 # Intellij

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the output file
-output_file="group_vars/all.yml"
+output_file="inventory/group_vars/all.yaml"
 
 # Create or empty the output file and add the initial YAML document separator
 {
@@ -9,9 +9,9 @@ output_file="group_vars/all.yml"
   echo "---"
 } > "$output_file"
 
-# Loop through each role's defaults/main.yml file
+# Loop through each role's defaults/main.yaml file
 for role in roles/*; do
-  defaults_file="$role/defaults/main.yml"
+  defaults_file="$role/defaults/main.yaml"
 
   if [ -f "$defaults_file" ]; then
     {
@@ -26,4 +26,4 @@ done
 # Remove the last newline to avoid two trailing newlines
 truncate -s -1 "$output_file"
 
-echo "group_vars/all.yml has been generated."
+echo "inventory/group_vars/all.yaml has been generated."
