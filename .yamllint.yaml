@@ -1,15 +1,20 @@
+---
 extends: default
 
 rules:
   braces:
-    min-spaces-inside: 1
+    min-spaces-inside: 0
     max-spaces-inside: 1
     min-spaces-inside-empty: 0
     max-spaces-inside-empty: 0
   brackets: disable
   comments:
     min-spaces-from-content: 1
+  comments-indentation: false
   document-start: disable
   indentation: disable
   line-length: disable
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
   truthy: disable

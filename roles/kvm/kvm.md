@@ -28,7 +28,7 @@ The KVM role is disabled by default. Enable it in either of two ways:
   ```
 
 * **Permanently (via vars file)**
-  Edit `group_vars/all.yml` and set
+  Edit `group_vars/all.yaml` and set
   ```yaml
   kvm_enabled: true
   ```
