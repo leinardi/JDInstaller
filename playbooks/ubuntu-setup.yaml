@@ -4,29 +4,34 @@
 
   pre_tasks:
     - name: Import pre_tasks
-      ansible.builtin.import_tasks: pre_tasks.yml
+      ansible.builtin.import_tasks: tasks/pre_tasks.yaml
 
 - name: Import common tasks
-  import_playbook: common.yml
+  import_playbook: common.yaml
   tags: common
   when: common_enabled | bool
 
 - name: Import desktop tasks
-  import_playbook: desktop.yml
+  import_playbook: desktop.yaml
   tags: desktop
   when: desktop_enabled | bool
 
 - name: Import gaming tasks
-  import_playbook: gaming.yml
+  import_playbook: gaming.yaml
   tags: gaming
   when: gaming_enabled | bool
 
 - name: Import development tasks
-  import_playbook: development.yml
+  import_playbook: development.yaml
   tags: development
   when: development_enabled | bool
 
+- name: Import 3D printing tasks
+  import_playbook: three_d_printing.yaml
+  tags: three_d_printing
+  when: three_d_printing_enabled | bool
+
 - name: Import work tasks
-  import_playbook: work.yml
+  import_playbook: work.yaml
   tags: work
   when: work_enabled | bool
