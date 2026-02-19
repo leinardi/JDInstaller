@@ -1,0 +1,23 @@
+version: 2
+enable-beta-ecosystems: true # Required for the pre-commit ecosystem
+
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "ci"]
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "ci"]
+    groups:
+      pre-commit-hooks:
+        patterns:
+          - "*"
