@@ -37,7 +37,7 @@ repos:
         files: \.(yml|yaml)$
         args: ["--write"]
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.7
+    rev: v1.7.11
     hooks:
       - id: actionlint
         name: actionlint
@@ -50,7 +50,7 @@ repos:
         args: ["-oneline", "-shellcheck", "shellcheck -S error"]
         stages: [manual]
   - repo: https://github.com/ansible/ansible-lint
-    rev: v25.5.0
+    rev: v26.1.1
     hooks:
       - id: ansible-lint
         name: ansible-lint
@@ -63,7 +63,7 @@ repos:
         args: ["-p"]
         stages: [manual]
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.37.1
+    rev: v1.38.0
     hooks:
       - id: yamllint
       - id: yamllint
