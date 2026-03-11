@@ -2,90 +2,69 @@
 - name: "OrcaSlicer | Validate configuration"
   ansible.builtin.assert:
     that:
-      - orcaslicer is mapping
-      - orcaslicer.method is defined
-      - orcaslicer.method in ["system", "user"]
-      - orcaslicer.github_repo is defined
-      - (orcaslicer.github_repo | length) > 0
-      - orcaslicer.app_id is defined
-      - (orcaslicer.app_id | length) > 0
-      - orcaslicer.nightly is defined
-      - orcaslicer.force_reinstall is defined
-      - orcaslicer.version is defined
-      - (orcaslicer.version | length) > 0
-      - orcaslicer_tmp_dir is defined
-      - (orcaslicer_tmp_dir | length) > 0
-    fail_msg: "Invalid or incomplete OrcaSlicer role configuration."
-
-- name: "OrcaSlicer | Compute Flatpak scope option"
-  ansible.builtin.set_fact:
-    _orcaslicer_scope_opt: "{{ '--system' if orcaslicer.method == 'system' else '--user' }}"
-  changed_when: false
+      - orcaslicer_appimage is mapping
+      - orcaslicer_appimage.github_repo is defined
+      - (orcaslicer_appimage.github_repo | length) > 0
+      - orcaslicer_appimage.distro_tag is defined
+      - (orcaslicer_appimage.distro_tag | length) > 0
+      - orcaslicer_appimage.install_dir is defined
+      - (orcaslicer_appimage.install_dir | length) > 0
+      - orcaslicer_appimage.bin_symlink is defined
+      - (orcaslicer_appimage.bin_symlink | length) > 0
+      - orcaslicer_appimage.nightly is defined
+      - orcaslicer_appimage.force_reinstall is defined
+      - orcaslicer_appimage.version is defined
+      - (orcaslicer_appimage.version | length) > 0
+      - orcaslicer_appimage_tmp_dir is defined
+      - (orcaslicer_appimage_tmp_dir | length) > 0
+    fail_msg: "Invalid or incomplete OrcaSlicer AppImage role configuration."
 
 - name: "OrcaSlicer | Normalize force_reinstall flag"
   ansible.builtin.set_fact:
-    _orcaslicer_force_reinstall: "{{ (orcaslicer.force_reinstall | default(false)) | bool }}"
+    _orcaslicer_ai_force_reinstall: "{{ (orcaslicer_appimage.force_reinstall | default(false)) | bool }}"
   changed_when: false
 
-- name: "OrcaSlicer | Check whether app is already installed"
-  ansible.builtin.command:
-    argv:
-      - flatpak
-      - info
-      - "{{ _orcaslicer_scope_opt }}"
-      - "{{ orcaslicer.app_id }}"
-  register: _orcaslicer_info
+- name: "OrcaSlicer | Check whether OrcaSlicer binary is already installed"
+  ansible.builtin.stat:
+    path: "{{ orcaslicer_appimage.install_dir }}/bin/orca-slicer"
+  register: _orcaslicer_ai_binary_stat
   changed_when: false
-  failed_when: false
 
 - name: "OrcaSlicer | Decide whether to install"
   ansible.builtin.set_fact:
-    _orcaslicer_is_installed: "{{ _orcaslicer_info.rc == 0 }}"
-    _orcaslicer_do_install: "{{ (_orcaslicer_info.rc != 0) or _orcaslicer_force_reinstall }}"
+    _orcaslicer_ai_is_installed: "{{ _orcaslicer_ai_binary_stat.stat.exists }}"
+    _orcaslicer_ai_do_install: "{{ (not _orcaslicer_ai_binary_stat.stat.exists) or _orcaslicer_ai_force_reinstall }}"
   changed_when: false
 
-- name: "OrcaSlicer | Uninstall existing app (force reinstall)"
-  become: "{{ orcaslicer.method == 'system' }}"
-  ansible.builtin.command:
-    argv:
-      - flatpak
-      - uninstall
-      - -y
-      - "{{ _orcaslicer_scope_opt }}"
-      - "{{ orcaslicer.app_id }}"
-  register: _orcaslicer_uninstall
+- name: "OrcaSlicer | Remove install dir (force reinstall)"
+  become: true
+  ansible.builtin.file:
+    path: "{{ orcaslicer_appimage.install_dir }}"
+    state: absent
   when:
-    - _orcaslicer_force_reinstall
-    - _orcaslicer_is_installed
-  changed_when: true
-  failed_when: _orcaslicer_uninstall.rc != 0
+    - _orcaslicer_ai_force_reinstall
+    - _orcaslicer_ai_is_installed
 
 - name: "OrcaSlicer | Ensure temporary directory exists"
   ansible.builtin.file:
-    path: "{{ orcaslicer_tmp_dir }}"
+    path: "{{ orcaslicer_appimage_tmp_dir }}"
     state: directory
     mode: "0755"
-  when: _orcaslicer_do_install
-
-- name: "OrcaSlicer | Map architecture token"
-  ansible.builtin.set_fact:
-    _orcaslicer_arch_tokens: "{{ {'x86_64': ['x86_64','amd64'], 'aarch64': ['aarch64','arm64']}.get(ansible_architecture, [ansible_architecture]) }}"
-  when: _orcaslicer_do_install
-  changed_when: false
+  when: _orcaslicer_ai_do_install
 
 # -------------------------
 # Nightly bundle selection
 # -------------------------
 - name: "OrcaSlicer | Nightly - fetch releases list"
   ansible.builtin.uri:
-    url: "https://api.github.com/repos/{{ orcaslicer.github_repo }}/releases"
+    url: "https://api.github.com/repos/{{ orcaslicer_appimage.github_repo }}/releases"
     return_content: true
     headers:
       Accept: "application/vnd.github+json"
   register: _orcaslicer_releases_resp
   when:
-    - _orcaslicer_do_install
-    - orcaslicer.nightly | bool
+    - _orcaslicer_ai_do_install
+    - orcaslicer_appimage.nightly | bool
   changed_when: false
 
 - name: "OrcaSlicer | Nightly - extract tag/assets from most recent prerelease"
@@ -111,8 +90,8 @@
         ) | default([])
       }}
   when:
-    - _orcaslicer_do_install
-    - orcaslicer.nightly | bool
+    - _orcaslicer_ai_do_install
+    - orcaslicer_appimage.nightly | bool
   changed_when: false
 
 # -------------------------
@@ -120,46 +99,37 @@
 # -------------------------
 - name: "OrcaSlicer | Stable - compute tag for pinned versions"
   ansible.builtin.set_fact:
-    _orcaslicer_version_tag: "{{ (orcaslicer.version if (orcaslicer.version | string).startswith('v') else ('v' ~ (orcaslicer.version | string))) }}"
+    _orcaslicer_version_tag: "{{ (orcaslicer_appimage.version if (orcaslicer_appimage.version | string).startswith('v') else ('v' ~ (orcaslicer_appimage.version | string))) }}"
   when:
-    - _orcaslicer_do_install
-    - not (orcaslicer.nightly | bool)
-    - orcaslicer.version != "latest"
+    - _orcaslicer_ai_do_install
+    - not (orcaslicer_appimage.nightly | bool)
+    - orcaslicer_appimage.version != "latest"
   changed_when: false
 
 - name: "OrcaSlicer | Stable - fetch release JSON (latest)"
   ansible.builtin.uri:
-    url: "https://api.github.com/repos/{{ orcaslicer.github_repo }}/releases/latest"
+    url: "https://api.github.com/repos/{{ orcaslicer_appimage.github_repo }}/releases/latest"
     return_content: true
     headers:
       Accept: "application/vnd.github+json"
   register: _orcaslicer_release_latest_resp
   when:
-    - _orcaslicer_do_install
-    - not (orcaslicer.nightly | bool)
-    - orcaslicer.version == "latest"
-  changed_when: false
-
-- name: "OrcaSlicer | Stable - compute tag for pinned versions"
-  ansible.builtin.set_fact:
-    _orcaslicer_version_tag: "{{ (orcaslicer.version if (orcaslicer.version | string).startswith('v') else ('v' ~ (orcaslicer.version | string))) }}"
-  when:
-    - _orcaslicer_do_install
-    - not (orcaslicer.nightly | bool)
-    - orcaslicer.version != "latest"
+    - _orcaslicer_ai_do_install
+    - not (orcaslicer_appimage.nightly | bool)
+    - orcaslicer_appimage.version == "latest"
   changed_when: false
 
 - name: "OrcaSlicer | Stable - fetch release JSON (pinned tag)"
   ansible.builtin.uri:
-    url: "https://api.github.com/repos/{{ orcaslicer.github_repo }}/releases/tags/{{ _orcaslicer_version_tag }}"
+    url: "https://api.github.com/repos/{{ orcaslicer_appimage.github_repo }}/releases/tags/{{ _orcaslicer_version_tag }}"
     return_content: true
     headers:
       Accept: "application/vnd.github+json"
   register: _orcaslicer_release_pinned_resp
   when:
-    - _orcaslicer_do_install
-    - not (orcaslicer.nightly | bool)
-    - orcaslicer.version != "latest"
+    - _orcaslicer_ai_do_install
+    - not (orcaslicer_appimage.nightly | bool)
+    - orcaslicer_appimage.version != "latest"
   changed_when: false
 
 - name: "OrcaSlicer | Stable - select release JSON object"
@@ -167,13 +137,13 @@
     _orcaslicer_release_json: >-
       {{
         (_orcaslicer_release_latest_resp.json
-          if orcaslicer.version == "latest"
+          if orcaslicer_appimage.version == "latest"
           else _orcaslicer_release_pinned_resp.json)
         | default({})
       }}
   when:
-    - _orcaslicer_do_install
-    - not (orcaslicer.nightly | bool)
+    - _orcaslicer_ai_do_install
+    - not (orcaslicer_appimage.nightly | bool)
   changed_when: false
 
 - name: "OrcaSlicer | Stable - extract tag/assets from release response"
@@ -181,78 +151,147 @@
     _orcaslicer_release_tag: "{{ _orcaslicer_release_json.tag_name | default('unknown') }}"
     _orcaslicer_release_assets: "{{ _orcaslicer_release_json.assets | default([]) }}"
   when:
-    - _orcaslicer_do_install
-    - not (orcaslicer.nightly | bool)
+    - _orcaslicer_ai_do_install
+    - not (orcaslicer_appimage.nightly | bool)
   changed_when: false
 
 # -------------------------
 # Asset selection (both)
 # -------------------------
-- name: "OrcaSlicer | Determine flatpak arch token"
+- name: "OrcaSlicer | Pick AppImage asset from release"
   ansible.builtin.set_fact:
-    _orcaslicer_flatpak_arch: >-
-      {{
-        'x86_64' if (ansible_facts.architecture in ['x86_64', 'amd64'])
-        else 'aarch64' if (ansible_facts.architecture in ['aarch64', 'arm64'])
-        else ansible_facts.architecture
-      }}
-  changed_when: false
-
-- name: "OrcaSlicer | Pick flatpak asset from release"
-  ansible.builtin.set_fact:
-    _orcaslicer_asset: >-
+    _orcaslicer_ai_asset: >-
       {{
         (
           _orcaslicer_release_assets
-          | selectattr('name', 'search', '\.flatpak$')
-          | selectattr('name', 'search', _orcaslicer_flatpak_arch)
+          | selectattr('name', 'search', '\.AppImage$')
+          | selectattr('name', 'search', orcaslicer_appimage.distro_tag)
           | list
           | first
         ) | default({})
       }}
+  when: _orcaslicer_ai_do_install
   changed_when: false
 
-- name: "OrcaSlicer | Fail if flatpak asset not found"
+- name: "OrcaSlicer | Fail if AppImage asset not found"
   ansible.builtin.fail:
     msg: >-
-      Could not find a .flatpak bundle asset for this release.
+      Could not find an .AppImage asset matching distro_tag '{{ orcaslicer_appimage.distro_tag }}' for this release.
       Release: {{ _orcaslicer_release_tag }}
-      Nightly: {{ orcaslicer.nightly | bool }}
-      Repo: {{ orcaslicer.github_repo }}
+      Nightly: {{ orcaslicer_appimage.nightly | bool }}
+      Repo: {{ orcaslicer_appimage.github_repo }}
   when:
-    - _orcaslicer_do_install
-    - (_orcaslicer_asset | length) == 0 or (_orcaslicer_asset.browser_download_url is not defined)
+    - _orcaslicer_ai_do_install
+    - (_orcaslicer_ai_asset | length) == 0 or (_orcaslicer_ai_asset.browser_download_url is not defined)
 
-- name: "OrcaSlicer | Set bundle URL and local path"
+- name: "OrcaSlicer | Set AppImage URL and local path"
   ansible.builtin.set_fact:
-    _orcaslicer_bundle_url: "{{ _orcaslicer_asset.browser_download_url }}"
-    _orcaslicer_bundle_path: "{{ orcaslicer_tmp_dir }}/{{ _orcaslicer_asset.name }}"
-  when: _orcaslicer_do_install
+    _orcaslicer_ai_url: "{{ _orcaslicer_ai_asset.browser_download_url }}"
+    _orcaslicer_ai_local_path: "{{ orcaslicer_appimage_tmp_dir }}/{{ _orcaslicer_ai_asset.name }}"
+  when: _orcaslicer_ai_do_install
   changed_when: false
 
-- name: "OrcaSlicer | Download .flatpak bundle"
+- name: "OrcaSlicer | Download AppImage"
   ansible.builtin.get_url:
-    url: "{{ _orcaslicer_bundle_url }}"
-    dest: "{{ _orcaslicer_bundle_path }}"
+    url: "{{ _orcaslicer_ai_url }}"
+    dest: "{{ _orcaslicer_ai_local_path }}"
     mode: "0644"
-  when: _orcaslicer_do_install
+  when: _orcaslicer_ai_do_install
 
-- name: "OrcaSlicer | Install from local bundle"
-  become: "{{ orcaslicer.method == 'system' }}"
+- name: "OrcaSlicer | Ensure install dir exists"
+  become: true
+  ansible.builtin.file:
+    path: "{{ orcaslicer_appimage.install_dir }}"
+    state: directory
+    mode: "0755"
+  when: _orcaslicer_ai_do_install
+
+- name: "OrcaSlicer | Make AppImage executable"
+  ansible.builtin.file:
+    path: "{{ _orcaslicer_ai_local_path }}"
+    mode: "0755"
+  when: _orcaslicer_ai_do_install
+
+- name: "OrcaSlicer | Extract AppImage"
+  become: true
   ansible.builtin.command:
-    argv:
-      - flatpak
-      - install
-      - -y
-      - "{{ _orcaslicer_scope_opt }}"
-      - "{{ _orcaslicer_bundle_path }}"
-  register: _orcaslicer_install
-  when: _orcaslicer_do_install
-  changed_when: true
-  failed_when: _orcaslicer_install.rc != 0
+    cmd: "{{ _orcaslicer_ai_local_path }} --appimage-extract"
+  args:
+    chdir: "{{ orcaslicer_appimage.install_dir }}"
+    creates: "{{ orcaslicer_appimage.install_dir }}/squashfs-root"
+  when: _orcaslicer_ai_do_install
+  notify:
+    - Move OrcaSlicer extracted payload into place
+
+- name: "OrcaSlicer | Flush handlers"
+  ansible.builtin.meta: flush_handlers
+
+- name: "OrcaSlicer | Remove temporary squashfs-root"
+  become: true
+  ansible.builtin.file:
+    path: "{{ orcaslicer_appimage.install_dir }}/squashfs-root"
+    state: absent
+  when: _orcaslicer_ai_do_install
+
+- name: "OrcaSlicer | Fix permissions of installed AppDir"
+  become: true
+  ansible.builtin.file:
+    path: "{{ orcaslicer_appimage.install_dir }}"
+    mode: "u=rwX,g=rX,o=rX"
+    recurse: true
+  when: _orcaslicer_ai_do_install
+
+- name: "OrcaSlicer | Install desktop entry"
+  become: true
+  ansible.builtin.template:
+    src: orcaslicer.desktop.j2
+    dest: /usr/share/applications/orcaslicer.desktop
+    mode: "0644"
+  when: _orcaslicer_ai_do_install
+
+- name: "OrcaSlicer | Check for hicolor icon"
+  ansible.builtin.stat:
+    path: "{{ orcaslicer_appimage.install_dir }}/usr/share/icons/hicolor/192x192/apps/OrcaSlicer.png"
+  register: _orcaslicer_icon_stat
+  changed_when: false
+  when: _orcaslicer_ai_do_install
+
+- name: "OrcaSlicer | Install icon"
+  become: true
+  ansible.builtin.copy:
+    src: "{{ orcaslicer_appimage.install_dir }}/usr/share/icons/hicolor/192x192/apps/OrcaSlicer.png"
+    dest: "/usr/share/icons/hicolor/192x192/apps/orcaslicer.png"
+    remote_src: true
+    mode: "0644"
+  when:
+    - _orcaslicer_ai_do_install
+    - _orcaslicer_icon_stat.stat.exists | default(false)
+
+- name: "OrcaSlicer | Refresh icon cache"
+  become: true
+  ansible.builtin.command:
+    cmd: gtk-update-icon-cache -f /usr/share/icons/hicolor
+  changed_when: false
+  when: _orcaslicer_ai_do_install
+
+- name: "OrcaSlicer | Update desktop database"
+  become: true
+  ansible.builtin.command: update-desktop-database
+  changed_when: false
+  failed_when: false
+  when: _orcaslicer_ai_do_install
+
+- name: "OrcaSlicer | Create bin symlink"
+  become: true
+  ansible.builtin.file:
+    src: "{{ orcaslicer_appimage.install_dir }}/bin/orca-slicer"
+    dest: "{{ orcaslicer_appimage.bin_symlink }}"
+    state: link
+    force: true
+  when: _orcaslicer_ai_do_install
 
 - name: "OrcaSlicer | Cleanup temporary directory"
   ansible.builtin.file:
-    path: "{{ orcaslicer_tmp_dir }}"
+    path: "{{ orcaslicer_appimage_tmp_dir }}"
     state: absent
-  when: _orcaslicer_do_install
+  when: _orcaslicer_ai_do_install

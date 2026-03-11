@@ -267,7 +267,35 @@ opentofu_enabled: true
 # Variables from roles/orcaslicer
 orcaslicer_enabled: true
 
-orcaslicer:
+orcaslicer_appimage:
+  # If true installs the nightly bundle; if false installs stable (latest or pinned version).
+  nightly: false
+
+  # Stable only: "latest" (default) or a specific version like "2.3.2"
+  version: 2.3.2-rc2
+
+  # If true and OrcaSlicer is already installed, wipe install_dir and reinstall.
+  force_reinstall: false
+
+  # Official GitHub repo used for the release API and assets
+  github_repo: OrcaSlicer/OrcaSlicer
+
+  # Distro tag used to select the right AppImage asset (e.g. Ubuntu2404, Ubuntu2204)
+  distro_tag: Ubuntu2404
+
+  # Where to extract the AppImage
+  install_dir: /opt/orcaslicer
+
+  # Convenience symlink in PATH
+  bin_symlink: /usr/local/bin/orcaslicer
+
+# Temporary download folder
+orcaslicer_appimage_tmp_dir: /tmp/orcaslicer-appimage
+
+# Variables from roles/orcaslicer_flatpak
+orcaslicer_flatpak_enabled: true
+
+orcaslicer_flatpak:
   # If true installs the nightly bundle; if false installs stable (latest or pinned version).
   nightly: false
 
@@ -284,10 +312,10 @@ orcaslicer:
   github_repo: OrcaSlicer/OrcaSlicer
 
   # Flatpak app-id inside the bundle (used for idempotency check + uninstall)
-  app_id: io.github.softfever.OrcaSlicer
+  app_id: io.github.orcaslicer.OrcaSlicer
 
 # Temporary download folder
-orcaslicer_tmp_dir: /tmp/orcaslicer-flatpak
+orcaslicer_flatpak_tmp_dir: /tmp/orcaslicer-flatpak
 
 # Variables from roles/pipx
 pipx_enabled: false
