@@ -1,0 +1,8 @@
+---
+- name: Move OrcaSlicer extracted payload into place
+  become: true
+  ansible.builtin.shell:
+    cmd: |
+      cp -a "{{ orcaslicer_appimage.install_dir }}/squashfs-root/." "{{ orcaslicer_appimage.install_dir }}/"
+    executable: /bin/bash
+  changed_when: true
