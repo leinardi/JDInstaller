@@ -1,24 +1,27 @@
 ---
 orcaslicer_enabled: true
 
-orcaslicer:
+orcaslicer_appimage:
   # If true installs the nightly bundle; if false installs stable (latest or pinned version).
   nightly: false
 
-  # "system" or "user"
-  method: system
+  # Stable only: "latest" (default) or a specific version like "2.3.2"
+  version: 2.3.2-rc2
 
-  # Stable only: "latest" (default) or a specific version like "2.3.1"
-  version: latest
-
-  # If true and OrcaSlicer is already installed, uninstall it first then reinstall.
+  # If true and OrcaSlicer is already installed, wipe install_dir and reinstall.
   force_reinstall: false
 
   # Official GitHub repo used for the release API and assets
   github_repo: OrcaSlicer/OrcaSlicer
 
-  # Flatpak app-id inside the bundle (used for idempotency check + uninstall)
-  app_id: io.github.softfever.OrcaSlicer
+  # Distro tag used to select the right AppImage asset (e.g. Ubuntu2404, Ubuntu2204)
+  distro_tag: Ubuntu2404
+
+  # Where to extract the AppImage
+  install_dir: /opt/orcaslicer
+
+  # Convenience symlink in PATH
+  bin_symlink: /usr/local/bin/orcaslicer
 
 # Temporary download folder
-orcaslicer_tmp_dir: /tmp/orcaslicer-flatpak
+orcaslicer_appimage_tmp_dir: /tmp/orcaslicer-appimage
