@@ -1,26 +1,56 @@
 ---
+- name: "Trezor Suite | Check installed desktop file"
+  ansible.builtin.stat:
+    path: "{{ trezor_suite.install_dir }}/trezor-suite.desktop"
+  register: _trezor_desktop_stat
+
+- name: "Trezor Suite | Read installed desktop file"
+  ansible.builtin.slurp:
+    src: "{{ trezor_suite.install_dir }}/trezor-suite.desktop"
+  register: _trezor_desktop_content
+  when: _trezor_desktop_stat.stat.exists
+
+- name: "Trezor Suite | Parse installed version"
+  ansible.builtin.set_fact:
+    _trezor_installed_version: >-
+      {{ (_trezor_desktop_content.content | b64decode).splitlines()
+         | select('match', '^X-AppImage-Version=')
+         | list | first | default('')
+         | regex_replace('^X-AppImage-Version=', '') }}
+  when: _trezor_desktop_stat.stat.exists
+
+- name: "Trezor Suite | Decide whether installation is needed"
+  ansible.builtin.set_fact:
+    _trezor_needs_install: >-
+      {{ (not _trezor_desktop_stat.stat.exists)
+         or ((_trezor_installed_version | default('')) != (trezor_suite.version | string)) }}
+
 - name: "Trezor Suite | Ensure cache dir exists"
   ansible.builtin.file:
     path: "{{ trezor_suite.cache_dir }}"
     state: directory
     mode: "0700"
+  when: _trezor_needs_install
 
 - name: "Trezor Suite | Build AppImage name"
   ansible.builtin.set_fact:
     trezor_appimage_name: "Trezor-Suite-{{ trezor_suite.version }}-linux-{{ trezor_suite.arch }}.AppImage"
   changed_when: false
+  when: _trezor_needs_install
 
 - name: "Trezor Suite | Build AppImage path and URL"
   ansible.builtin.set_fact:
     trezor_appimage_local: "{{ trezor_suite.cache_dir }}/{{ trezor_appimage_name }}"
     trezor_appimage_url: "https://data.trezor.io/suite/releases/desktop/latest/{{ trezor_appimage_name }}"
   changed_when: false
+  when: _trezor_needs_install
 
 - name: "Trezor Suite | Build signature path and URL"
   ansible.builtin.set_fact:
     trezor_signature_local: "{{ trezor_suite.cache_dir }}/{{ trezor_appimage_name }}.asc"
     trezor_signature_url: "https://data.trezor.io/suite/releases/desktop/latest/{{ trezor_appimage_name }}.asc"
   changed_when: false
+  when: _trezor_needs_install
 
 - name: "Trezor Suite | Download AppImage"
   ansible.builtin.get_url:
@@ -29,6 +59,7 @@
     mode: "0644"
     force: false
   register: trezor_appimage_dl
+  when: _trezor_needs_install
 
 - name: "Trezor Suite | Download signature (.asc)"
   ansible.builtin.get_url:
@@ -37,6 +68,7 @@
     mode: "0644"
     force: false
   register: trezor_sig_dl
+  when: _trezor_needs_install
 
 - name: "Trezor Suite | Download SatoshiLabs signing key (2021)"
   ansible.builtin.get_url:
@@ -45,6 +77,7 @@
     mode: "0644"
     force: false
   register: trezor_key_dl
+  when: _trezor_needs_install
 
 # Show-only import to read the fingerprint without adding trust yet
 - name: "Trezor Suite | Read signing key fingerprint (machine-readable)"
@@ -54,6 +87,7 @@
       --fingerprint {{ trezor_suite.cache_dir }}/satoshilabs-2021-signing-key.asc
   register: trezor_key_fpr_raw
   changed_when: false
+  when: _trezor_needs_install
 
 - name: "Trezor Suite | Extract fingerprint"
   ansible.builtin.set_fact:
@@ -62,6 +96,7 @@
           | select('match','^fpr:')
           | list)[0].split(':')[9] | upper }}
   changed_when: false
+  when: _trezor_needs_install
 
 - name: "Trezor Suite | Assert key fingerprint matches expected"
   ansible.builtin.assert:
@@ -71,6 +106,7 @@
       Signing key fingerprint did not match expected.
       Got {{ trezor_key_fpr_clean }}, expected {{ trezor_suite.gpg_expected_fpr }}.
     success_msg: "Signing key fingerprint matches expected."
+  when: _trezor_needs_install
 
 # Import the key to the local keyring (no ultimate trust set)
 - name: "Trezor Suite | Import signing key to GnuPG keyring"
@@ -79,6 +115,7 @@
       gpg --import {{ trezor_suite.cache_dir }}/satoshilabs-2021-signing-key.asc
   register: trezor_key_import
   changed_when: "'imported' in trezor_key_import.stdout or 'not changed' not in trezor_key_import.stdout"
+  when: _trezor_needs_install
 
 # Verify the detached signature against the AppImage
 - name: "Trezor Suite | Verify signature"
@@ -87,6 +124,14 @@
       gpg --verify {{ trezor_signature_local }} {{ trezor_appimage_local }}
   register: trezor_sig_verify
   changed_when: false
+  when: _trezor_needs_install
+
+- name: "Trezor Suite | Remove existing install for version upgrade"
+  become: true
+  ansible.builtin.file:
+    path: "{{ trezor_suite.install_dir }}"
+    state: absent
+  when: _trezor_needs_install and _trezor_desktop_stat.stat.exists
 
 - name: "Trezor Suite | Ensure install dir exists"
   become: true
@@ -94,11 +139,13 @@
     path: "{{ trezor_suite.install_dir }}"
     state: directory
     mode: "0755"
+  when: _trezor_needs_install
 
 - name: "Trezor Suite | Make AppImage executable"
   ansible.builtin.file:
     path: "{{ trezor_appimage_local }}"
     mode: "0755"
+  when: _trezor_needs_install
 
 # Extract AppImage into install_dir (no reliance on /tmp mounts)
 - name: "Trezor Suite | Extract AppImage"
@@ -108,19 +155,22 @@
       {{ trezor_appimage_local }} --appimage-extract
   args:
     chdir: "{{ trezor_suite.install_dir }}"
-    creates: "{{ trezor_suite.install_dir }}/squashfs-root"
   register: trezor_extract
+  changed_when: true
   notify:
     - Move trezor extracted payload into place
+  when: _trezor_needs_install
 
 - name: "Trezor Suite | Flush handlers before cleanup"
   ansible.builtin.meta: flush_handlers
+  when: _trezor_needs_install
 
 - name: "Trezor Suite | Remove temporary squashfs-root"
   become: true
   ansible.builtin.file:
     path: "{{ trezor_suite.install_dir }}/squashfs-root"
     state: absent
+  when: _trezor_needs_install
 
 - name: "Trezor Suite | Fix permissions of installed AppDir"
   become: true
@@ -128,6 +178,7 @@
     path: "{{ trezor_suite.install_dir }}"
     mode: "u=rwX,g=rX,o=rX"
     recurse: true
+  when: _trezor_needs_install
 
 # Critical: allow Chromium sandbox to function
 - name: "Trezor Suite | Set chrome-sandbox owner and mode"
@@ -137,10 +188,11 @@
     owner: root
     group: root
     mode: "04755"
+  when: _trezor_needs_install
 
 # Desktop entry: remove '--no-sandbox' and make absolute Exec path
 - name: "Trezor Suite | Install desktop entry"
-  when: trezor_suite.desktop_install | bool
+  when: _trezor_needs_install and (trezor_suite.desktop_install | bool)
   block:
     - name: "Read original .desktop"
       ansible.builtin.slurp:
@@ -195,8 +247,16 @@
     dest: "{{ trezor_suite.bin_symlink }}"
     state: link
     force: true
+  when: _trezor_needs_install
 
-# Install official udev rules
+# Clean cache (leave GPG key in keyring, remove staged files)
+- name: "Trezor Suite | Cleanup cache files"
+  ansible.builtin.file:
+    path: "{{ trezor_suite.cache_dir }}"
+    state: absent
+  when: _trezor_needs_install
+
+# Install official udev rules (unconditional — independent of app version)
 - name: "Trezor Suite | Download udev rules"
   become: true
   ansible.builtin.get_url:
@@ -204,9 +264,3 @@
     dest: "{{ trezor_suite.udev_rules_path }}"
     mode: "0644"
   notify: Restart udev
-
-# Clean cache (leave GPG key in keyring, remove staged files)
-- name: "Trezor Suite | Cleanup cache files"
-  ansible.builtin.file:
-    path: "{{ trezor_suite.cache_dir }}"
-    state: absent
