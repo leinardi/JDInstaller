@@ -21,7 +21,8 @@ its respective value in `inventory/group_vars/all.yaml`.
 
 ## Introduction
 
-This project uses [Ansible](https://www.ansible.com/) to automate the setup of Ubuntu installations. By running the main playbook (`playbooks/ubuntu-setup.yaml`), the
+This project uses [Ansible](https://www.ansible.com/) to automate the setup of Ubuntu installations. By running the main playbook (
+`playbooks/ubuntu-setup.yaml`), the
 system will be configured with a range of packages and settings that I prefer. You can easily customize the playbook by enabling or disabling specific roles in
 `inventory/group_vars/all.yaml`.
 
@@ -114,8 +115,8 @@ To generate/reset the `inventory/group_vars/all.yaml` file to the default values
 Below is a list of the playbooks that are included in this project. You can enable or disable each one by modifying the respective variable in
 `inventory/group_vars/all.yaml`.
 
-| Playbook          | Enabled by Default | Description                               |
-|-------------------|--------------------|-------------------------------------------|
+| Playbook           | Enabled by Default | Description                               |
+|--------------------|--------------------|-------------------------------------------|
 | `common.yaml`      | ✅                  | Sets up common packages and settings.     |
 | `desktop.yaml`     | ✅                  | Installs desktop-specific applications.   |
 | `development.yaml` | ✅                  | Installs development tools and libraries. |
@@ -124,7 +125,8 @@ Below is a list of the playbooks that are included in this project. You can enab
 
 ## Roles
 
-The tables below provide an overview of the roles included in this project. Each role can be enabled or disabled via `inventory/group_vars/all.yaml`. The "Enabled by
+The tables below provide an overview of the roles included in this project. Each role can be enabled or disabled via `inventory/group_vars/all.yaml`. The "
+Enabled by
 Default" column shows whether the role is active by default. Even if a role is enabled by default, if the relative playbook is disabled via
 `inventory/group_vars/all.yaml`, the role will not be executed. To run a specific playbook or role, make sure both the playbook and the role are enabled in
 `inventory/group_vars/all.yaml`.
@@ -199,7 +201,8 @@ Default" column shows whether the role is active by default. Even if a role is e
 | `mattermost`                | ✅                  | apt (mattermost repo) | Installs Mattermost, a team chat application. |
 | `zoom`                      | ✅                  | deb                   | Installs Zoom, a video conferencing tool.     |
 
-Each playbook can be customized, and roles enabled or disabled as required via `inventory/group_vars/all.yaml`. By default, the playbook `work.yaml` is disabled,
+Each playbook can be customized, and roles enabled or disabled as required via `inventory/group_vars/all.yaml`. By default, the playbook `work.yaml` is
+disabled,
 but can be easily enabled if needed by changing the `work_enabled` in `inventory/group_vars/all.yaml`.
 
 ## DaVinci Resolve
@@ -221,7 +224,8 @@ instructions on enabling the installation, as well as uninstallation steps.
 ## Contributions
 
 Bug fixes and improvements to the Ansible code are welcome. However, please note that the list of default software installations is strictly based on my
-personal preferences. I will accept pull requests adding roles for software that I don't use, but they must be disabled by default via `inventory/group_vars/all.yaml`.
+personal preferences. I will accept pull requests adding roles for software that I don't use, but they must be disabled by default via
+`inventory/group_vars/all.yaml`.
 
 **Before opening a pull request, please create an issue to describe the feature you would like to add and wait for my approval.** This helps avoid unnecessary
 work.
