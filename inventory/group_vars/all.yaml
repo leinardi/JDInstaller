@@ -152,7 +152,7 @@ flatpak_enabled: true
 freecad_enabled: true
 
 # Variables from roles/gamemode
-gparted_enabled: true
+gamemode_enabled: true
 
 # Variables from roles/gaming
 gaming_enabled: true
@@ -179,7 +179,7 @@ gnome_extensions:
     - system-monitor-next@paradoxxx.zero.gmail.com
 
 # Variables from roles/gparted
-gamemode_enabled: true
+gparted_enabled: true
 
 # Variables from roles/graphics_drivers
 graphics_drivers_enabled: true
