@@ -5,16 +5,17 @@ This document explains how to install KVM and, optionally, enable GPU passthroug
 ## Prerequisites
 
 1. **Enable hardware virtualisation in firmware (BIOS/UEFI)**
+
 * • Intel: look for “VT-d” and enable it.
 * • AMD  : look for “SVM” *and* “IOMMU” and enable both.
 
+1. **GRUB as a bootloader**
 
-2. **GRUB as a bootloader**
 * This role supports only **GRUB** for now.
 
-3. **Ubuntu as Host OS**
-* This role supports **ubuntu** for now.
+1. **Ubuntu as Host OS**
 
+* This role supports **ubuntu** for now.
 
 ---
 
@@ -23,12 +24,14 @@ This document explains how to install KVM and, optionally, enable GPU passthroug
 The KVM role is disabled by default. Enable it in either of two ways:
 
 * **Temporarily (via CLI)**
+
   ```bash
   make install TAGS="kvm" EXTRA_VARS="kvm_enabled=true"
   ```
 
 * **Permanently (via vars file)**
   Edit `group_vars/all.yaml` and set
+
   ```yaml
   kvm_enabled: true
   ```
@@ -43,7 +46,6 @@ The KVM role is disabled by default. Enable it in either of two ways:
 If your system has at least two IOMMU-isolated GPUs (typically an integrated GPU plus a dedicated one), the role can add extra GRUB [other bootloader may be supported in the future] menu entries that bind the chosen dedicated GPU to `vfio-pci` at boot.
 
 > Note that GPUs must not belong to the same pci group. If a single group is found, then the installation exits.
-
 
 * One menu entry is generated per GPU, e.g.
 
