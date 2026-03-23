@@ -18,7 +18,7 @@
   loop_control:
     label: "{{ item }}"
   environment:
-    PATH: "{{ ansible_env.HOME }}/.local/bin:{{ ansible_env.PATH }}"
+    PATH: "{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
   register: extension_install_result
   changed_when: "'already installed' not in extension_install_result.stdout"
 
@@ -34,44 +34,47 @@
     creates: "{{ xdg_data_home }}/gnome-shell/extensions/nightthemeswitcher@romainvigier.fr/schemas/gschemas.compiled"
   when: "'nightthemeswitcher@romainvigier.fr' in gnome_extensions.packages"
 
+- name: Get Night Theme Switcher sunrise setting
+  ansible.builtin.command:
+    cmd: "gsettings --schemadir {{ xdg_data_home }}/gnome-shell/extensions/nightthemeswitcher@romainvigier.fr/schemas get org.gnome.shell.extensions.nightthemeswitcher.time sunrise"
+  register: nightthemeswitcher_sunrise
+  when: "'nightthemeswitcher@romainvigier.fr' in gnome_extensions.packages"
+  changed_when: false
+
 - name: Set Night Theme Switcher sunrise to 7:00
   ansible.builtin.command:
     cmd: "gsettings --schemadir {{ xdg_data_home }}/gnome-shell/extensions/nightthemeswitcher@romainvigier.fr/schemas set org.gnome.shell.extensions.nightthemeswitcher.time sunrise 7.0"
+  when: "'nightthemeswitcher@romainvigier.fr' in gnome_extensions.packages and nightthemeswitcher_sunrise.stdout != '7.0'"
+  changed_when: nightthemeswitcher_sunrise.stdout != '7.0'
+
+- name: Get Night Theme Switcher sunset setting
+  ansible.builtin.command:
+    cmd: "gsettings --schemadir {{ xdg_data_home }}/gnome-shell/extensions/nightthemeswitcher@romainvigier.fr/schemas get org.gnome.shell.extensions.nightthemeswitcher.time sunset"
+  register: nightthemeswitcher_sunset
   when: "'nightthemeswitcher@romainvigier.fr' in gnome_extensions.packages"
-  changed_when: true
+  changed_when: false
 
 - name: Set Night Theme Switcher sunset to 21:00
   ansible.builtin.command:
     cmd: "gsettings --schemadir {{ xdg_data_home }}/gnome-shell/extensions/nightthemeswitcher@romainvigier.fr/schemas set org.gnome.shell.extensions.nightthemeswitcher.time sunset 21.0"
-  when: "'nightthemeswitcher@romainvigier.fr' in gnome_extensions.packages"
-  changed_when: true
+  when: "'nightthemeswitcher@romainvigier.fr' in gnome_extensions.packages and nightthemeswitcher_sunset.stdout != '21.0'"
+  changed_when: nightthemeswitcher_sunset.stdout != '21.0'
+
+- name: Get system-monitor-next current settings
+  ansible.builtin.command:
+    cmd: "gsettings --schemadir {{ xdg_data_home }}/gnome-shell/extensions/system-monitor-next@paradoxxx.zero.gmail.com/schemas get org.gnome.shell.extensions.system-monitor {{ item.key }}"
+  loop: "{{ system_monitor_next_settings }}"
+  loop_control:
+    label: "{{ item.key }}"
+  register: system_monitor_current
+  when: "'system-monitor-next@paradoxxx.zero.gmail.com' in gnome_extensions.packages"
+  changed_when: false
 
 - name: Set system-monitor-next settings
   ansible.builtin.command:
-    cmd: "gsettings --schemadir {{ xdg_data_home }}/gnome-shell/extensions/system-monitor-next@paradoxxx.zero.gmail.com/schemas set org.gnome.shell.extensions.system-monitor {{ item.key }} {{ item.value }}"
-  loop:
-    - { key: "battery-refresh-time", value: "100000" }
-    - { key: "battery-show-text", value: "false" }
-    - { key: "cpu-graph-width", value: "50" }
-    - { key: "cpu-show-text", value: "false" }
-    - { key: "disk-display", value: "true" }
-    - { key: "disk-graph-width", value: "50" }
-    - { key: "disk-show-text", value: "false" }
-    - { key: "fan-refresh-time", value: "100000" }
-    - { key: "gpu-graph-width", value: "50" }
-    - { key: "gpu-refresh-time", value: "100000" }
-    - { key: "gpu-show-text", value: "false" }
-    - { key: "icon-display", value: "false" }
-    - { key: "memory-graph-width", value: "50" }
-    - { key: "memory-show-text", value: "false" }
-    - { key: "net-graph-width", value: "50" }
-    - { key: "net-show-text", value: "false" }
-    - { key: "swap-graph-width", value: "50" }
-    - { key: "swap-show-text", value: "false" }
-    - { key: "thermal-graph-width", value: "50" }
-    - { key: "thermal-refresh-time", value: "100000" }
-    - { key: "thermal-show-menu", value: "false" }
-    - { key: "thermal-show-text", value: "false" }
-    - { key: "thermal-threshold", value: "90" }
-  when: "'system-monitor-next@paradoxxx.zero.gmail.com' in gnome_extensions.packages"
-  changed_when: true
+    cmd: "gsettings --schemadir {{ xdg_data_home }}/gnome-shell/extensions/system-monitor-next@paradoxxx.zero.gmail.com/schemas set org.gnome.shell.extensions.system-monitor {{ item.0.key }} {{ item.0.value }}"
+  loop: "{{ system_monitor_next_settings | zip(system_monitor_current.results | default([])) | list }}"
+  loop_control:
+    label: "{{ item.0.key }}"
+  when: "'system-monitor-next@paradoxxx.zero.gmail.com' in gnome_extensions.packages and item.1.stdout.split()[-1] != item.0.value"
+  changed_when: item.1.stdout.split()[-1] != item.0.value

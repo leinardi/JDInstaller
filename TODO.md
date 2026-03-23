@@ -14,3 +14,10 @@ bookworm
 Fix tags (see common.yaml)
 <https://flathub.org/apps/com.mattjakeman.ExtensionManager>
 Telegram
+
+PPA missing resolute:
+
+- ulauncher
+- virtualbox
+- freecad
+-

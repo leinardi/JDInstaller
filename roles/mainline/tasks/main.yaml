@@ -2,10 +2,10 @@
 - name: Add Mainline PPA
   become: true
   ansible.builtin.deb822_repository:
-    name: "cappelikan-ubuntu-ppa-{{ ansible_distribution_release }}"
+    name: "cappelikan-ubuntu-ppa-{{ ansible_facts['distribution_release'] }}"
     types: deb
     uris: "https://ppa.launchpadcontent.net/cappelikan/ppa/ubuntu/"
-    suites: "{{ ansible_distribution_release }}"
+    suites: "{{ ansible_facts['distribution_release'] }}"
     components: main
     signed_by: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3AE27527713D2479DCAFFD58A89D7C1B2F76304D
 

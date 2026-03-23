@@ -1,6 +1,6 @@
 # KVM Role – Installation & GPU-Passthrough Guide
 
-This document explains how to install KVM and, optionally, enable GPU passthrough on Ubuntu 24.04 using this Ansible role.
+This document explains how to install KVM and, optionally, enable GPU passthrough on Ubuntu 26.04 using this Ansible role.
 
 ## Prerequisites
 

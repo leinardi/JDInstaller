@@ -2,10 +2,10 @@
 - name: Add git PPA
   become: true
   ansible.builtin.deb822_repository:
-    name: "git-core-ubuntu-ppa-{{ ansible_distribution_release }}"
+    name: "git-core-ubuntu-ppa-{{ ansible_facts['distribution_release'] }}"
     types: deb
     uris: "https://ppa.launchpadcontent.net/git-core/ppa/ubuntu/"
-    suites: "{{ ansible_distribution_release }}"
+    suites: "{{ ansible_facts['distribution_release'] }}"
     components: main
     signed_by: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF911AB184317630C59970973E363C90F8F1B6217
 
@@ -44,12 +44,12 @@
 
 - name: Check if .gitconfig exists
   ansible.builtin.stat:
-    path: "{{ ansible_env.HOME }}/.gitconfig"
+    path: "{{ ansible_facts['env']['HOME'] }}/.gitconfig"
   register: gitconfig_stat
 
 - name: Copy .gitconfig only if it does not exist
   ansible.builtin.copy:
     src: gitconfig
-    dest: "{{ ansible_env.HOME }}/.gitconfig"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.gitconfig"
     mode: "0644"
   when: not gitconfig_stat.stat.exists

@@ -67,26 +67,6 @@ common:
     - whois
     - zip
 
-# Variables from roles/davinci_resolve
-davinci_resolve_enabled: false
-davinci_resolve:
-  install_studio: false # Set to true to install the Studio version
-  free:
-    download_referid: b18a01b5460b4c6f867bb007e9861543
-    product: DaVinci Resolve
-    package: davinci-resolve
-  studio:
-    download_referid: cbccd0fb44684be3a2dace78a0ad7b20
-    product: DaVinci Resolve Studio
-    package: davinci-resolve-studio
-  country: us
-  email: someone@canonical.com
-  phone: 202-555-0194
-  state: DE
-  city: Dover
-  street: 838 Walker Road
-  user_agent: "Mozilla/5.0 (X11; Linux {{ ansible_architecture }}; rv:131.0) Gecko/20100101 Firefox/131.0"
-
 # Variables from roles/desktop
 desktop_enabled: true
 desktop:
@@ -178,6 +158,31 @@ gnome_extensions:
     - nightthemeswitcher@romainvigier.fr
     - system-monitor-next@paradoxxx.zero.gmail.com
 
+system_monitor_next_settings:
+  - { key: "battery-refresh-time", value: "100000" }
+  - { key: "battery-show-text", value: "false" }
+  - { key: "cpu-graph-width", value: "50" }
+  - { key: "cpu-show-text", value: "false" }
+  - { key: "disk-display", value: "true" }
+  - { key: "disk-graph-width", value: "50" }
+  - { key: "disk-show-text", value: "false" }
+  - { key: "fan-refresh-time", value: "100000" }
+  - { key: "gpu-graph-width", value: "50" }
+  - { key: "gpu-refresh-time", value: "100000" }
+  - { key: "gpu-show-text", value: "false" }
+  - { key: "icon-display", value: "false" }
+  - { key: "memory-graph-width", value: "50" }
+  - { key: "memory-show-text", value: "false" }
+  - { key: "net-graph-width", value: "50" }
+  - { key: "net-show-text", value: "false" }
+  - { key: "swap-graph-width", value: "50" }
+  - { key: "swap-show-text", value: "false" }
+  - { key: "thermal-graph-width", value: "50" }
+  - { key: "thermal-refresh-time", value: "100000" }
+  - { key: "thermal-show-menu", value: "false" }
+  - { key: "thermal-show-text", value: "false" }
+  - { key: "thermal-threshold", value: "90" }
+
 # Variables from roles/gparted
 gparted_enabled: true
 
@@ -220,7 +225,7 @@ mainline_enabled: true
 # Variables from roles/mangohud
 mangohud_enabled: true
 mangohud:
-  version: "v0.8.1 "
+  version: "v0.8.1"
   dependencies:
     - cmake
     - git
@@ -248,12 +253,9 @@ nautilus_plugins_enabled: true
 
 # Variables from roles/nodejs
 nodejs_enabled: true
-nodejs_version_major: 22
+nodejs_version_major: 24
 nodejs_repo_name: "nodesource-node{{ nodejs_version_major }}"
 nodejs_repo_uri: "https://deb.nodesource.com/node_{{ nodejs_version_major }}.x"
-
-# Variables from roles/nordvpn
-nordvpn_enabled: false
 
 # Variables from roles/openjdk
 openjdk_enabled: true
@@ -362,13 +364,13 @@ trezor_suite:
 ufw_enabled: false
 
 # Variables from roles/ulauncher
-ulauncher_enabled: true
+ulauncher_enabled: false
 
 # Variables from roles/vagrant
 vagrant_enabled: false
 
 # Variables from roles/virtualbox
-virtualbox_enabled: true
+virtualbox_enabled: false
 virtualbox:
   version: "7.1"
 

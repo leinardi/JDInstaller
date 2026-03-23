@@ -5,9 +5,6 @@
     - role: anydesk
       tags: anydesk
       when: anydesk_enabled | bool
-    - role: davinci_resolve
-      tags: davinci_resolve
-      when: davinci_resolve_enabled | bool
     - role: desktop
       when: desktop_enabled | bool
     - role: chrome
@@ -67,9 +64,6 @@
     - role: nautilus_plugins
       tags: nautilus_plugins
       when: nautilus_plugins_enabled | bool
-    - role: nordvpn
-      tags: nordvpn
-      when: nordvpn_enabled | bool
     - role: openjre
       tags:
         - java

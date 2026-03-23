@@ -1,4 +1,9 @@
 ---
+- name: Check if Mozilla APT repository is already configured
+  ansible.builtin.stat:
+    path: /etc/apt/sources.list.d/mozilla.sources
+  register: mozilla_repo_stat
+
 - name: Add Mozilla Firefox repository
   become: true
   ansible.builtin.deb822_repository:
@@ -37,6 +42,7 @@
     name: firefox
     state: absent
   failed_when: false # Do not fail regardless of the exit code
+  when: not mozilla_repo_stat.stat.exists
 
 - name: Remove Firefox APT package (if installed)
   become: true
@@ -45,6 +51,7 @@
     state: absent
     autoremove: true
   failed_when: false # Do not fail regardless of the exit code
+  when: not mozilla_repo_stat.stat.exists
 
 - name: Install Firefox from Mozilla repository
   become: true
@@ -52,6 +59,7 @@
     name: firefox
     state: present
     update_cache: true
+  when: not mozilla_repo_stat.stat.exists
 
 - name: Get system language from locale
   ansible.builtin.set_fact:
@@ -75,7 +83,7 @@
     executable: /bin/bash
   register: gnome_favorites
   environment:
-    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_facts['user_uid'] }}/bus"
   changed_when: false
 
 - name: Add Firefox to GNOME Shell dock
@@ -84,5 +92,5 @@
       gsettings set org.gnome.shell favorite-apps "['firefox.desktop', {{ gnome_favorites.stdout }}]"
     executable: /bin/bash
   environment:
-    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_user_uid }}/bus"
+    DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/{{ ansible_facts['user_uid'] }}/bus"
   changed_when: "'firefox.desktop' not in gnome_favorites.stdout"
