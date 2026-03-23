@@ -1,0 +1,26 @@
+line-length = 150
+target-version = "py312"
+
+[lint]
+# Ruff always enables E and F by default; we extend that set.
+extend-select = [
+    "I", # import sorting (isort)
+    "PL", # pylint-compatible rules (subset)
+    "UP", # pyupgrade
+    "B", # bugbear
+    "SIM", # flake8-simplify
+    "C4", # comprehensions
+    "ERA", # eradicate (commented-out code)
+    "W", # pycodestyle warnings
+    "RUF", # Ruff-specific rules
+]
+
+ignore = [
+    # add ignores as needed
+]
+
+[lint.pylint]
+allow-magic-value-types = ["str", "int"]
+
+[format]
+quote-style = "double"

@@ -1,7 +1,7 @@
 ---
-##
+#
 # Chooses the right bootloader tasks based on `supported_bootloaders`
-##
+#
 
 - name: Define bootloader lookup map
   ansible.builtin.set_fact:

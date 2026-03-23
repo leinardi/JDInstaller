@@ -9,27 +9,30 @@ The DaVinci Resolve installation is disabled by default. To enable it:
 1. First, follow the instructions to [Download the Repository](../../README.md#download-the-repository).
 
 2. Ensure you are on the DaVinci Resolve branch of the repository:
+
    ```bash
    git checkout davinci
    ```
 
 3. To install the standard (non-Studio) version, move to the next step. If you want, instead, to install the Studio version, update the configuration by setting
    `davinci_resolve.install_studio` to `true` in `group_vars/all.yaml`:
+
    ```yaml
    davinci_resolve:
      install_studio: true
    ```
 
 4. Run the following command to initiate the installation:
+
    ```bash
    make install TAGS=davinci_resolve
    ```
+
    or, if you have already downloaded the Davinci Resolve ZIP archive, you can avoid re-downloading it by pointing the script to the existing file like this:
-   
+
    ```bash
       make install TAGS=davinci_resolve EXTRA_VARS="davinci_resolve_zip_file=/path/to/davinci_resolve_file.zip"
    ```
-
 
 This process will automate the download and installation of DaVinci Resolve, setting up all necessary libraries, udev rules, desktop icons, and MIME files.
 
@@ -69,6 +72,7 @@ sudo rm -rf /opt/davinci-resolve
 ```
 
 > **Note:** If you installed the Studio version, replace `sudo rm -rf /opt/davinci-resolve` with:
+>
 > ```bash
 > sudo rm -rf /opt/davinci-resolve-studio
 > ```

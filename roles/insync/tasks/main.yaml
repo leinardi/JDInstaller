@@ -21,7 +21,7 @@
   ansible.builtin.lineinfile:
     path: /etc/sysctl.d/99-sysctl.conf
     state: absent
-    regexp: '^fs\.inotify\.max_user_watches=.*$'
+    regexp: "^fs\\.inotify\\.max_user_watches=.*$"
     insertafter: "^# added by Insync$"
     backrefs: true
 
