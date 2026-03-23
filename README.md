@@ -15,7 +15,6 @@ its respective value in `inventory/group_vars/all.yaml`.
     - [Run Single Roles](#run-single-roles)
 - [Playbooks](#playbooks)
 - [Roles](#roles)
-- [DaVinci Resolve](#davinci-resolve)
 - [Contributions](#contributions)
 - [Acknowledgements](#acknowledgements)
 
@@ -147,7 +146,6 @@ Default" column shows whether the role is active by default. Even if a role is e
 | `desktop`          | ✅                  | apt                   | Installs a set of desktop-related packages listed in `desktop.packages`.                       |
 | `chrome`           | ✅                  | apt (Google repo)     | Installs Google Chrome.                                                                        |
 | `chromium`         | ✅                  | apt                   | Installs the open-source Chromium browser.                                                     |
-| `davinci_resolve`  | ⛔                  | archive               | Installs DaVinci Resolve. Change `davinci_resolve.install_studio` to install the Studio build. |
 | `doublecmd`        | ✅                  | apt                   | Installs Double Commander, a file manager.                                                     |
 | `earth`            | ✅                  | apt                   | Installs Google Earth Pro.                                                                     |
 | `edge`             | ⛔                  | apt (Google repo)     | Installs Microsoft Edge browser.                                                               |
@@ -165,7 +163,6 @@ Default" column shows whether the role is active by default. Even if a role is e
 | `mainline`         | ✅                  | PPA                   | Installs Mainline, a tool for managing Linux kernels.                                          |
 | `meld`             | ✅                  | apt                   | Installs Meld, a file comparison tool.                                                         |
 | `nautilus_plugins` | ⛔                  | apt                   | Installs plugins for the Nautilus file manager.                                                |
-| `nordvpn`          | ✅                  | apt (NordVPN repo)    | Installs NordVPN client.                                                                       |
 | `openjre`          | ⛔                  | apt                   | Installs OpenJRE, a Java runtime environment.                                                  |
 | `sweethome3d`      | ✅                  | flathub               | Installs Sweet Home 3D, an interior design app.                                                |
 | `timeshift`        | ⛔                  | apt                   | Installs Timeshift for system backups.                                                         |
@@ -208,19 +205,15 @@ but can be easily enabled if needed by changing the `work_enabled` in `inventory
 
 ## DaVinci Resolve
 
-The DaVinci Resolve section of this script automates the entire installation process on Ubuntu 24.04, making it straightforward to get the software up and
-running without requiring older system dependencies or containers.
-
-This part of the script:
-
-- Downloads the official DaVinci Resolve archive and installs it in `/opt/`
-- Sets up necessary symlinks to avoid downgrading dependencies
-- Installs udev rules for USB peripherals like DaVinci Panels
-- Auto-detects and installs the correct OpenCL libraries for AMD, Intel, or Nvidia GPUs
-- Sets up system icons, MIME files, and desktop entries
-
-By default, **the installation of DaVinci Resolve is disabled**. Please refer to [DaVinciResolve.md](roles/davinci_resolve/DaVinciResolve.md) for detailed
-instructions on enabling the installation, as well as uninstallation steps.
+> **Note:** The DaVinci Resolve role has been removed from this branch as it is only supported
+> on Ubuntu 24.04. To install DaVinci Resolve, switch to the `davinci` branch:
+>
+> ```bash
+> git checkout davinci
+> ```
+>
+> See [DaVinciResolve.md](https://github.com/leinardi/JDInstaller/blob/davinci/roles/davinci_resolve/DaVinciResolve.md)
+> for full installation instructions.
 
 ## Contributions
 

@@ -115,13 +115,13 @@ repos:
         files: ^(playbooks|roles|inventory)/.*\.(ya?ml)$
         exclude: ^roles/.*/(files|templates)/|^\.github/|^docs/|^public/|^mkdocs\.ya?ml$
         args: [--fix]
-        language_version: python3.12
+        language_version: python3.14
       - id: ansible-lint
         name: ansible-lint
         always_run: false
         files: ^(playbooks|roles|inventory)/.*\.(ya?ml)$
         exclude: ^roles/.*/(files|templates)/|^\.github/|^docs/|^public/|^mkdocs\.ya?ml$
-        language_version: python3.12
+        language_version: python3.14
       - id: ansible-lint
         alias: ansible-lint-parseable
         name: "ansible-lint (parseable output)"
@@ -129,7 +129,7 @@ repos:
         exclude: ^roles/.*/(files|templates)/|^\.github/|^docs/|^public/|^mkdocs\.ya?ml$
         args: ["-p"]
         stages: [manual]
-        language_version: python3.12
+        language_version: python3.14
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.38.0
     hooks:

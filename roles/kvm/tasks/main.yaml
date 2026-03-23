@@ -29,7 +29,7 @@
   become: true
   ansible.builtin.apt:
     name:
-      - qemu-kvm # KVM hypervisor
+      - qemu-system-x86 # KVM hypervisor (qemu-kvm is a virtual package, this is the concrete one)
       - qemu-utils # QEMU utilities (e.g., qemu-img)
       - libvirt-daemon-system # libvirt system background service
       - libvirt-clients # libvirt client utilities
@@ -52,7 +52,7 @@
 - name: Add current user to libvirt groups
   become: true
   ansible.builtin.user:
-    name: "{{ ansible_user_id }}"
+    name: "{{ ansible_facts['user_id'] }}"
     groups:
       - libvirt
       - kvm

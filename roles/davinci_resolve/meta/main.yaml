@@ -1,3 +1,0 @@
----
-dependencies:
-  - { role: inotify_watches }

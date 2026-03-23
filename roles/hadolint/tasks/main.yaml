@@ -3,8 +3,8 @@
   ansible.builtin.set_fact:
     _arch_rx: >-
       {{
-        'x86_64' if ansible_architecture in ['x86_64','amd64']
-        else 'arm64|aarch64' if ansible_architecture in ['aarch64','arm64']
+        'x86_64' if ansible_facts['architecture'] in ['x86_64','amd64']
+        else 'arm64|aarch64' if ansible_facts['architecture'] in ['aarch64','arm64']
         else None
       }}
   failed_when: _arch_rx is none

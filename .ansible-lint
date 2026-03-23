@@ -1,6 +1,4 @@
 ---
-offline: true
-
 exclude_paths:
   - .cache/
   - .github/

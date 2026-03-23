@@ -19,8 +19,7 @@ The main pain points fall into four clusters:
 2. **Security posture** — real registration data and identifiable defaults live in a public `group_vars/all.yaml`, and there is no vault usage anywhere.
 3. **Repetition and inconsistency** — the `gsettings` role is 160+ lines of cut-paste pairs; variable style is mixed (flat-prefixed vs dict); tagging is
    inconsistent across playbooks.
-4. **Maintainability friction** — `davinci_resolve` is a 575-line monolithic task file; `mangohud` always rebuilds; the `TODO.md` is a raw notes dump; the
-   `.claude` directory is minimal.
+4. **Maintainability friction** — `mangohud` always rebuilds; the `TODO.md` is a raw notes dump; the `.claude` directory is minimal.
 
 No major rewrites are needed. All improvements are incremental.
 
@@ -55,25 +54,16 @@ where lines 154–155 read `gamemode_enabled: true` under `# Variables from role
 
 ### BUG-2 — Broken file paths in CI functional test (`ubuntu-test.yaml`)
 
-**Why it matters:** The `test-all-packages-besides-davinci` job references paths that do not exist, meaning it will always fail or silently skip the sed
-mutation:
+**Why it matters:** The `test-all-packages` job references paths that do not exist, meaning it will always fail or silently skip the sed mutation:
 
 - `sed -i '…' group_vars/all.yml` — the file is at `inventory/group_vars/all.yaml` (different prefix, `.yaml` not `.yml`)
 - `ansible-playbook ubuntu-setup.yml` — the file is at `playbooks/ubuntu-setup.yaml`
 
-The `test-default-packages` job uses `make install` (which works) but `test-all-packages-besides-davinci` bypasses `make` and invokes the playbook directly with
-wrong paths.
+The `test-default-packages` job uses `make install` (which works) but `test-all-packages` bypasses `make` and invokes the playbook directly with wrong paths.
 
 **Evidence:**
 
-- `.github/workflows/ubuntu-test.yaml` lines 88–91:
-
-  ```yaml
-  sed -i '/davinci_resolve_enabled: false/!s/_enabled: false/_enabled: true/' group_vars/all.yml
-  …
-  run: ansible-playbook ubuntu-setup.yml -vvv
-  ```
-
+- `.github/workflows/ubuntu-test.yaml`: sed targets `group_vars/all.yml`, playbook invoked as `ubuntu-setup.yml`
 - Actual paths: `inventory/group_vars/all.yaml` and `playbooks/ubuntu-setup.yaml`
 
 **Recommendation:** Fix both paths to `inventory/group_vars/all.yaml` and `playbooks/ubuntu-setup.yaml`. Also add a checkout step at the top of
@@ -213,27 +203,6 @@ this and avoids running shell commands entirely.
 
 ---
 
-### A-2 — `davinci_resolve/tasks/main.yaml` is a 575-line monolith
-
-**Why it matters:** It is the largest file in the repo by far, covering API registration, download, extraction, RPATH patching, library symlinking, desktop
-entry management, and group management. Bugs and logic are hard to isolate. `kvm` handles complexity by splitting into 6 task files — the same pattern should be
-applied here.
-
-**Evidence:** `roles/davinci_resolve/tasks/main.yaml` — 575 lines. `roles/kvm/tasks/` has 6 files.
-
-**Recommendation:** Split into subtask files:
-
-- `tasks/install.yaml` — download + extract
-- `tasks/libraries.yaml` — RPATH patching + symlinks
-- `tasks/desktop.yaml` — .desktop/.menu/.icon files
-- `tasks/groups.yaml` — davinci group management
-- `tasks/main.yaml` — orchestrator that includes the above
-
-**Effort:** Medium.
-**Priority:** Medium
-
----
-
 ### A-3 — `mangohud` is not idempotent (always rebuilds from source)
 
 **Why it matters:** Every run clones the repo and builds from source unconditionally. On a re-run, even with the same version, all build tasks will execute and
@@ -335,22 +304,6 @@ and no dry-run confirmation.
 
 ---
 
-### A-8 — `davinci_resolve` role lacks an idempotency check
-
-**Why it matters:** Unlike `trezor_suite` and `orcaslicer`, the `davinci_resolve` role has no early-exit "is this version already installed?" check. Every run
-re-downloads (several GBs), re-extracts, and re-patches the entire installation. This is extremely expensive and means the role cannot be included in routine
-re-runs.
-
-**Evidence:** `roles/davinci_resolve/tasks/main.yaml` — first task after setting facts immediately installs deps and hits the Blackmagic API; no stat check of
-existing installation.
-
-**Recommendation:** Add a version detection step similar to `trezor_suite` (check a version marker file or the installed binary version), and gate the
-installation block on a `_davinci_needs_install` fact.
-**Effort:** Medium.
-**Priority:** Medium
-
----
-
 ### A-9 — `orcaslicer` version check doesn't detect version change (only presence)
 
 **Why it matters:** `_orcaslicer_ai_do_install` is set to `not binary_stat.exists or force_reinstall`. If OrcaSlicer is installed at the wrong version, the role
@@ -403,26 +356,6 @@ compromised, there is no fingerprint assertion like `trezor_suite` performs.
 
 ## 6. Security and Secret-Handling Review
 
-### SEC-1 — DaVinci Resolve registration data is public in a committed file
-
-**Why it matters:** `inventory/group_vars/all.yaml` is committed to a public GitHub repository. It contains `email: someone@canonical.com`,
-`phone: 202-555-0194`, and a full US street address. While these are obviously placeholder/fake values, the pattern teaches users that this is the correct way
-to configure personal registration data — which means real users may put their actual email/phone/address in `group_vars/all.yaml` and commit it publicly.
-
-**Evidence:** `inventory/group_vars/all.yaml` lines 83–87.
-
-**Recommendation:**
-
-1. Add a comment explaining these are fake defaults and must be overridden via a local vars file or `--extra-vars`
-2. Create a `davinci_resolve_registration.yaml.example` file users can copy and customise
-3. Add `*_registration.yaml` and `*_credentials.yaml` patterns to `.gitignore`
-4. Long term: use `ansible-vault` for any field that would contain real PII
-
-**Effort:** Low (documentation + gitignore).
-**Priority:** High (public repo, PII risk for users who adapt the project)
-
----
-
 ### SEC-2 — No vault usage anywhere in the repository
 
 **Why it matters:** There are no `ansible-vault` encrypted files, no `vault_*` variable references, and no vault password file configuration. For a personal
@@ -431,7 +364,7 @@ no template for handling secrets.
 
 **Evidence:** `grep -r 'vault_' roles/ inventory/` returns no matches.
 
-**Recommendation:** Add a brief "Secrets" section to `README.md` explaining that credentials (DaVinci email, any future API keys) should be stored in a
+**Recommendation:** Add a brief "Secrets" section to `README.md` explaining that credentials (API keys, tokens, etc.) should be stored in a
 `vault.yaml` file excluded from git. Provide a `vault.yaml.example` template. This is documentation, not code change.
 **Effort:** Low.
 **Priority:** Medium
@@ -449,26 +382,6 @@ the keyserver were compromised or the URL returned a different key, the reposito
 personal homelab the risk is low but the pattern is worth establishing.
 **Effort:** Low.
 **Priority:** Low
-
----
-
-### SEC-4 — `davinci_resolve` registration POST includes hardcoded cookie
-
-**Why it matters:** `roles/davinci_resolve/tasks/main.yaml` line 84 includes:
-
-```yaml
-Cookie: "_ga=GA1.2.1849503966.1518103294; _gid=GA1.2.953840595.1518103294"
-```
-
-These are hardcoded Google Analytics cookies. They are non-sensitive (tracking IDs), but they represent a specific real identity/session and are committed to a
-public repo. More practically, they may expire and break the registration POST.
-
-**Evidence:** `roles/davinci_resolve/tasks/main.yaml` line 84.
-
-**Recommendation:** Remove the `Cookie:` header or replace with a generated/throwaway value. The Blackmagic API registration endpoint likely does not require
-valid GA cookies.
-**Effort:** Trivial.
-**Priority:** Medium
 
 ---
 
@@ -511,32 +424,16 @@ optimisations.
 **Evidence:** `.github/workflows/ubuntu-test.yaml` lines 44–51.
 
 **Recommendation:** Use `actions/checkout` with `ref: ${{ github.sha }}` and then just run `make install` from the checked-out directory. This is simpler and
-aligns with `test-all-packages-besides-davinci`.
+aligns with `test-all-packages`.
 **Effort:** Low.
 **Priority:** Low
-
----
-
-### CI-4 — `ansible-lint` skip rule `var-naming[no-role-prefix]` broadens scope of non-prefixed variables
-
-**Why it matters:** `var-naming[no-role-prefix]` is silenced globally in `.ansible-lint`. This means the linter won't catch variables like `download_id`,
-`product`, `package`, `pkgver` in `davinci_resolve` — all of which are unscoped and could leak into the play's variable namespace, causing subtle conflicts if
-other roles set similarly-named variables.
-
-**Evidence:** `.ansible-lint` line 5: `- var-naming[no-role-prefix]`
-`roles/davinci_resolve/tasks/main.yaml` line 6: `download_referid`, `product`, `package` — all unprefixed.
-
-**Recommendation:** Fix the offending variables in `davinci_resolve` (prefix with `_davinci_` or `davinci_`) and remove the global skip rule, or narrow it to
-specific files using `noqa` inline comments.
-**Effort:** Medium (finding and fixing all unprefixed vars).
-**Priority:** Medium
 
 ---
 
 ### CI-5 — No `molecule` or role-level unit tests
 
 **Why it matters:** There is no role-level testing (Molecule, testinfra, or similar). The functional CI tests run the entire playbook, which makes it difficult
-to isolate which role is broken when a test fails. Complex roles like `kvm`, `davinci_resolve`, and `mangohud` particularly benefit from isolated tests.
+to isolate which role is broken when a test fails. Complex roles like `kvm` and `mangohud` particularly benefit from isolated tests.
 
 **Evidence:** No `molecule/` directories in any role; no test framework in `requirements.yml`.
 
@@ -567,11 +464,11 @@ confusing failures.
 ### DOC-1 — README has no "Contributing / Adapting" section for new users
 
 **Why it matters:** The README says "it can be easily adapted to different setups" but gives no guidance on what to customise beyond enabling/disabling roles.
-New adopters don't know they need to change DaVinci registration data, git config, locale/timezone, mangohud version, etc.
+New adopters don't know they need to change git config, locale/timezone, mangohud version, etc.
 
 **Evidence:** `README.md` — no section on customisation beyond toggle flags.
 
-**Recommendation:** Add a "Customising for your setup" section listing: locale/timezone (`common` defaults), DaVinci credentials, git identity, any tool
+**Recommendation:** Add a "Customising for your setup" section listing: locale/timezone (`common` defaults), git identity, any tool
 versions. Even 5 bullet points would significantly improve onboarding.
 **Effort:** Low.
 **Priority:** Medium
@@ -592,15 +489,13 @@ isn't tracked anywhere useful.
 
 ---
 
-### DOC-3 — `kvm.md` and `DaVinciResolve.md` live inside role directories, inconsistently
+### DOC-3 — `kvm.md` lives inside the role directory, inconsistently
 
-**Why it matters:** Two roles have their own `.md` documentation files (`roles/kvm/kvm.md`, `roles/davinci_resolve/DaVinciResolve.md`). No other roles do. These
-are not discoverable from `README.md` and are in inconsistent locations (one uses the role name, the other uses the product name).
+**Why it matters:** `roles/kvm/kvm.md` is not discoverable from `README.md` and uses an inconsistent location (role name rather than `README.md`).
 
-**Evidence:** `roles/kvm/kvm.md`, `roles/davinci_resolve/DaVinciResolve.md`.
+**Evidence:** `roles/kvm/kvm.md`.
 
-**Recommendation:** Either link these from `README.md` (under a "Detailed Role Documentation" section), or standardise to `roles/<role>/README.md` naming. If
-they add real value, link them.
+**Recommendation:** Either link it from `README.md` (under a "Detailed Role Documentation" section), or standardise to `roles/kvm/README.md` naming.
 **Effort:** Trivial.
 **Priority:** Low
 
@@ -677,14 +572,12 @@ These are changes that take less than 30 minutes and have immediate value:
 | QW-4  | Remove trailing space from `mangohud.version: "v0.8.1 "`                                                                                                                                                     | `roles/mangohud/defaults/main.yaml`                                                    | 1 min                            |
 | QW-5  | Add `tags: development` to `development` role in `development.yaml`                                                                                                                                          | `playbooks/development.yaml`                                                           | 1 min                            |
 | QW-6  | Add `tags: desktop` to `desktop` role in `desktop.yaml`                                                                                                                                                      | `playbooks/desktop.yaml`                                                               | 1 min                            |
-| QW-7  | Remove hardcoded Google Analytics cookie from DaVinci role                                                                                                                                                   | `roles/davinci_resolve/tasks/main.yaml` line 84                                        | 2 min                            |
 | QW-8  | Rename `lspci_output` register to `lspci_output_nvidia` for consistency                                                                                                                                      | `playbooks/tasks/pre_tasks.yaml`                                                       | 2 min                            |
 | QW-9  | Add `# Do not edit directly — generated by make generate-group-vars` comment to `all.yaml` header in `generate-group-vars.sh` (it already has one, but make it more prominent / link to the Makefile target) | `generate-group-vars.sh`                                                               | 5 min                            |
 | QW-10 | Add `pull_request:` trigger to `ubuntu-test.yaml` with `paths:` filter                                                                                                                                       | `.github/workflows/ubuntu-test.yaml`                                                   | 10 min                           |
 | QW-11 | Fix `has_nvidia_gpu` to use `stdout \| length > 0` instead of `rc` check                                                                                                                                    | `playbooks/tasks/pre_tasks.yaml`                                                       | 2 min                            |
 | QW-12 | Disable one of `orcaslicer_enabled` or `orcaslicer_flatpak_enabled` by default                                                                                                                               | `roles/orcaslicer/defaults/main.yaml` or `roles/orcaslicer_flatpak/defaults/main.yaml` | 2 min                            |
 | QW-13 | Replace `midclt` rule in `CLAUDE.local.md` with general `command` vs `shell` guidance                                                                                                                        | `CLAUDE.local.md`                                                                      | 5 min                            |
-| QW-14 | Add DaVinci registration data comment and `vault.yaml.example`                                                                                                                                               | `inventory/group_vars/all.yaml`, new file                                              | 15 min                           |
 
 ---
 
@@ -697,12 +590,6 @@ already in `requirements.yml`.
 
 ---
 
-### LT-2 — Split `davinci_resolve/tasks/main.yaml` into subtask files
-
-Estimated effort: 1–2 hours (mechanical refactor). Reduces the single 575-line file to 5 focused files of ~80–120 lines each. Follow the `kvm` role pattern.
-
----
-
 ### LT-3 — Add version-pinning idempotency to `orcaslicer`
 
 Estimated effort: 1 hour. Write a version marker file at install time, read it on subsequent runs, compare to `orcaslicer_appimage.version`, and skip if
@@ -712,7 +599,7 @@ unchanged. Model after `trezor_suite`.
 
 ### LT-4 — Introduce `ansible-vault` for personal credentials
 
-Estimated effort: 2–3 hours (initial setup). Create a vault file for DaVinci registration data, git user config, and any other PII. Document the vault password
+Estimated effort: 2–3 hours (initial setup). Create a vault file for git user config and any other PII. Document the vault password
 pattern in README. This is optional for a personal project but important if the repo is used by others.
 
 ---
@@ -755,8 +642,7 @@ Estimated effort: 30 minutes. Add `common_upgrade_packages: false` default and g
   convention.
 - **`changed_when: false` on read tasks, `changed_when: true` on write tasks** — well-applied but implicit; one sentence in CLAUDE.local.md would make it
   explicit.
-- **State-machine pattern** (check → set_fact → conditional block) — used in `trezor_suite` and `orcaslicer` but not in `davinci_resolve` or `mangohud`. Make it
-  the explicit standard.
+- **State-machine pattern** (check → set_fact → conditional block) — used in `trezor_suite` and `orcaslicer` but not in `mangohud`. Make it the explicit standard.
 
 ### Roles that are in wrong playbooks
 
@@ -791,38 +677,34 @@ Estimated effort: 30 minutes. Add `common_upgrade_packages: false` default and g
 3. **QW-3**: Fix `gaming.yaml` playbook `name:` field
 4. **QW-4**: Remove trailing space from `mangohud.version`
 5. **QW-5 + QW-6**: Add missing role tags in `development.yaml` and `desktop.yaml`
-6. **SEC-1 + QW-14**: Add PII warning comment to DaVinci defaults, add `vault.yaml.example`
 
-After these six items, regenerate `inventory/group_vars/all.yaml` with `make generate-group-vars` and verify the CI passes.
+After these five items, regenerate `inventory/group_vars/all.yaml` with `make generate-group-vars` and verify the CI passes.
 
 ---
 
 ### Do Next (important quality improvements)
 
 1. **A-3**: Add idempotency check to `mangohud` (prevent unnecessary full rebuilds)
-2. **A-8**: Add version-check idempotency to `davinci_resolve`
-3. **A-9**: Add version marker to `orcaslicer` (detect version drift)
-4. **A-10**: Disable one of `orcaslicer`/`orcaslicer_flatpak` by default (or document the dual-install)
-5. **CI-2**: Add `pull_request:` trigger to `ubuntu-test.yaml` with role/playbook path filter
-6. **CI-4**: Prefix unprefixed vars in `davinci_resolve`, then remove global `var-naming[no-role-prefix]` skip
-7. **DOC-4**: Add `all.yaml` auto-generation notice to README
-8. **DOC-1**: Add "Customising for your setup" section to README
-9. **CL-2/CL-3**: Update `CLAUDE.local.md` — remove `midclt` reference, document `_` prefix convention
+2. **A-9**: Add version marker to `orcaslicer` (detect version drift)
+3. **A-10**: Disable one of `orcaslicer`/`orcaslicer_flatpak` by default (or document the dual-install)
+4. **CI-2**: Add `pull_request:` trigger to `ubuntu-test.yaml` with role/playbook path filter
+5. **DOC-4**: Add `all.yaml` auto-generation notice to README
+6. **DOC-1**: Add "Customising for your setup" section to README
+7. **CL-2/CL-3**: Update `CLAUDE.local.md` — remove `midclt` reference, document `_` prefix convention
 
 ---
 
 ### Nice to Have Later
 
 1. **A-1**: Refactor `gsettings` to use `community.general.dconf` or loop-based approach
-2. **A-2**: Split `davinci_resolve/tasks/main.yaml` into subtask files
-3. **LT-4**: Introduce `ansible-vault` for PII fields
-4. **LT-5**: Add Molecule tests for `trezor_suite` and `orcaslicer`
-5. **LT-6**: Standardise variable style (`nodejs` dict migration)
-6. **LT-7**: Make `common` apt upgrade opt-in
-7. **S-2 / DOC-2**: Convert `TODO.md` to GitHub Issues
-8. **DOC-3**: Link or standardise `kvm.md` / `DaVinciResolve.md`
-9. **S-5**: Sort `generate-group-vars.sh` loop output explicitly for stability
-10. **A-7**: Gate `apt upgrade` behind a variable flag
+2. **LT-4**: Introduce `ansible-vault` for PII fields
+3. **LT-5**: Add Molecule tests for `trezor_suite` and `orcaslicer`
+4. **LT-6**: Standardise variable style (`nodejs` dict migration)
+5. **LT-7**: Make `common` apt upgrade opt-in
+6. **S-2 / DOC-2**: Convert `TODO.md` to GitHub Issues
+7. **DOC-3**: Link or standardise `kvm.md`
+8. **S-5**: Sort `generate-group-vars.sh` loop output explicitly for stability
+9. **A-7**: Gate `apt upgrade` behind a variable flag
 
 ---
 
