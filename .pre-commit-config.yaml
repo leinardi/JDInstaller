@@ -1,4 +1,72 @@
+---
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+        exclude: ^mkdocs\.ya?ml$
+      - id: check-json
+      - id: check-toml
+      - id: check-added-large-files
+  - repo: https://github.com/checkmake/checkmake.git
+    rev: v0.3.0
+    hooks:
+      - id: checkmake
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.19.1
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          # add stubs the project needs
+          - types-requests
+          - types-setuptools
+      - id: mypy
+        alias: mypy-json-output
+        name: mypy (json output)
+        args:
+          - "--output"
+          - "json"
+          - "--hide-error-context"
+          - "--show-column-numbers"
+          - "--show-absolute-path"
+          - "--no-pretty"
+          - "--ignore-missing-imports"
+          - "--scripts-are-modules"
+        additional_dependencies:
+          # add stubs the project needs
+          - types-requests
+          - types-setuptools
+        stages: [manual]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
+    hooks:
+      - id: ruff-check
+        args: ["--fix"]
+      - id: ruff-format
+      - id: ruff-check
+        alias: ruff-check-rdjson
+        args: ["--fix", "-q", "--output-format=rdjson"]
+        stages: [manual]
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.10
+    hooks:
+      - id: actionlint
+        name: actionlint
+        files: ^\.github/workflows/.*\.(yml|yaml)$
+        args: ["-shellcheck", "shellcheck -S error"]
+      - id: actionlint
+        alias: actionlint-oneline
+        name: actionlint (one line per one error)
+        files: ^\.github/workflows/.*\.(yml|yaml)$
+        args: ["-oneline", "-shellcheck", "shellcheck -S error"]
+        stages: [manual]
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.20.0
+    hooks:
+      - id: markdownlint-cli2
   - repo: local
     hooks:
       - id: generate-group-vars
@@ -12,14 +80,14 @@ repos:
         entry: shellcheck
         language: system
         types: [shell]
-        args: ["-e", "SC2148"]
+        args: ["-x"]
       - id: shellcheck
         alias: shellcheck-diff-output
         name: shellcheck (diff output)
         entry: shellcheck
         language: system
         types: [shell]
-        args: ["-f", "diff", "-e", "SC2148"]
+        args: ["-f", "diff", "-x"]
         stages: [manual]
       - id: shellcheck
         alias: shellcheck-json-output
@@ -27,7 +95,7 @@ repos:
         entry: shellcheck
         language: system
         types: [shell]
-        args: ["-f", "json", "-e", "SC2148"]
+        args: ["-f", "json", "-x"]
         stages: [manual]
       - id: prettier-yaml
         name: prettier-yaml
@@ -35,32 +103,30 @@ repos:
         language: node
         additional_dependencies: ["prettier@3.5.3"]
         files: \.(yml|yaml)$
+        exclude: ^roles/
         args: ["--write"]
-  - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.11
-    hooks:
-      - id: actionlint
-        name: actionlint
-        files: ^\.github/workflows/.*\.(yml|yaml)$
-        args: ["-shellcheck", "shellcheck -S error"]
-      - id: actionlint
-        alias: actionlint-oneline
-        name: actionlint (one line per one error)
-        files: ^\.github/workflows/.*\.(yml|yaml)$
-        args: ["-oneline", "-shellcheck", "shellcheck -S error"]
-        stages: [manual]
   - repo: https://github.com/ansible/ansible-lint
-    rev: v26.3.0
+    rev: v26.1.1
     hooks:
+      - id: ansible-lint
+        alias: ansible-lint-fix
+        name: ansible-lint-fix
+        always_run: false
+        files: ^(playbooks|roles|inventory)/.*\.(ya?ml)$
+        exclude: ^roles/.*/(files|templates)/|^\.github/|^docs/|^public/|^mkdocs\.ya?ml$
+        args: [--fix]
+        language_version: python3.12
       - id: ansible-lint
         name: ansible-lint
         always_run: false
-        files: \.(yml|yaml)$
-        exclude: ^\.github/.*
+        files: ^(playbooks|roles|inventory)/.*\.(ya?ml)$
+        exclude: ^roles/.*/(files|templates)/|^\.github/|^docs/|^public/|^mkdocs\.ya?ml$
         language_version: python3.12
       - id: ansible-lint
         alias: ansible-lint-parseable
         name: "ansible-lint (parseable output)"
+        files: ^(playbooks|roles|inventory)/.*\.(ya?ml)$
+        exclude: ^roles/.*/(files|templates)/|^\.github/|^docs/|^public/|^mkdocs\.ya?ml$
         args: ["-p"]
         stages: [manual]
         language_version: python3.12

@@ -47,6 +47,7 @@ You can either download the ZIP file of this repository or clone the repository 
    unzip JDInstaller-master.zip
    cd JDInstaller-master
    ```
+
 3. Install `make` if it is not already installed:
 
    ```bash

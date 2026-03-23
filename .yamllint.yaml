@@ -13,8 +13,11 @@ rules:
   comments-indentation: false
   document-start: disable
   indentation: disable
-  line-length: disable
+  line-length:
+    max: 9999
   octal-values:
     forbid-implicit-octal: true
     forbid-explicit-octal: true
-  truthy: disable
+  truthy:
+    allowed-values: ["true", "false"]
+    check-keys: false

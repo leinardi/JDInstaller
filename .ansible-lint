@@ -1,5 +1,19 @@
+---
+offline: true
+
 exclude_paths:
+  - .cache/
   - .github/
+  - .markdownlint-cli2.yaml
+  - .pre-commit-config.yaml
+  - .yamllint.yaml
+  - docs/
+  - inventory/group_vars/all.yaml
+  - mkdocs.yaml
+  - public/
+  - roles/**/files/
+  - roles/**/templates/
+  - venv/
 
 skip_list:
   - var-naming[no-role-prefix]
