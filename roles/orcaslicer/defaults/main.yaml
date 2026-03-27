@@ -6,7 +6,7 @@ orcaslicer_appimage:
   nightly: false
 
   # Stable only: "latest" (default) or a specific version like "2.3.2"
-  version: 2.3.2-rc2
+  version: 2.3.2
 
   # If true and OrcaSlicer is already installed, wipe install_dir and reinstall.
   force_reinstall: false

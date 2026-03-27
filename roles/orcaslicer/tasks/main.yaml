@@ -36,14 +36,77 @@
     _orcaslicer_ai_do_install: "{{ (not _orcaslicer_ai_binary_stat.stat.exists) or _orcaslicer_ai_force_reinstall }}"
   changed_when: false
 
-- name: "OrcaSlicer | Remove install dir (force reinstall)"
+- name: "OrcaSlicer | Get installed version string"
+  ansible.builtin.command:
+    cmd: "{{ orcaslicer_appimage.install_dir }}/bin/orca-slicer -h"
+  register: _orcaslicer_ai_version_output
+  changed_when: false
+  failed_when: false
+  when:
+    - _orcaslicer_ai_is_installed
+    - not (orcaslicer_appimage.nightly | bool)
+    - orcaslicer_appimage.version != "latest"
+
+- name: "OrcaSlicer | Parse installed version"
+  ansible.builtin.set_fact:
+    _orcaslicer_ai_installed_version: >-
+      {{
+        (
+          (_orcaslicer_ai_version_output.stdout_lines | default([]))
+          + (_orcaslicer_ai_version_output.stderr_lines | default([]))
+        )
+        | select('match', '^OrcaSlicer-')
+        | list
+        | first
+        | default('')
+        | regex_replace('^OrcaSlicer-(.+):$', '\1')
+      }}
+  changed_when: false
+  when:
+    - _orcaslicer_ai_is_installed
+    - not (orcaslicer_appimage.nightly | bool)
+    - orcaslicer_appimage.version != "latest"
+
+- name: "OrcaSlicer | Normalize desired version (strip leading v)"
+  ansible.builtin.set_fact:
+    _orcaslicer_ai_desired_version: >-
+      {{
+        (orcaslicer_appimage.version | string)
+        | regex_replace('^v', '')
+      }}
+  changed_when: false
+  when:
+    - not (orcaslicer_appimage.nightly | bool)
+    - orcaslicer_appimage.version != "latest"
+
+- name: "OrcaSlicer | Decide whether version mismatch requires reinstall"
+  ansible.builtin.set_fact:
+    _orcaslicer_ai_do_install: >-
+      {{
+        _orcaslicer_ai_do_install
+        or (
+          _orcaslicer_ai_is_installed
+          and (_orcaslicer_ai_installed_version | default('')) != _orcaslicer_ai_desired_version
+        )
+      }}
+    _orcaslicer_ai_version_mismatch: >-
+      {{
+        _orcaslicer_ai_is_installed
+        and (_orcaslicer_ai_installed_version | default('')) != _orcaslicer_ai_desired_version
+      }}
+  changed_when: false
+  when:
+    - not (orcaslicer_appimage.nightly | bool)
+    - orcaslicer_appimage.version != "latest"
+
+- name: "OrcaSlicer | Remove install dir (force reinstall or version mismatch)"
   become: true
   ansible.builtin.file:
     path: "{{ orcaslicer_appimage.install_dir }}"
     state: absent
   when:
-    - _orcaslicer_ai_force_reinstall
     - _orcaslicer_ai_is_installed
+    - _orcaslicer_ai_force_reinstall or (_orcaslicer_ai_version_mismatch | default(false))
 
 - name: "OrcaSlicer | Ensure temporary directory exists"
   ansible.builtin.file:

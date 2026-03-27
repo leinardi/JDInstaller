@@ -57,11 +57,13 @@ repos:
         always_run: false
         files: \.(yml|yaml)$
         exclude: ^\.github/.*
+        language_version: python3.12
       - id: ansible-lint
         alias: ansible-lint-parseable
         name: "ansible-lint (parseable output)"
         args: ["-p"]
         stages: [manual]
+        language_version: python3.12
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.38.0
     hooks:
