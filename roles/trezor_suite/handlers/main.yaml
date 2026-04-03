@@ -1,9 +1,9 @@
 ---
 - name: Restart udev
   become: true
-  ansible.builtin.service:
-    name: udev
-    state: restarted
+  ansible.builtin.command:
+    cmd: udevadm control --reload-rules
+  changed_when: true
 - name: Move trezor extracted payload into place
   become: true
   ansible.builtin.shell:

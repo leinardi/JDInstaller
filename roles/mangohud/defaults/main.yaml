@@ -1,5 +1,5 @@
 ---
-mangohud_enabled: true
+mangohud_enabled: false
 mangohud:
   version: "v0.8.1"
   dependencies:
