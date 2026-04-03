@@ -1,7 +1,7 @@
 ---
 trezor_suite_enabled: true
 trezor_suite:
-  version: "26.3.2"
+  version: "26.3.3"
   arch: "x86_64"
   install_dir: "/opt/trezor-suite"
   gpg_key_url: "https://trezor.io/security/satoshilabs-2021-signing-key.asc"

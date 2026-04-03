@@ -1,8 +1,17 @@
 ---
+- name: Check if gnome-extensions-cli is functional
+  ansible.builtin.command:
+    cmd: "gnome-extensions-cli --version"
+  register: gec_check
+  failed_when: false
+  changed_when: false
+  environment:
+    PATH: "{{ ansible_facts['env']['HOME'] }}/.local/bin:{{ ansible_facts['env']['PATH'] }}"
+
 - name: Install gnome-extensions-cli using pipx
   community.general.pipx:
     name: gnome-extensions-cli
-    state: present
+    state: "{{ 'reinstall' if gec_check.rc != 0 else 'present' }}"
     executable: pipx
 
 - name: Install system-monitor-next dependencies

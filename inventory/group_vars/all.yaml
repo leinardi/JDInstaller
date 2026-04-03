@@ -349,7 +349,7 @@ timeshift_enabled: false
 # Variables from roles/trezor_suite
 trezor_suite_enabled: true
 trezor_suite:
-  version: "26.3.2"
+  version: "26.3.3"
   arch: "x86_64"
   install_dir: "/opt/trezor-suite"
   gpg_key_url: "https://trezor.io/security/satoshilabs-2021-signing-key.asc"
@@ -372,7 +372,7 @@ vagrant_enabled: false
 # Variables from roles/virtualbox
 virtualbox_enabled: false
 virtualbox:
-  version: "7.1"
+  version: "7.2"
 
 # Variables from roles/vlc
 vlc_enabled: true
