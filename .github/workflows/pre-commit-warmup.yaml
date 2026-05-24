@@ -3,36 +3,14 @@ name: Pre-commit Cache Warm-up
 on:
   push:
     branches:
+      - main
       - master
     paths:
       - .pre-commit-config.yaml
   workflow_dispatch:
 
-# This allows a subsequently queued workflow run to interrupt previous runs
-concurrency:
-  group: "${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}"
-  cancel-in-progress: true
-
 jobs:
-  warm-precommit-cache:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Install pre-commit
-        run: pip install --no-cache-dir pre-commit
-
-      - name: Cache pre-commit
-        id: precommit
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit|${{ runner.os }}|${{ hashFiles('.pre-commit-config.yaml') }}
-
-      - name: Warm up hook environments
-        if: steps.precommit.outputs.cache-hit != 'true'
-        run: pre-commit install-hooks
+  warm-pre-commit-cache:
+    uses: leinardi/gh-reusable-workflows/.github/workflows/pre-commit-warmup.yaml@v1
+    with:
+      python_version: "3.14"
