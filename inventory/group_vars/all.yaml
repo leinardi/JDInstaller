@@ -67,26 +67,6 @@ common:
     - whois
     - zip
 
-# Variables from roles/davinci_resolve
-davinci_resolve_enabled: false
-davinci_resolve:
-  install_studio: false # Set to true to install the Studio version
-  free:
-    download_referid: b18a01b5460b4c6f867bb007e9861543
-    product: DaVinci Resolve
-    package: davinci-resolve
-  studio:
-    download_referid: cbccd0fb44684be3a2dace78a0ad7b20
-    product: DaVinci Resolve Studio
-    package: davinci-resolve-studio
-  country: us
-  email: someone@canonical.com
-  phone: 202-555-0194
-  state: DE
-  city: Dover
-  street: 838 Walker Road
-  user_agent: "Mozilla/5.0 (X11; Linux {{ ansible_architecture }}; rv:131.0) Gecko/20100101 Firefox/131.0"
-
 # Variables from roles/desktop
 desktop_enabled: true
 desktop:
@@ -152,7 +132,7 @@ flatpak_enabled: true
 freecad_enabled: true
 
 # Variables from roles/gamemode
-gparted_enabled: true
+gamemode_enabled: true
 
 # Variables from roles/gaming
 gaming_enabled: true
@@ -178,8 +158,33 @@ gnome_extensions:
     - nightthemeswitcher@romainvigier.fr
     - system-monitor-next@paradoxxx.zero.gmail.com
 
+system_monitor_next_settings:
+  - { key: "battery-refresh-time", value: "100000" }
+  - { key: "battery-show-text", value: "false" }
+  - { key: "cpu-graph-width", value: "50" }
+  - { key: "cpu-show-text", value: "false" }
+  - { key: "disk-display", value: "true" }
+  - { key: "disk-graph-width", value: "50" }
+  - { key: "disk-show-text", value: "false" }
+  - { key: "fan-refresh-time", value: "100000" }
+  - { key: "gpu-graph-width", value: "50" }
+  - { key: "gpu-refresh-time", value: "100000" }
+  - { key: "gpu-show-text", value: "false" }
+  - { key: "icon-display", value: "false" }
+  - { key: "memory-graph-width", value: "50" }
+  - { key: "memory-show-text", value: "false" }
+  - { key: "net-graph-width", value: "50" }
+  - { key: "net-show-text", value: "false" }
+  - { key: "swap-graph-width", value: "50" }
+  - { key: "swap-show-text", value: "false" }
+  - { key: "thermal-graph-width", value: "50" }
+  - { key: "thermal-refresh-time", value: "100000" }
+  - { key: "thermal-show-menu", value: "false" }
+  - { key: "thermal-show-text", value: "false" }
+  - { key: "thermal-threshold", value: "90" }
+
 # Variables from roles/gparted
-gamemode_enabled: true
+gparted_enabled: true
 
 # Variables from roles/graphics_drivers
 graphics_drivers_enabled: true
@@ -218,9 +223,9 @@ libreoffice_enabled: true
 mainline_enabled: true
 
 # Variables from roles/mangohud
-mangohud_enabled: true
+mangohud_enabled: false
 mangohud:
-  version: "v0.8.1 "
+  version: "v0.8.1"
   dependencies:
     - cmake
     - git
@@ -248,12 +253,9 @@ nautilus_plugins_enabled: true
 
 # Variables from roles/nodejs
 nodejs_enabled: true
-nodejs_version_major: 22
+nodejs_version_major: 24
 nodejs_repo_name: "nodesource-node{{ nodejs_version_major }}"
 nodejs_repo_uri: "https://deb.nodesource.com/node_{{ nodejs_version_major }}.x"
-
-# Variables from roles/nordvpn
-nordvpn_enabled: false
 
 # Variables from roles/openjdk
 openjdk_enabled: true
@@ -263,6 +265,9 @@ openjre_enabled: false
 
 # Variables from roles/opentofu
 opentofu_enabled: true
+
+terraform_docs_version: v0.22.0
+terraform_docs_install_path: /usr/local/bin/terraform-docs
 
 # Variables from roles/orcaslicer
 orcaslicer_enabled: true
@@ -347,7 +352,7 @@ timeshift_enabled: false
 # Variables from roles/trezor_suite
 trezor_suite_enabled: true
 trezor_suite:
-  version: "26.3.2"
+  version: "26.3.3"
   arch: "x86_64"
   install_dir: "/opt/trezor-suite"
   gpg_key_url: "https://trezor.io/security/satoshilabs-2021-signing-key.asc"
@@ -370,7 +375,7 @@ vagrant_enabled: false
 # Variables from roles/virtualbox
 virtualbox_enabled: true
 virtualbox:
-  version: "7.1"
+  version: "7.2"
 
 # Variables from roles/vlc
 vlc_enabled: true

@@ -10,7 +10,7 @@ output_file="inventory/group_vars/all.yaml"
 } > "$output_file"
 
 # Loop through each role's defaults/main.yaml file
-for role in roles/*; do
+for role in $(find roles -mindepth 1 -maxdepth 1 -type d | sort); do
   defaults_file="$role/defaults/main.yaml"
 
   if [ -f "$defaults_file" ]; then

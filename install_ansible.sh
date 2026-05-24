@@ -11,6 +11,16 @@ check_root() {
   fi
 }
 
+# Function to check whether the Ansible PPA has packages for the current Ubuntu codename
+ppa_supports_codename() {
+  local codename
+  codename=$(lsb_release -cs)
+  local ppa_url="https://ppa.launchpadcontent.net/ansible/ansible/ubuntu/dists/${codename}/"
+  local http_status
+  http_status=$(curl --head --silent --output /dev/null --write-out "%{http_code}" --max-time 10 "${ppa_url}")
+  [[ "${http_status}" == "200" ]]
+}
+
 # Function to add the Ansible PPA if it's not already added
 add_ansible_ppa() {
   if ! grep -q "ansible/ansible" /etc/apt/sources.list /etc/apt/sources.list.d/*; then
@@ -18,12 +28,12 @@ add_ansible_ppa() {
 
     # Install software-properties-common if it's not installed
     if ! dpkg -s software-properties-common >/dev/null 2>&1; then
-      sudo apt-get update -y
-      sudo apt-get install -y software-properties-common
+      apt-get update -y
+      apt-get install -y software-properties-common
     fi
 
     # Add the Ansible PPA
-    if ! sudo apt-add-repository ppa:ansible/ansible -y; then
+    if ! apt-add-repository ppa:ansible/ansible -y; then
       echo "Error: Failed to add Ansible PPA. Please check your connection or repository settings." >&2
       exit 1
     fi
@@ -37,8 +47,8 @@ install_ansible() {
   echo "Installing Ansible and dependencies..."
 
   # Update package list and install Ansible
-  sudo apt-get update -y
-  if ! sudo apt-get install -y ansible git python3-apt; then
+  apt-get update -y
+  if ! apt-get install -y ansible git python3-apt; then
     echo "Error: Failed to install Ansible. Please check the logs." >&2
     exit 1
   fi
@@ -47,7 +57,11 @@ install_ansible() {
 # Function to check if Ansible is installed
 check_ansible_installed() {
   if ! command -v ansible >/dev/null 2>&1; then
-    add_ansible_ppa
+    if ppa_supports_codename; then
+      add_ansible_ppa
+    else
+      echo "Ansible PPA does not support $(lsb_release -cs), installing from Ubuntu repos..."
+    fi
     install_ansible
   else
     echo "Ansible is already installed."

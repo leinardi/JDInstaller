@@ -5,7 +5,7 @@
     name: insync
     types: deb
     uris: http://apt.insync.io/ubuntu
-    suites: "{{ ansible_distribution_release }}"
+    suites: "{{ ansible_facts['distribution_release'] }}"
     components: contrib non-free
     signed_by: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xACCAF35C
 
@@ -21,7 +21,7 @@
   ansible.builtin.lineinfile:
     path: /etc/sysctl.d/99-sysctl.conf
     state: absent
-    regexp: '^fs\.inotify\.max_user_watches=.*$'
+    regexp: "^fs\\.inotify\\.max_user_watches=.*$"
     insertafter: "^# added by Insync$"
     backrefs: true
 

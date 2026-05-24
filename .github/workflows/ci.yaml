@@ -111,6 +111,11 @@ jobs:
           path: ~/.cache/pre-commit
           key: pre-commit|${{ runner.os }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
       - name: Install Python deps + pre-commit
         run: |
           pip install --no-cache-dir pre-commit

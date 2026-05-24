@@ -1,4 +1,5 @@
 # Resolve repository root (Makefile can live anywhere)
+SHELL := /bin/bash
 REPO_ROOT := $(shell git rev-parse --show-toplevel 2>/dev/null || pwd)
 
 MK_COMMON_REPO        ?= leinardi/make-common
@@ -37,17 +38,24 @@ generate-group-vars: check-installed-pre-commit ## Generate inventory/group_vars
 .PHONY: install
 install: check-ansible ## Run ansible-playbook with optional parameters
 	@echo "Running ansible-playbook with optional parameters..."
-	ansible-playbook playbooks/ubuntu-setup.yaml --ask-become-pass $(strip \
+	@read -r -s -p "BECOME password: " _pass; echo; \
+	_tmpfile=$$(mktemp -t ansible-sudoers.XXXXXXXX); \
+	printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$$USER" > "$$_tmpfile"; \
+	echo "$$_pass" | sudo -S cp "$$_tmpfile" /etc/sudoers.d/90-ansible-nopasswd; \
+	sudo chmod 0440 /etc/sudoers.d/90-ansible-nopasswd; \
+	rm -f "$$_tmpfile"; \
+	ansible-playbook playbooks/ubuntu-setup.yaml $(strip \
 	$(if $(TAGS),--tags=$(TAGS)) \
 	$(if $(LIMIT),--limit=$(LIMIT)) \
 	$(if $(EXTRA_VARS),--extra-vars="$(EXTRA_VARS)") \
-	$(if $(OTHER_PARAMS),$(OTHER_PARAMS)))
+	$(if $(OTHER_PARAMS),$(OTHER_PARAMS))); \
+	_rc=$$?; sudo rm -f /etc/sudoers.d/90-ansible-nopasswd; exit $$_rc
 
 .PHONY: check-ansible
 check-ansible: # Check if ansible is installed, and run the ansible installation script if not
 	@if ! command -v ansible >/dev/null 2>&1; then \
 		echo "Ansible is not installed, running setup script..."; \
-		./install_ansible.sh; \
+		sudo ./install_ansible.sh; \
 	else \
 		echo "Ansible is already installed."; \
 	fi

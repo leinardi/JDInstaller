@@ -1,7 +1,7 @@
 ---
-##
+#
 # Configures grub menu entry and handles GPU.
-##
+#
 
 - name: Create GRUB iommu.cfg configuration file
   become: true

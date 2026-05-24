@@ -15,13 +15,13 @@ its respective value in `inventory/group_vars/all.yaml`.
     - [Run Single Roles](#run-single-roles)
 - [Playbooks](#playbooks)
 - [Roles](#roles)
-- [DaVinci Resolve](#davinci-resolve)
 - [Contributions](#contributions)
 - [Acknowledgements](#acknowledgements)
 
 ## Introduction
 
-This project uses [Ansible](https://www.ansible.com/) to automate the setup of Ubuntu installations. By running the main playbook (`playbooks/ubuntu-setup.yaml`), the
+This project uses [Ansible](https://www.ansible.com/) to automate the setup of Ubuntu installations. By running the main playbook (
+`playbooks/ubuntu-setup.yaml`), the
 system will be configured with a range of packages and settings that I prefer. You can easily customize the playbook by enabling or disabling specific roles in
 `inventory/group_vars/all.yaml`.
 
@@ -46,6 +46,7 @@ You can either download the ZIP file of this repository or clone the repository 
    unzip JDInstaller-master.zip
    cd JDInstaller-master
    ```
+
 3. Install `make` if it is not already installed:
 
    ```bash
@@ -114,8 +115,8 @@ To generate/reset the `inventory/group_vars/all.yaml` file to the default values
 Below is a list of the playbooks that are included in this project. You can enable or disable each one by modifying the respective variable in
 `inventory/group_vars/all.yaml`.
 
-| Playbook          | Enabled by Default | Description                               |
-|-------------------|--------------------|-------------------------------------------|
+| Playbook           | Enabled by Default | Description                               |
+|--------------------|--------------------|-------------------------------------------|
 | `common.yaml`      | ✅                  | Sets up common packages and settings.     |
 | `desktop.yaml`     | ✅                  | Installs desktop-specific applications.   |
 | `development.yaml` | ✅                  | Installs development tools and libraries. |
@@ -124,7 +125,8 @@ Below is a list of the playbooks that are included in this project. You can enab
 
 ## Roles
 
-The tables below provide an overview of the roles included in this project. Each role can be enabled or disabled via `inventory/group_vars/all.yaml`. The "Enabled by
+The tables below provide an overview of the roles included in this project. Each role can be enabled or disabled via `inventory/group_vars/all.yaml`. The "
+Enabled by
 Default" column shows whether the role is active by default. Even if a role is enabled by default, if the relative playbook is disabled via
 `inventory/group_vars/all.yaml`, the role will not be executed. To run a specific playbook or role, make sure both the playbook and the role are enabled in
 `inventory/group_vars/all.yaml`.
@@ -144,7 +146,6 @@ Default" column shows whether the role is active by default. Even if a role is e
 | `desktop`          | ✅                  | apt                   | Installs a set of desktop-related packages listed in `desktop.packages`.                       |
 | `chrome`           | ✅                  | apt (Google repo)     | Installs Google Chrome.                                                                        |
 | `chromium`         | ✅                  | apt                   | Installs the open-source Chromium browser.                                                     |
-| `davinci_resolve`  | ⛔                  | archive               | Installs DaVinci Resolve. Change `davinci_resolve.install_studio` to install the Studio build. |
 | `doublecmd`        | ✅                  | apt                   | Installs Double Commander, a file manager.                                                     |
 | `earth`            | ✅                  | apt                   | Installs Google Earth Pro.                                                                     |
 | `edge`             | ⛔                  | apt (Google repo)     | Installs Microsoft Edge browser.                                                               |
@@ -162,7 +163,6 @@ Default" column shows whether the role is active by default. Even if a role is e
 | `mainline`         | ✅                  | PPA                   | Installs Mainline, a tool for managing Linux kernels.                                          |
 | `meld`             | ✅                  | apt                   | Installs Meld, a file comparison tool.                                                         |
 | `nautilus_plugins` | ⛔                  | apt                   | Installs plugins for the Nautilus file manager.                                                |
-| `nordvpn`          | ✅                  | apt (NordVPN repo)    | Installs NordVPN client.                                                                       |
 | `openjre`          | ⛔                  | apt                   | Installs OpenJRE, a Java runtime environment.                                                  |
 | `sweethome3d`      | ✅                  | flathub               | Installs Sweet Home 3D, an interior design app.                                                |
 | `timeshift`        | ⛔                  | apt                   | Installs Timeshift for system backups.                                                         |
@@ -199,29 +199,27 @@ Default" column shows whether the role is active by default. Even if a role is e
 | `mattermost`                | ✅                  | apt (mattermost repo) | Installs Mattermost, a team chat application. |
 | `zoom`                      | ✅                  | deb                   | Installs Zoom, a video conferencing tool.     |
 
-Each playbook can be customized, and roles enabled or disabled as required via `inventory/group_vars/all.yaml`. By default, the playbook `work.yaml` is disabled,
+Each playbook can be customized, and roles enabled or disabled as required via `inventory/group_vars/all.yaml`. By default, the playbook `work.yaml` is
+disabled,
 but can be easily enabled if needed by changing the `work_enabled` in `inventory/group_vars/all.yaml`.
 
 ## DaVinci Resolve
 
-The DaVinci Resolve section of this script automates the entire installation process on Ubuntu 24.04, making it straightforward to get the software up and
-running without requiring older system dependencies or containers.
-
-This part of the script:
-
-- Downloads the official DaVinci Resolve archive and installs it in `/opt/`
-- Sets up necessary symlinks to avoid downgrading dependencies
-- Installs udev rules for USB peripherals like DaVinci Panels
-- Auto-detects and installs the correct OpenCL libraries for AMD, Intel, or Nvidia GPUs
-- Sets up system icons, MIME files, and desktop entries
-
-By default, **the installation of DaVinci Resolve is disabled**. Please refer to [DaVinciResolve.md](roles/davinci_resolve/DaVinciResolve.md) for detailed
-instructions on enabling the installation, as well as uninstallation steps.
+> **Note:** The DaVinci Resolve role has been removed from this branch as it is only supported
+> on Ubuntu 24.04. To install DaVinci Resolve, switch to the `davinci` branch:
+>
+> ```bash
+> git checkout davinci
+> ```
+>
+> See [DaVinciResolve.md](https://github.com/leinardi/JDInstaller/blob/davinci/roles/davinci_resolve/DaVinciResolve.md)
+> for full installation instructions.
 
 ## Contributions
 
 Bug fixes and improvements to the Ansible code are welcome. However, please note that the list of default software installations is strictly based on my
-personal preferences. I will accept pull requests adding roles for software that I don't use, but they must be disabled by default via `inventory/group_vars/all.yaml`.
+personal preferences. I will accept pull requests adding roles for software that I don't use, but they must be disabled by default via
+`inventory/group_vars/all.yaml`.
 
 **Before opening a pull request, please create an issue to describe the feature you would like to add and wait for my approval.** This helps avoid unnecessary
 work.

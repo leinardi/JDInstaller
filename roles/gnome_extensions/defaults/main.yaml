@@ -7,3 +7,28 @@ gnome_extensions:
     - freon@UshakovVasilii_Github.yahoo.com
     - nightthemeswitcher@romainvigier.fr
     - system-monitor-next@paradoxxx.zero.gmail.com
+
+system_monitor_next_settings:
+  - { key: "battery-refresh-time", value: "100000" }
+  - { key: "battery-show-text", value: "false" }
+  - { key: "cpu-graph-width", value: "50" }
+  - { key: "cpu-show-text", value: "false" }
+  - { key: "disk-display", value: "true" }
+  - { key: "disk-graph-width", value: "50" }
+  - { key: "disk-show-text", value: "false" }
+  - { key: "fan-refresh-time", value: "100000" }
+  - { key: "gpu-graph-width", value: "50" }
+  - { key: "gpu-refresh-time", value: "100000" }
+  - { key: "gpu-show-text", value: "false" }
+  - { key: "icon-display", value: "false" }
+  - { key: "memory-graph-width", value: "50" }
+  - { key: "memory-show-text", value: "false" }
+  - { key: "net-graph-width", value: "50" }
+  - { key: "net-show-text", value: "false" }
+  - { key: "swap-graph-width", value: "50" }
+  - { key: "swap-show-text", value: "false" }
+  - { key: "thermal-graph-width", value: "50" }
+  - { key: "thermal-refresh-time", value: "100000" }
+  - { key: "thermal-show-menu", value: "false" }
+  - { key: "thermal-show-text", value: "false" }
+  - { key: "thermal-threshold", value: "90" }

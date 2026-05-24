@@ -1,2 +1,5 @@
 ---
 opentofu_enabled: true
+
+terraform_docs_version: v0.22.0
+terraform_docs_install_path: /usr/local/bin/terraform-docs
