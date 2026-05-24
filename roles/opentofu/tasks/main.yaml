@@ -17,3 +17,55 @@
     name: tofu
     state: present
     update_cache: true
+
+- name: Map terraform-docs architecture token
+  ansible.builtin.set_fact:
+    _terraform_docs_arch: >-
+      {{
+        'amd64' if ansible_facts['architecture'] in ['x86_64', 'amd64']
+        else 'arm64' if ansible_facts['architecture'] in ['aarch64', 'arm64']
+        else None
+      }}
+  failed_when: _terraform_docs_arch is none
+
+- name: Install terraform-docs
+  block:
+    - name: Create terraform-docs temporary directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: terraform-docs
+      register: _terraform_docs_tmpdir
+
+    - name: Download terraform-docs archive
+      ansible.builtin.get_url:
+        url: >-
+          https://github.com/terraform-docs/terraform-docs/releases/download/{{ terraform_docs_version }}/terraform-docs-{{ terraform_docs_version }}-linux-{{ _terraform_docs_arch }}.tar.gz
+        dest: "{{ _terraform_docs_tmpdir.path }}/terraform-docs.tar.gz"
+        mode: "0644"
+
+    - name: Extract terraform-docs archive
+      ansible.builtin.unarchive:
+        src: "{{ _terraform_docs_tmpdir.path }}/terraform-docs.tar.gz"
+        dest: "{{ _terraform_docs_tmpdir.path }}"
+        remote_src: true
+
+    - name: Install terraform-docs binary
+      become: true
+      ansible.builtin.copy:
+        src: "{{ _terraform_docs_tmpdir.path }}/terraform-docs"
+        dest: "{{ terraform_docs_install_path }}"
+        mode: "0755"
+        owner: root
+        group: root
+        remote_src: true
+  always:
+    - name: Remove terraform-docs temporary directory
+      ansible.builtin.file:
+        path: "{{ _terraform_docs_tmpdir.path }}"
+        state: absent
+      when: _terraform_docs_tmpdir.path is defined
+
+- name: Verify terraform-docs runs
+  ansible.builtin.command: "{{ terraform_docs_install_path }} --version"
+  register: _terraform_docs_version
+  changed_when: false

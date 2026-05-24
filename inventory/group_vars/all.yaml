@@ -264,6 +264,9 @@ openjre_enabled: false
 # Variables from roles/opentofu
 opentofu_enabled: true
 
+terraform_docs_version: v0.22.0
+terraform_docs_install_path: /usr/local/bin/terraform-docs
+
 # Variables from roles/orcaslicer
 orcaslicer_enabled: true
 
