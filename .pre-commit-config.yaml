@@ -12,11 +12,11 @@ repos:
       - id: check-toml
       - id: check-added-large-files
   - repo: https://github.com/checkmake/checkmake.git
-    rev: v0.3.0
+    rev: v0.3.2
     hooks:
       - id: checkmake
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.1
+    rev: v2.1.0
     hooks:
       - id: mypy
         additional_dependencies:
@@ -41,7 +41,7 @@ repos:
           - types-setuptools
         stages: [manual]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.0
+    rev: v0.15.15
     hooks:
       - id: ruff-check
         args: ["--fix"]
@@ -51,7 +51,7 @@ repos:
         args: ["--fix", "-q", "--output-format=rdjson"]
         stages: [manual]
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.10
+    rev: v1.7.12
     hooks:
       - id: actionlint
         name: actionlint
@@ -64,7 +64,7 @@ repos:
         args: ["-oneline", "-shellcheck", "shellcheck -S error"]
         stages: [manual]
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.20.0
+    rev: v0.22.1
     hooks:
       - id: markdownlint-cli2
   - repo: local
