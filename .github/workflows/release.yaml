@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Create release tag
         uses: actions/github-script@v9
@@ -32,7 +32,7 @@ jobs:
             })
 
       - name: Workaround to fetch the tag # Is there a better way to do it?
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
