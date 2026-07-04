@@ -64,7 +64,7 @@ repos:
         args: ["-oneline", "-shellcheck", "shellcheck -S error"]
         stages: [manual]
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.22.1
+    rev: v0.23.0
     hooks:
       - id: markdownlint-cli2
   - repo: local
@@ -106,7 +106,7 @@ repos:
         exclude: ^roles/
         args: ["--write"]
   - repo: https://github.com/ansible/ansible-lint
-    rev: v26.4.0
+    rev: v26.6.0
     hooks:
       - id: ansible-lint
         alias: ansible-lint-fix
