@@ -221,6 +221,17 @@
 # -------------------------
 # Asset selection (both)
 # -------------------------
+- name: "OrcaSlicer | Compute AppImage arch match regex"
+  ansible.builtin.set_fact:
+    _orcaslicer_ai_arch_regex: >-
+      {{
+        'aarch64'
+        if ansible_architecture in ['aarch64', 'arm64']
+        else '^(?!.*(?:aarch64|arm64)).*'
+      }}
+  when: _orcaslicer_ai_do_install
+  changed_when: false
+
 - name: "OrcaSlicer | Pick AppImage asset from release"
   ansible.builtin.set_fact:
     _orcaslicer_ai_asset: >-
@@ -229,6 +240,8 @@
           _orcaslicer_release_assets
           | selectattr('name', 'search', '\.AppImage$')
           | selectattr('name', 'search', orcaslicer_appimage.distro_tag)
+          | rejectattr('name', 'search', '_belt')
+          | selectattr('name', 'search', _orcaslicer_ai_arch_regex)
           | list
           | first
         ) | default({})
