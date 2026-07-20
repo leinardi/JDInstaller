@@ -16,7 +16,7 @@ repos:
     hooks:
       - id: checkmake
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.2.0
+    rev: v2.3.0
     hooks:
       - id: mypy
         additional_dependencies:
@@ -41,7 +41,7 @@ repos:
           - types-setuptools
         stages: [manual]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.21
+    rev: v0.15.22
     hooks:
       - id: ruff-check
         args: ["--fix"]
@@ -64,7 +64,7 @@ repos:
         args: ["-oneline", "-shellcheck", "shellcheck -S error"]
         stages: [manual]
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.23.0
+    rev: v0.23.1
     hooks:
       - id: markdownlint-cli2
   - repo: local
