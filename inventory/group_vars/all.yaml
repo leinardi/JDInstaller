@@ -1,5 +1,30 @@
 # Automatically generated from roles' defaults
 ---
+# Variables from roles/amethyst_mod_manager
+amethyst_mod_manager_enabled: true
+
+amethyst_mod_manager:
+  # "latest" or a specific tag/version, e.g. "v2.0.4" / "2.0.4"
+  version: "v2.0.4"
+
+  # Official GitHub repo used for the release API and assets
+  github_repo: ChrisDKN/Amethyst-Mod-Manager
+
+  # Used to select the right AppImage asset
+  arch: x86_64
+
+  # Where to extract the AppImage
+  install_dir: /opt/amethyst-mod-manager
+
+  # Convenience symlink in PATH
+  bin_symlink: /usr/local/bin/amethyst-mod-manager
+
+  # If true and Amethyst Mod Manager is already installed, wipe install_dir and reinstall.
+  force_reinstall: false
+
+# Temporary download folder
+amethyst_mod_manager_tmp_dir: /tmp/amethyst-mod-manager
+
 # Variables from roles/anydesk
 anydesk_enabled: true
 
@@ -223,9 +248,9 @@ libreoffice_enabled: true
 mainline_enabled: true
 
 # Variables from roles/mangohud
-mangohud_enabled: false
+mangohud_enabled: true
 mangohud:
-  version: "v0.8.1"
+  version: "v0.8.4"
   dependencies:
     - cmake
     - git

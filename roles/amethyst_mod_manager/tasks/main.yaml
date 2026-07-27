@@ -1,0 +1,301 @@
+---
+- name: "Amethyst Mod Manager | Validate configuration"
+  ansible.builtin.assert:
+    that:
+      - amethyst_mod_manager is mapping
+      - amethyst_mod_manager.version is defined
+      - (amethyst_mod_manager.version | length) > 0
+      - amethyst_mod_manager.github_repo is defined
+      - (amethyst_mod_manager.github_repo | length) > 0
+      - amethyst_mod_manager.arch is defined
+      - (amethyst_mod_manager.arch | length) > 0
+      - amethyst_mod_manager.install_dir is defined
+      - (amethyst_mod_manager.install_dir | length) > 0
+      - amethyst_mod_manager.bin_symlink is defined
+      - (amethyst_mod_manager.bin_symlink | length) > 0
+      - amethyst_mod_manager.force_reinstall is defined
+      - amethyst_mod_manager_tmp_dir is defined
+      - (amethyst_mod_manager_tmp_dir | length) > 0
+    fail_msg: "Invalid or incomplete Amethyst Mod Manager role configuration."
+
+- name: "Amethyst Mod Manager | Normalize force_reinstall flag"
+  ansible.builtin.set_fact:
+    _amethyst_force_reinstall: "{{ (amethyst_mod_manager.force_reinstall | default(false)) | bool }}"
+  changed_when: false
+
+- name: "Amethyst Mod Manager | Check installed desktop file"
+  ansible.builtin.stat:
+    path: /usr/share/applications/amethyst-mod-manager.desktop
+  register: _amethyst_desktop_stat
+  changed_when: false
+
+- name: "Amethyst Mod Manager | Read installed desktop file"
+  ansible.builtin.slurp:
+    src: /usr/share/applications/amethyst-mod-manager.desktop
+  register: _amethyst_desktop_content
+  when: _amethyst_desktop_stat.stat.exists
+
+- name: "Amethyst Mod Manager | Parse installed version"
+  ansible.builtin.set_fact:
+    _amethyst_installed_version: >-
+      {{ (_amethyst_desktop_content.content | b64decode).splitlines()
+         | select('match', '^X-AppImage-Version=')
+         | list | first | default('')
+         | regex_replace('^X-AppImage-Version=', '') }}
+  changed_when: false
+  when: _amethyst_desktop_stat.stat.exists
+
+- name: "Amethyst Mod Manager | Normalize desired version (strip leading v)"
+  ansible.builtin.set_fact:
+    _amethyst_desired_version: "{{ (amethyst_mod_manager.version | string) | regex_replace('^v', '') }}"
+  changed_when: false
+  when: amethyst_mod_manager.version != "latest"
+
+- name: "Amethyst Mod Manager | Decide whether install is needed (pinned version)"
+  ansible.builtin.set_fact:
+    _amethyst_needs_install: >-
+      {{
+        _amethyst_force_reinstall
+        or (not _amethyst_desktop_stat.stat.exists)
+        or ((_amethyst_installed_version | default('')) != _amethyst_desired_version)
+      }}
+  changed_when: false
+  when: amethyst_mod_manager.version != "latest"
+
+- name: "Amethyst Mod Manager | Decide whether install is needed (latest, before API check)"
+  ansible.builtin.set_fact:
+    _amethyst_needs_install: "{{ _amethyst_force_reinstall or (not _amethyst_desktop_stat.stat.exists) }}"
+  changed_when: false
+  when: amethyst_mod_manager.version == "latest"
+
+# -------------------------
+# Release resolution
+# -------------------------
+- name: "Amethyst Mod Manager | Compute tag for pinned version"
+  ansible.builtin.set_fact:
+    _amethyst_version_tag: >-
+      {{ (amethyst_mod_manager.version if (amethyst_mod_manager.version | string).startswith('v')
+          else ('v' ~ (amethyst_mod_manager.version | string))) }}
+  when:
+    - amethyst_mod_manager.version != "latest"
+    - _amethyst_needs_install
+  changed_when: false
+
+- name: "Amethyst Mod Manager | Fetch release JSON (latest)"
+  ansible.builtin.uri:
+    url: "https://api.github.com/repos/{{ amethyst_mod_manager.github_repo }}/releases/latest"
+    return_content: true
+    headers:
+      Accept: "application/vnd.github+json"
+  register: _amethyst_release_latest_resp
+  when: amethyst_mod_manager.version == "latest"
+  changed_when: false
+
+- name: "Amethyst Mod Manager | Fetch release JSON (pinned tag)"
+  ansible.builtin.uri:
+    url: "https://api.github.com/repos/{{ amethyst_mod_manager.github_repo }}/releases/tags/{{ _amethyst_version_tag }}"
+    return_content: true
+    headers:
+      Accept: "application/vnd.github+json"
+  register: _amethyst_release_pinned_resp
+  when:
+    - amethyst_mod_manager.version != "latest"
+    - _amethyst_needs_install
+  changed_when: false
+
+- name: "Amethyst Mod Manager | Select release JSON object"
+  ansible.builtin.set_fact:
+    _amethyst_release_json: >-
+      {{
+        (_amethyst_release_latest_resp.json
+          if amethyst_mod_manager.version == "latest"
+          else _amethyst_release_pinned_resp.json)
+        | default({})
+      }}
+  when: amethyst_mod_manager.version == "latest" or _amethyst_needs_install
+  changed_when: false
+
+- name: "Amethyst Mod Manager | Extract tag/assets/resolved version from release response"
+  ansible.builtin.set_fact:
+    _amethyst_release_tag: "{{ _amethyst_release_json.tag_name | default('unknown') }}"
+    _amethyst_release_assets: "{{ _amethyst_release_json.assets | default([]) }}"
+    _amethyst_resolved_version: "{{ (_amethyst_release_json.tag_name | default('unknown')) | regex_replace('^v', '') }}"
+  when: amethyst_mod_manager.version == "latest" or _amethyst_needs_install
+  changed_when: false
+
+- name: "Amethyst Mod Manager | Decide whether install is needed (latest, after resolving tag)"
+  ansible.builtin.set_fact:
+    _amethyst_needs_install: >-
+      {{
+        _amethyst_needs_install
+        or ((_amethyst_installed_version | default('')) != _amethyst_resolved_version)
+      }}
+  changed_when: false
+  when: amethyst_mod_manager.version == "latest"
+
+- name: "Amethyst Mod Manager | Set resolved version (pinned)"
+  ansible.builtin.set_fact:
+    _amethyst_resolved_version: "{{ _amethyst_desired_version }}"
+  changed_when: false
+  when:
+    - amethyst_mod_manager.version != "latest"
+    - not _amethyst_needs_install
+
+# -------------------------
+# Asset selection
+# -------------------------
+- name: "Amethyst Mod Manager | Pick AppImage asset from release"
+  ansible.builtin.set_fact:
+    _amethyst_asset: >-
+      {{
+        (
+          _amethyst_release_assets
+          | selectattr('name', 'search', '\.AppImage$')
+          | selectattr('name', 'search', amethyst_mod_manager.arch)
+          | list
+          | first
+        ) | default({})
+      }}
+  when: _amethyst_needs_install
+  changed_when: false
+
+- name: "Amethyst Mod Manager | Fail if AppImage asset not found"
+  ansible.builtin.fail:
+    msg: >-
+      Could not find an .AppImage asset matching arch '{{ amethyst_mod_manager.arch }}' for this release.
+      Release: {{ _amethyst_release_tag }}
+      Repo: {{ amethyst_mod_manager.github_repo }}
+  when:
+    - _amethyst_needs_install
+    - (_amethyst_asset | length) == 0 or (_amethyst_asset.browser_download_url is not defined)
+
+- name: "Amethyst Mod Manager | Set AppImage URL and local path"
+  ansible.builtin.set_fact:
+    _amethyst_url: "{{ _amethyst_asset.browser_download_url }}"
+    _amethyst_local_path: "{{ amethyst_mod_manager_tmp_dir }}/{{ _amethyst_asset.name }}"
+  when: _amethyst_needs_install
+  changed_when: false
+
+# -------------------------
+# Download and install
+# -------------------------
+- name: "Amethyst Mod Manager | Ensure temporary directory exists"
+  ansible.builtin.file:
+    path: "{{ amethyst_mod_manager_tmp_dir }}"
+    state: directory
+    mode: "0755"
+  when: _amethyst_needs_install
+
+- name: "Amethyst Mod Manager | Download AppImage"
+  ansible.builtin.get_url:
+    url: "{{ _amethyst_url }}"
+    dest: "{{ _amethyst_local_path }}"
+    mode: "0644"
+  when: _amethyst_needs_install
+
+- name: "Amethyst Mod Manager | Make AppImage executable"
+  ansible.builtin.file:
+    path: "{{ _amethyst_local_path }}"
+    mode: "0755"
+  when: _amethyst_needs_install
+
+- name: "Amethyst Mod Manager | Remove existing install (force reinstall or version mismatch)"
+  become: true
+  ansible.builtin.file:
+    path: "{{ amethyst_mod_manager.install_dir }}"
+    state: absent
+  when:
+    - _amethyst_needs_install
+    - _amethyst_desktop_stat.stat.exists
+
+- name: "Amethyst Mod Manager | Ensure install dir exists"
+  become: true
+  ansible.builtin.file:
+    path: "{{ amethyst_mod_manager.install_dir }}"
+    state: directory
+    mode: "0755"
+  when: _amethyst_needs_install
+
+- name: "Amethyst Mod Manager | Extract AppImage"
+  become: true
+  ansible.builtin.command:
+    cmd: "{{ _amethyst_local_path }} --appimage-extract"
+  args:
+    chdir: "{{ amethyst_mod_manager.install_dir }}"
+    creates: "{{ amethyst_mod_manager.install_dir }}/squashfs-root"
+  when: _amethyst_needs_install
+  notify:
+    - Move Amethyst Mod Manager extracted payload into place
+
+- name: "Amethyst Mod Manager | Flush handlers"
+  ansible.builtin.meta: flush_handlers
+
+- name: "Amethyst Mod Manager | Remove temporary squashfs-root"
+  become: true
+  ansible.builtin.file:
+    path: "{{ amethyst_mod_manager.install_dir }}/squashfs-root"
+    state: absent
+  when: _amethyst_needs_install
+
+- name: "Amethyst Mod Manager | Fix permissions of installed AppDir"
+  become: true
+  ansible.builtin.file:
+    path: "{{ amethyst_mod_manager.install_dir }}"
+    mode: "u=rwX,g=rX,o=rX"
+    recurse: true
+  when: _amethyst_needs_install
+
+- name: "Amethyst Mod Manager | Install desktop entry"
+  become: true
+  ansible.builtin.template:
+    src: amethyst-mod-manager.desktop.j2
+    dest: /usr/share/applications/amethyst-mod-manager.desktop
+    mode: "0644"
+  when: _amethyst_needs_install
+
+- name: "Amethyst Mod Manager | Check for bundled icon"
+  ansible.builtin.stat:
+    path: "{{ amethyst_mod_manager.install_dir }}/usr/share/icons/hicolor/256x256/apps/mod-manager.png"
+  register: _amethyst_icon_stat
+  changed_when: false
+  when: _amethyst_needs_install
+
+- name: "Amethyst Mod Manager | Install icon"
+  become: true
+  ansible.builtin.copy:
+    src: "{{ amethyst_mod_manager.install_dir }}/usr/share/icons/hicolor/256x256/apps/mod-manager.png"
+    dest: "/usr/share/icons/hicolor/256x256/apps/amethyst-mod-manager.png"
+    remote_src: true
+    mode: "0644"
+  when:
+    - _amethyst_needs_install
+    - _amethyst_icon_stat.stat.exists | default(false)
+
+- name: "Amethyst Mod Manager | Refresh icon cache"
+  become: true
+  ansible.builtin.command:
+    cmd: gtk-update-icon-cache -f /usr/share/icons/hicolor
+  changed_when: false
+  when: _amethyst_needs_install
+
+- name: "Amethyst Mod Manager | Update desktop database"
+  become: true
+  ansible.builtin.command: update-desktop-database
+  changed_when: false
+  failed_when: false
+  when: _amethyst_needs_install
+
+- name: "Amethyst Mod Manager | Create bin symlink"
+  become: true
+  ansible.builtin.file:
+    src: "{{ amethyst_mod_manager.install_dir }}/AppRun"
+    dest: "{{ amethyst_mod_manager.bin_symlink }}"
+    state: link
+    force: true
+  when: _amethyst_needs_install
+
+- name: "Amethyst Mod Manager | Cleanup temporary directory"
+  ansible.builtin.file:
+    path: "{{ amethyst_mod_manager_tmp_dir }}"
+    state: absent
+  when: _amethyst_needs_install

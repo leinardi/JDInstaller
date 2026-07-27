@@ -1,0 +1,8 @@
+---
+- name: Move Amethyst Mod Manager extracted payload into place
+  become: true
+  ansible.builtin.shell:
+    cmd: |
+      cp -a "{{ amethyst_mod_manager.install_dir }}/squashfs-root/." "{{ amethyst_mod_manager.install_dir }}/"
+    executable: /bin/bash
+  changed_when: true
