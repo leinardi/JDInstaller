@@ -1,0 +1,24 @@
+---
+amethyst_mod_manager_enabled: true
+
+amethyst_mod_manager:
+  # "latest" or a specific tag/version, e.g. "v2.0.4" / "2.0.4"
+  version: "v2.0.4"
+
+  # Official GitHub repo used for the release API and assets
+  github_repo: ChrisDKN/Amethyst-Mod-Manager
+
+  # Used to select the right AppImage asset
+  arch: x86_64
+
+  # Where to extract the AppImage
+  install_dir: /opt/amethyst-mod-manager
+
+  # Convenience symlink in PATH
+  bin_symlink: /usr/local/bin/amethyst-mod-manager
+
+  # If true and Amethyst Mod Manager is already installed, wipe install_dir and reinstall.
+  force_reinstall: false
+
+# Temporary download folder
+amethyst_mod_manager_tmp_dir: /tmp/amethyst-mod-manager

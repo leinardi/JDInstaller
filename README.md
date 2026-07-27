@@ -184,12 +184,13 @@ Default" column shows whether the role is active by default. Even if a role is e
 
 ### Playbook: `gaming.yaml`
 
-| Role       | Enabled by Default | Source | Description                                      |
-|------------|--------------------|--------|--------------------------------------------------|
-| `discord`  | ✅                  | deb    | Installs Discord for chatting and VoIP.          |
-| `gamemode` | ✅                  | apt    | Installs GameMode, a tool for optimizing gaming. |
-| `mangohud` | ✅                  | github | Installs MangoHud, a gaming performance overlay. |
-| `steam`    | ✅                  | deb    | Installs Steam, a gaming platform.               |
+| Role                   | Enabled by Default | Source | Description                                         |
+|------------------------|---------------------|--------|------------------------------------------------------|
+| `amethyst_mod_manager` | ✅                  | github | Installs Amethyst Mod Manager, a game mod manager.  |
+| `discord`              | ✅                  | deb    | Installs Discord for chatting and VoIP.              |
+| `gamemode`             | ✅                  | apt    | Installs GameMode, a tool for optimizing gaming.     |
+| `mangohud`             | ✅                  | github | Installs MangoHud, a gaming performance overlay.     |
+| `steam`                | ✅                  | deb    | Installs Steam, a gaming platform.                   |
 
 ### Playbook: `work.yaml`
 

@@ -2,6 +2,9 @@
 - name: Ubuntu Work Playbook
   hosts: localhost
   roles:
+    - role: amethyst_mod_manager
+      tags: amethyst_mod_manager
+      when: amethyst_mod_manager_enabled | bool
     - role: discord
       tags: discord
       when: discord_enabled | bool
