@@ -223,9 +223,9 @@ libreoffice_enabled: true
 mainline_enabled: true
 
 # Variables from roles/mangohud
-mangohud_enabled: false
+mangohud_enabled: true
 mangohud:
-  version: "v0.8.1"
+  version: "v0.8.4"
   dependencies:
     - cmake
     - git
