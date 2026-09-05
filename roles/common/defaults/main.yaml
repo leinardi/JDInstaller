@@ -47,6 +47,7 @@ common:
     - software-properties-common
     - tar
     - tig
+    - tmux
     - tofrodos
     - trash-cli
     - tree
@@ -54,4 +55,3 @@ common:
     - vim
     - wget
     - whois
-    - zip

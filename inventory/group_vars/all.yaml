@@ -83,6 +83,7 @@ common:
     - software-properties-common
     - tar
     - tig
+    - tmux
     - tofrodos
     - trash-cli
     - tree
@@ -90,7 +91,6 @@ common:
     - vim
     - wget
     - whois
-    - zip
 
 # Variables from roles/desktop
 desktop_enabled: true
@@ -106,6 +106,7 @@ desktop:
     - synaptic
     - ubuntu-restricted-extras
     - vlc
+    - wl-clipboard
     - xclip
 
   # Snap packages to install.
