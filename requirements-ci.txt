@@ -1,0 +1,4 @@
+# CI only: the ansible-core that the ansible-syntax job in .github/workflows/ci.yaml runs
+# `make ansible-syntax-check` with. A local run uses the Ansible that install_ansible.sh sets up.
+# Kept here rather than inline in the workflow so Dependabot's pip ecosystem keeps it current.
+ansible-core==2.21.4

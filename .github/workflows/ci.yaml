@@ -2,423 +2,233 @@ name: CI
 
 on:
   pull_request:
+  # The README's CI badge shows the default branch; only ansible-syntax runs on a push, since every
+  # other job reports on a pull request's diff.
   push:
-    branches:
-      - master
-      - release
+    branches: [master]
   workflow_dispatch:
 
-# This allows a subsequently queued workflow run to interrupt previous runs
 concurrency:
   group: "${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}"
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Every job reads the repository and nothing else, unless it says otherwise below.
+permissions:
+  contents: read
 
 jobs:
   actionlint:
+    # Reports inline PR review comments over a diff range; a manual dispatch has
+    # neither a pull request to comment on nor a base ref to diff against.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      TERM: dumb
-      FROM_REF: ${{ github.event.pull_request.base.sha }}
-      TO_REF: ${{ github.event.pull_request.head.sha }}
+    # reviewdog posts its findings as a pull request review (-reporter=github-pr-review in every
+    # action this workflow uses, at the pinned commit), which needs pull-requests: write. It
+    # creates no check runs, so checks: write is not needed.
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
-      - name: Cache pre-commit
-        uses: actions/cache@v6
+      - name: Run actionlint via pre-commit + reviewdog
+        uses: leinardi/gha-pre-commit-reviewdog-actions/actionlint@68bf8e338b79df404181ceef655ae02f1c8edb8a # v1.0.2
         with:
-          path: ~/.cache/pre-commit
-          key: pre-commit|${{ runner.os }}|${{ hashFiles('.pre-commit-config.yaml') }}
+          from-ref: ${{ github.event.pull_request.base.sha }}
+          to-ref: ${{ github.event.pull_request.head.sha }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Python deps + pre-commit
-        run: |
-          pip install --no-cache-dir pre-commit
+  pre-commit-hooks:
+    # Reports inline PR review comments over a diff range; a manual dispatch has
+    # neither a pull request to comment on nor a base ref to diff against.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    # reviewdog posts its findings as a pull request review (-reporter=github-pr-review in every
+    # action this workflow uses, at the pinned commit), which needs pull-requests: write. It
+    # creates no check runs, so checks: write is not needed.
+    permissions:
+      contents: read
+      pull-requests: write
 
-      - name: Setup Reviewdog binary
-        uses: reviewdog/action-setup@d8a7baabd7f3e8544ee4dbde3ee41d0011c3a93f # v1.5.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          reviewdog_version: latest
+          fetch-depth: 0
 
-      - name: Run actionlint
-        id: actionlint-lint
-        run: |
-          # Run the hook and capture output without failing the step
-          set +e
-          set -o pipefail
-
-          pre-commit run actionlint-oneline \
-            --hook-stage manual \
-            --from-ref "$FROM_REF" \
-            --to-ref   "$TO_REF" \
-            --color=never \
-            | tee >(grep -Ev '^\[INFO\]' | tail -n +5 > actionlint-report.txt)
-
-          exitcode=${PIPESTATUS[0]}
-          echo "exitcode=$exitcode" >> "$GITHUB_OUTPUT"
-
-          exit 0
-
-      - name: Report actionlint via reviewdog
-        if: steps.actionlint-lint.outputs.exitcode != '0'
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Strip header, reformat output, and pass to reviewdog
-          cat actionlint-report.txt \
-            | while read -r r; do
-                # default to error
-                severity=e
-
-                # if this line is actually a shellcheck-like message, extract its severity
-                if echo "$r" | grep -q " shellcheck reported issue in this script:"; then
-                  s=$(echo "$r" |
-                        sed -E 's/^.* shellcheck reported issue in this script:[^:]*:([^:]).*$/\1/')
-                  case "$s" in e|w|i|n) severity="$s" ;; esac
-                fi
-
-                # prefix for reviewdog’s %t:%f:%l:%c:%m efm
-                echo "$severity:$r"
-              done \
-            | reviewdog \
-                -efm="%t:%f:%l:%c: %m" \
-                -name="actionlint" \
-                -reporter=github-pr-review \
-                -filter-mode=nofilter \
-                -fail-level=info
-          exit 1
+      - name: Run pre-commit hooks + reviewdog diff
+        uses: leinardi/gha-pre-commit-reviewdog-actions/pre-commit-hooks@68bf8e338b79df404181ceef655ae02f1c8edb8a # v1.0.2
+        with:
+          from-ref: ${{ github.event.pull_request.base.sha }}
+          to-ref: ${{ github.event.pull_request.head.sha }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # The default core hooks, plus the two that rewrite files: prettier-yaml, and
+          # generate-group-vars, which fails when inventory/group_vars/all.yaml no longer matches
+          # the role defaults it is generated from.
+          hooks: |
+            check-merge-conflict
+            end-of-file-fixer
+            trailing-whitespace
+            check-yaml
+            check-json
+            check-toml
+            check-added-large-files
+            prettier-yaml
+            generate-group-vars
 
   ansible-lint:
+    # Reports inline PR review comments over a diff range; a manual dispatch has
+    # neither a pull request to comment on nor a base ref to diff against.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      TERM: dumb
-      FROM_REF: ${{ github.event.pull_request.base.sha }}
-      TO_REF: ${{ github.event.pull_request.head.sha }}
+    # reviewdog posts its findings as a pull request review (-reporter=github-pr-review in every
+    # action this workflow uses, at the pinned commit), which needs pull-requests: write. It
+    # creates no check runs, so checks: write is not needed.
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
-      - name: Cache pre-commit
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit|${{ runner.os }}|${{ hashFiles('.pre-commit-config.yaml') }}
-
+      # The ansible-lint hooks pin language_version: python3.14, which the runner image lacks.
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.14"
 
-      - name: Install Python deps + pre-commit
-        run: |
-          pip install --no-cache-dir pre-commit
-
-      - name: Setup Reviewdog binary
-        uses: reviewdog/action-setup@d8a7baabd7f3e8544ee4dbde3ee41d0011c3a93f # v1.5.0
+      - name: Run ansible-lint via pre-commit + reviewdog
+        uses: leinardi/gha-pre-commit-reviewdog-actions/ansible-lint@68bf8e338b79df404181ceef655ae02f1c8edb8a # v1.0.2
         with:
-          reviewdog_version: latest
+          from-ref: ${{ github.event.pull_request.base.sha }}
+          to-ref: ${{ github.event.pull_request.head.sha }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run ansible-lint
-        id: ansible-lint-lint
-        run: |
-          # Run the hook and capture output without failing the step
-          set +e
-          set -o pipefail
-
-          pre-commit run ansible-lint-parseable \
-            --hook-stage manual \
-            --from-ref "$FROM_REF" \
-            --to-ref   "$TO_REF" \
-            --color=never \
-            | tee >(grep -Ev '^\[INFO\]' | tail -n +5 > ansible-lint-report.txt)
-
-          exitcode=${PIPESTATUS[0]}
-          echo "exitcode=$exitcode" >> "$GITHUB_OUTPUT"
-
-          exit 0
-
-      - name: Report ansible-lint via reviewdog
-        if: steps.ansible-lint-lint.outputs.exitcode != '0'
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Strip header, reformat output, and pass to reviewdog
-          cat ansible-lint-report.txt \
-            | reviewdog \
-                -efm="%f:%l: %m" \
-                -name="ansible-lint" \
-                -reporter=github-pr-review \
-                -filter-mode=nofilter \
-                -fail-level=info
-          exit 1
-
-  check-group-vars:
+  markdownlint:
+    # Reports inline PR review comments over a diff range; a manual dispatch has
+    # neither a pull request to comment on nor a base ref to diff against.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      TERM: dumb
-      FROM_REF: ${{ github.event.pull_request.base.sha }}
-      TO_REF: ${{ github.event.pull_request.head.sha }}
+    # reviewdog posts its findings as a pull request review (-reporter=github-pr-review in every
+    # action this workflow uses, at the pinned commit), which needs pull-requests: write. It
+    # creates no check runs, so checks: write is not needed.
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
-      - name: Cache pre-commit
-        uses: actions/cache@v6
+      - name: Run markdownlint-cli2 via pre-commit + reviewdog
+        uses: leinardi/gha-pre-commit-reviewdog-actions/markdownlint-cli2@68bf8e338b79df404181ceef655ae02f1c8edb8a # v1.0.2
         with:
-          path: ~/.cache/pre-commit
-          key: pre-commit|${{ runner.os }}|${{ hashFiles('.pre-commit-config.yaml') }}
-
-      - name: Install Python deps + pre-commit
-        run: pip install --no-cache-dir pre-commit
-
-      - name: Setup Reviewdog binary
-        uses: reviewdog/action-setup@d8a7baabd7f3e8544ee4dbde3ee41d0011c3a93f # v1.5.0
-        with:
-          reviewdog_version: latest
-
-      - name: Run generate-group-vars
-        id: generate-group-vars
-        run: |
-          # Run the hook and capture exit code without failing the step
-          set +e
-          set -o pipefail
-
-          pre-commit run generate-group-vars
-          echo "exitcode=$?" >> "$GITHUB_OUTPUT"
-
-          exit 0
-
-      - name: Generate diff for reviewdog
-        if: steps.generate-group-vars.outputs.exitcode != '0'
-        run: git diff > generate-group-vars.diff
-
-      - name: Report generate-group-vars suggestions via reviewdog
-        if: steps.generate-group-vars.outputs.exitcode != '0'
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          reviewdog \
-            -name="generate-group-vars" \
-            -f=diff \
-            -f.diff.strip=1 \
-            -reporter=github-pr-review \
-            -filter-mode=nofilter < generate-group-vars.diff
-
-          exit 1
-
-  prettier:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      TERM: dumb
-      FROM_REF: ${{ github.event.pull_request.base.sha }}
-      TO_REF: ${{ github.event.pull_request.head.sha }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Cache pre-commit
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit|${{ runner.os }}|${{ hashFiles('.pre-commit-config.yaml') }}
-
-      - name: Install Python deps + pre-commit
-        run: pip install --no-cache-dir pre-commit
-
-      - name: Setup Reviewdog binary
-        uses: reviewdog/action-setup@d8a7baabd7f3e8544ee4dbde3ee41d0011c3a93f # v1.5.0
-        with:
-          reviewdog_version: latest
-
-      - name: Run prettier YAML formatter
-        id: prettier
-        run: |
-          # Run the hook and capture exit code without failing the step
-          set +e
-          set -o pipefail
-
-          pre-commit run prettier-yaml \
-            --from-ref "$FROM_REF" \
-            --to-ref   "$TO_REF"
-
-          echo "exitcode=$?" >> "$GITHUB_OUTPUT"
-          exit 0
-
-      - name: Generate diff for reviewdog
-        if: steps.prettier.outputs.exitcode != '0'
-        run: git diff > prettier.diff
-
-      - name: Report prettier suggestions via reviewdog
-        if: steps.prettier.outputs.exitcode != '0'
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          reviewdog \
-            -name="prettier" \
-            -f=diff \
-            -f.diff.strip=1 \
-            -reporter=github-pr-review \
-            -filter-mode=nofilter < prettier.diff
-
-          exit 1
+          from-ref: ${{ github.event.pull_request.base.sha }}
+          to-ref: ${{ github.event.pull_request.head.sha }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   shellcheck:
+    # Reports inline PR review comments over a diff range; a manual dispatch has
+    # neither a pull request to comment on nor a base ref to diff against.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      TERM: dumb
-      FROM_REF: ${{ github.event.pull_request.base.sha }}
-      TO_REF: ${{ github.event.pull_request.head.sha }}
+    # reviewdog posts its findings as a pull request review (-reporter=github-pr-review in every
+    # action this workflow uses, at the pinned commit), which needs pull-requests: write. It
+    # creates no check runs, so checks: write is not needed.
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
-      - name: Cache pre-commit
-        uses: actions/cache@v6
+      - name: Run shellcheck via pre-commit + reviewdog
+        uses: leinardi/gha-pre-commit-reviewdog-actions/shellcheck@68bf8e338b79df404181ceef655ae02f1c8edb8a # v1.0.2
         with:
-          path: ~/.cache/pre-commit
-          key: pre-commit|${{ runner.os }}|${{ hashFiles('.pre-commit-config.yaml') }}
-
-      - name: Install shellcheck
-        run: sudo apt-get install -y shellcheck
-
-      - name: Install Python deps + pre-commit
-        run: |
-          pip install --no-cache-dir pre-commit
-
-      - name: Setup Reviewdog binary
-        uses: reviewdog/action-setup@d8a7baabd7f3e8544ee4dbde3ee41d0011c3a93f # v1.5.0
-        with:
-          reviewdog_version: latest
-
-      - name: Run shellcheck
-        id: shellcheck-lint
-        run: |
-          # Run diagnostics hook and capture output without failing the step
-          set +e
-          set -o pipefail
-
-          pre-commit run shellcheck-json-output \
-            --hook-stage manual \
-            --from-ref "$FROM_REF" \
-            --to-ref   "$TO_REF" \
-            --color=never \
-            | tee >(grep -Ev '^\[INFO\]' | tail -n +5 > shellcheck.json)
-          exitcode=${PIPESTATUS[0]}
-          echo "exitcode=$exitcode" >> "$GITHUB_OUTPUT"
-
-          exit 0
-
-      - name: Report shellcheck suggestions via reviewdog
-        if: steps.shellcheck-lint.outputs.exitcode != '0'
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-        run: |
-          pre-commit run shellcheck-diff-output \
-            --hook-stage manual \
-            --from-ref "$FROM_REF" \
-            --to-ref   "$TO_REF" \
-            --color=never \
-            | grep -Ev '^\[INFO\]' \
-            | tail -n +5 \
-            | reviewdog \
-                -name="shellcheck (suggestion)" \
-                -f=diff \
-                -f.diff.strip=1 \
-                -reporter=github-pr-review \
-                -filter-mode=nofilter \
-                -fail-level=error
-
-      - name: Report shellcheck via reviewdog (diagnostics)
-        if: steps.shellcheck-lint.outputs.exitcode != '0'
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          jq -r '.[] | "\(.file):\(.line):\(.column):\(.level):\(.message) [SC\(.code)](https://github.com/koalaman/shellcheck/wiki/SC\(.code))"' shellcheck.json \
-            | reviewdog \
-                -efm="%f:%l:%c:%t%*[^:]:%m" \
-                -name="shellcheck" \
-                -reporter=github-pr-review \
-                -filter-mode=nofilter \
-                -fail-level=error
+          from-ref: ${{ github.event.pull_request.base.sha }}
+          to-ref: ${{ github.event.pull_request.head.sha }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   yamllint:
-    needs: [actionlint, prettier]
+    # Reports inline PR review comments over a diff range; a manual dispatch has
+    # neither a pull request to comment on nor a base ref to diff against.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      TERM: dumb
-      FROM_REF: ${{ github.event.pull_request.base.sha }}
-      TO_REF: ${{ github.event.pull_request.head.sha }}
+    # reviewdog posts its findings as a pull request review (-reporter=github-pr-review in every
+    # action this workflow uses, at the pinned commit), which needs pull-requests: write. It
+    # creates no check runs, so checks: write is not needed.
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
-      - name: Cache pre-commit
-        uses: actions/cache@v6
+      - name: Run yamllint via pre-commit + reviewdog
+        uses: leinardi/gha-pre-commit-reviewdog-actions/yamllint@68bf8e338b79df404181ceef655ae02f1c8edb8a # v1.0.2
         with:
-          path: ~/.cache/pre-commit
-          key: pre-commit|${{ runner.os }}|${{ hashFiles('.pre-commit-config.yaml') }}
+          from-ref: ${{ github.event.pull_request.base.sha }}
+          to-ref: ${{ github.event.pull_request.head.sha }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Python deps + pre-commit
-        run: pip install --no-cache-dir pre-commit
+  conventional-commits:
+    # The release version is derived from the commit types since the last tag,
+    # so a commit nobody can classify is a release nobody can version. The local
+    # commit-msg hook only runs where `make pre-commit-install` was run; this job
+    # is the check that no commit skips. It runs the repository's own
+    # conventional-pre-commit hook, so --force-scope applies here too, and it
+    # skips merge commits. No pull-request title check: squash merging is
+    # disabled, so a title never becomes a commit on main. Enabling squash
+    # merging would need one added here first.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
 
-      - name: Setup Reviewdog binary
-        uses: reviewdog/action-setup@d8a7baabd7f3e8544ee4dbde3ee41d0011c3a93f # v1.5.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          reviewdog_version: latest
+          fetch-depth: 0
 
-      - name: Run yamllint
-        id: yamllint-lint
-        run: |
-          # Run the hook and capture output without failing the step
-          set +e
-          set -o pipefail
+      - name: Validate the commit messages
+        uses: leinardi/gha-pre-commit-reviewdog-actions/conventional-commits@68bf8e338b79df404181ceef655ae02f1c8edb8a # v1.0.2
+        with:
+          from-ref: ${{ github.event.pull_request.base.sha }}
+          to-ref: ${{ github.event.pull_request.head.sha }}
 
-          pre-commit run yamllint-parsable \
-            --hook-stage manual \
-            --from-ref "$FROM_REF" \
-            --to-ref   "$TO_REF" \
-            --color=never \
-            | tee >(grep -Ev '^\[INFO\]' | tail -n +5 > yamllint-report.txt)
+  # Every playbook, on every pull request: ansible-lint above only sees the files a pull request
+  # changes, so a role or variable change that breaks a playbook it does not touch gets past it.
+  ansible-syntax:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
 
-          exitcode=${PIPESTATUS[0]}
-          echo "exitcode=$exitcode" >> "$GITHUB_OUTPUT"
-          exit 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Report yamllint via reviewdog
-        if: steps.yamllint-lint.outputs.exitcode != '0'
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cat yamllint-report.txt \
-            | reviewdog \
-                -efm="%f:%l:%c: %m" \
-                -name="yamllint" \
-                -reporter=github-pr-review \
-                -filter-mode=nofilter \
-                -fail-level=info
-          exit 1
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+
+      - name: Install ansible-core
+        run: python -m pip install --disable-pip-version-check -r requirements-ci.txt
+
+      - name: Check the syntax of every playbook
+        run: make ansible-syntax-check

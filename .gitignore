@@ -1,5 +1,7 @@
 # Ansible
 /.galaxy/
+# ansible-lint installs the requirements.yml collections here when it cannot find them.
+/.ansible/
 *.retry
 group_vars/_*.yaml
 group_vars/local.yaml

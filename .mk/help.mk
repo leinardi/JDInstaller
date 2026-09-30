@@ -1,10 +1,9 @@
 ifndef MK_COMMON_HELP_INCLUDED
 MK_COMMON_HELP_INCLUDED := 1
 
-# Only set default if not already set
-ifeq ($(.DEFAULT_GOAL),)
-  .DEFAULT_GOAL := help
-endif
+# Set help as the default goal.
+# Repos can override by assigning .DEFAULT_GOAL after including this file.
+.DEFAULT_GOAL := help
 
 .PHONY: help
 help: ## Show this help and usage
