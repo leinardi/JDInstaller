@@ -1,4 +1,4 @@
-[![Ubuntu test](https://github.com/leinardi/JDInstaller/actions/workflows/ubuntu-test.yaml/badge.svg?branch=release)](https://github.com/leinardi/JDInstaller/actions/workflows/ubuntu-test.yaml) [![CI release](https://github.com/leinardi/JDInstaller/actions/workflows/ci.yaml/badge.svg?branch=release)](https://github.com/leinardi/JDInstaller/actions/workflows/ci.yaml)
+[![CI](https://github.com/leinardi/JDInstaller/actions/workflows/ci.yaml/badge.svg)](https://github.com/leinardi/JDInstaller/actions/workflows/ci.yaml)
 
 # JDInstaller
 
@@ -115,13 +115,13 @@ To generate/reset the `inventory/group_vars/all.yaml` file to the default values
 Below is a list of the playbooks that are included in this project. You can enable or disable each one by modifying the respective variable in
 `inventory/group_vars/all.yaml`.
 
-| Playbook           | Enabled by Default | Description                               |
-|--------------------|--------------------|-------------------------------------------|
-| `common.yaml`      | ✅                  | Sets up common packages and settings.     |
-| `desktop.yaml`     | ✅                  | Installs desktop-specific applications.   |
-| `development.yaml` | ✅                  | Installs development tools and libraries. |
-| `gaming.yaml`      | ✅                  | Installs gaming-related tools.            |
-| `work.yaml`        | ⛔                  | Installs work-related applications.       |
+| Playbook | Enabled by Default | Description |
+| --- | --- | --- |
+| `common.yaml` | ✅ | Sets up common packages and settings. |
+| `desktop.yaml` | ✅ | Installs desktop-specific applications. |
+| `development.yaml` | ✅ | Installs development tools and libraries. |
+| `gaming.yaml` | ✅ | Installs gaming-related tools. |
+| `work.yaml` | ⛔ | Installs work-related applications. |
 
 ## Roles
 
@@ -133,72 +133,72 @@ Default" column shows whether the role is active by default. Even if a role is e
 
 ### Playbook: `common.yaml`
 
-| Role     | Enabled by Default | Source | Description                                                    |
-|----------|--------------------|--------|----------------------------------------------------------------|
-| `common` | ✅                  | apt    | Installs a set of common packages listed in `common.packages`. |
-| `snapd`  | ⛔                  | apt    | Installs snapd for managing Snap packages.                     |
-| `ufw`    | ⛔                  | apt    | Installs and configures Uncomplicated Firewall (UFW).          |
+| Role | Enabled by Default | Source | Description |
+| --- | --- | --- | --- |
+| `common` | ✅ | apt | Installs a set of common packages listed in `common.packages`. |
+| `snapd` | ⛔ | apt | Installs snapd for managing Snap packages. |
+| `ufw` | ⛔ | apt | Installs and configures Uncomplicated Firewall (UFW). |
 
 ### Playbook: `desktop.yaml`
 
-| Role               | Enabled by Default | Source                | Description                                                                                    |
-|--------------------|--------------------|-----------------------|------------------------------------------------------------------------------------------------|
-| `desktop`          | ✅                  | apt                   | Installs a set of desktop-related packages listed in `desktop.packages`.                       |
-| `chrome`           | ✅                  | apt (Google repo)     | Installs Google Chrome.                                                                        |
-| `chromium`         | ✅                  | apt                   | Installs the open-source Chromium browser.                                                     |
-| `doublecmd`        | ✅                  | apt                   | Installs Double Commander, a file manager.                                                     |
-| `earth`            | ✅                  | apt                   | Installs Google Earth Pro.                                                                     |
-| `edge`             | ⛔                  | apt (Google repo)     | Installs Microsoft Edge browser.                                                               |
-| `firefox`          | ✅                  | apt (Mozilla repo)    | Installs Mozilla Firefox.                                                                      |
-| `flatpak`          | ✅                  | apt                   | Installs Flatpak for managing app installations.                                               |
-| `gimp`             | ✅                  | apt                   | Installs GIMP, a graphic editor.                                                               |
-| `gnome_extensions` | ✅                  | apt                   | Installs GNOME extensions. See `gnome_extensions.packages` for the list of extensions.         |
-| `gparted`          | ✅                  | apt                   | Installs GParted, a partition editor.                                                          |
-| `graphics_drivers` | ✅                  | PPA                   | Installs proprietary drivers for graphics cards.                                               |
-| `gsettings`        | ✅                  | -                     | Configures GNOME settings via gsettings.                                                       |
-| `handbrake`        | ⛔                  | apt                   | Installs HandBrake, a video transcoder.                                                        |
-| `inkscape`         | ✅                  | apt                   | Installs Inkscape, a vector graphics editor.                                                   |
-| `insync`           | ✅                  | apt (InSync repo)     | Installs Insync, a Google Drive sync client.                                                   |
-| `libreoffice`      | ✅                  | apt                   | Installs LibreOffice, a free office suite.                                                     |
-| `mainline`         | ✅                  | PPA                   | Installs Mainline, a tool for managing Linux kernels.                                          |
-| `meld`             | ✅                  | apt                   | Installs Meld, a file comparison tool.                                                         |
-| `nautilus_plugins` | ⛔                  | apt                   | Installs plugins for the Nautilus file manager.                                                |
-| `openjre`          | ⛔                  | apt                   | Installs OpenJRE, a Java runtime environment.                                                  |
-| `sweethome3d`      | ✅                  | flathub               | Installs Sweet Home 3D, an interior design app.                                                |
-| `timeshift`        | ⛔                  | apt                   | Installs Timeshift for system backups.                                                         |
-| `ulauncher`        | ✅                  | PPA                   | Installs Ulauncher, an application launcher.                                                   |
-| `virtualbox`       | ✅                  | apt (VirtualBox repo) | Installs VirtualBox for running virtual machines.                                              |
-| `vlc`              | ✅                  | apt                   | Installs VLC media player.                                                                     |
-| `xfburn`           | ✅                  | apt                   | Installs Xfburn, a tool for burning CDs and DVDs.                                              |
+| Role | Enabled by Default | Source | Description |
+| --- | --- | --- | --- |
+| `desktop` | ✅ | apt | Installs a set of desktop-related packages listed in `desktop.packages`. |
+| `chrome` | ✅ | apt (Google repo) | Installs Google Chrome. |
+| `chromium` | ✅ | apt | Installs the open-source Chromium browser. |
+| `doublecmd` | ✅ | apt | Installs Double Commander, a file manager. |
+| `earth` | ✅ | apt | Installs Google Earth Pro. |
+| `edge` | ⛔ | apt (Google repo) | Installs Microsoft Edge browser. |
+| `firefox` | ✅ | apt (Mozilla repo) | Installs Mozilla Firefox. |
+| `flatpak` | ✅ | apt | Installs Flatpak for managing app installations. |
+| `gimp` | ✅ | apt | Installs GIMP, a graphic editor. |
+| `gnome_extensions` | ✅ | apt | Installs GNOME extensions. See `gnome_extensions.packages` for the list of extensions. |
+| `gparted` | ✅ | apt | Installs GParted, a partition editor. |
+| `graphics_drivers` | ✅ | PPA | Installs proprietary drivers for graphics cards. |
+| `gsettings` | ✅ | - | Configures GNOME settings via gsettings. |
+| `handbrake` | ⛔ | apt | Installs HandBrake, a video transcoder. |
+| `inkscape` | ✅ | apt | Installs Inkscape, a vector graphics editor. |
+| `insync` | ✅ | apt (InSync repo) | Installs Insync, a Google Drive sync client. |
+| `libreoffice` | ✅ | apt | Installs LibreOffice, a free office suite. |
+| `mainline` | ✅ | PPA | Installs Mainline, a tool for managing Linux kernels. |
+| `meld` | ✅ | apt | Installs Meld, a file comparison tool. |
+| `nautilus_plugins` | ⛔ | apt | Installs plugins for the Nautilus file manager. |
+| `openjre` | ⛔ | apt | Installs OpenJRE, a Java runtime environment. |
+| `sweethome3d` | ✅ | flathub | Installs Sweet Home 3D, an interior design app. |
+| `timeshift` | ⛔ | apt | Installs Timeshift for system backups. |
+| `ulauncher` | ✅ | PPA | Installs Ulauncher, an application launcher. |
+| `virtualbox` | ✅ | apt (VirtualBox repo) | Installs VirtualBox for running virtual machines. |
+| `vlc` | ✅ | apt | Installs VLC media player. |
+| `xfburn` | ✅ | apt | Installs Xfburn, a tool for burning CDs and DVDs. |
 
 ### Playbook: `development.yaml`
 
-| Role          | Enabled by Default | Source | Description                                                           |
-|---------------|--------------------|--------|-----------------------------------------------------------------------|
-| `development` | ✅                  | apt    | Installs a set of development tools listed in `development.packages`. |
-| `filezilla`   | ✅                  | apt    | Installs FileZilla, an FTP client.                                    |
-| `git`         | ✅                  | apt    | Installs Git, a version control system.                               |
-| `openjdk`     | ✅                  | apt    | Installs OpenJDK, a Java development environment.                     |
-| `python`      | ✅                  | apt    | Installs Python.                                                      |
-| `slack`       | ⛔                  | snap   | Installs Slack for team communication.                                |
+| Role | Enabled by Default | Source | Description |
+| --- | --- | --- | --- |
+| `development` | ✅ | apt | Installs a set of development tools listed in `development.packages`. |
+| `filezilla` | ✅ | apt | Installs FileZilla, an FTP client. |
+| `git` | ✅ | apt | Installs Git, a version control system. |
+| `openjdk` | ✅ | apt | Installs OpenJDK, a Java development environment. |
+| `python` | ✅ | apt | Installs Python. |
+| `slack` | ⛔ | snap | Installs Slack for team communication. |
 
 ### Playbook: `gaming.yaml`
 
-| Role                   | Enabled by Default | Source | Description                                         |
-|------------------------|---------------------|--------|------------------------------------------------------|
-| `amethyst_mod_manager` | ✅                  | github | Installs Amethyst Mod Manager, a game mod manager.  |
-| `discord`              | ✅                  | deb    | Installs Discord for chatting and VoIP.              |
-| `gamemode`             | ✅                  | apt    | Installs GameMode, a tool for optimizing gaming.     |
-| `mangohud`             | ✅                  | github | Installs MangoHud, a gaming performance overlay.     |
-| `steam`                | ✅                  | deb    | Installs Steam, a gaming platform.                   |
+| Role | Enabled by Default | Source | Description |
+| --- | --- | --- | --- |
+| `amethyst_mod_manager` | ✅ | github | Installs Amethyst Mod Manager, a game mod manager. |
+| `discord` | ✅ | deb | Installs Discord for chatting and VoIP. |
+| `gamemode` | ✅ | apt | Installs GameMode, a tool for optimizing gaming. |
+| `mangohud` | ✅ | github | Installs MangoHud, a gaming performance overlay. |
+| `steam` | ✅ | deb | Installs Steam, a gaming platform. |
 
 ### Playbook: `work.yaml`
 
-| Role                        | Enabled by Default | Source                | Description                                   |
-|-----------------------------|--------------------|-----------------------|-----------------------------------------------|
-| `globalprotect_openconnect` | ✅                  | deb                   | Installs OpenConnect for GlobalProtect VPN.   |
-| `mattermost`                | ✅                  | apt (mattermost repo) | Installs Mattermost, a team chat application. |
-| `zoom`                      | ✅                  | deb                   | Installs Zoom, a video conferencing tool.     |
+| Role | Enabled by Default | Source | Description |
+| --- | --- | --- | --- |
+| `globalprotect_openconnect` | ✅ | deb | Installs OpenConnect for GlobalProtect VPN. |
+| `mattermost` | ✅ | apt (mattermost repo) | Installs Mattermost, a team chat application. |
+| `zoom` | ✅ | deb | Installs Zoom, a video conferencing tool. |
 
 Each playbook can be customized, and roles enabled or disabled as required via `inventory/group_vars/all.yaml`. By default, the playbook `work.yaml` is
 disabled,
@@ -225,29 +225,7 @@ personal preferences. I will accept pull requests adding roles for software that
 **Before opening a pull request, please create an issue to describe the feature you would like to add and wait for my approval.** This helps avoid unnecessary
 work.
 
-This project uses the [pre-commit framework](https://pre-commit.com/) to ensure consistent formatting and basic static analysis across commits.
-
-To enable it:
-
-1. Install `pre-commit` system-wide (e.g., via APT):
-
-    ```bash
-    sudo apt install pre-commit
-    ````
-
-2. Set it up for this repository:
-
-   ```bash
-   make install-pre-commit
-   ```
-
-After that, checks will automatically run before each commit. You can also run the checks manually with:
-
-```bash
-make check
-```
-
-This command performs static analysis on shell and YAML files and regenerates the `inventory/group_vars/all.yaml` file.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the setup, the checks to run and the commit message rules.
 
 ## Acknowledgements
 
