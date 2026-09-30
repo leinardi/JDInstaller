@@ -1,4 +1,6 @@
 ---
+default_install_hook_types: [pre-commit, commit-msg]
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -15,41 +17,6 @@ repos:
     rev: v0.3.2
     hooks:
       - id: checkmake
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.3.1
-    hooks:
-      - id: mypy
-        additional_dependencies:
-          # add stubs the project needs
-          - types-requests
-          - types-setuptools
-      - id: mypy
-        alias: mypy-json-output
-        name: mypy (json output)
-        args:
-          - "--output"
-          - "json"
-          - "--hide-error-context"
-          - "--show-column-numbers"
-          - "--show-absolute-path"
-          - "--no-pretty"
-          - "--ignore-missing-imports"
-          - "--scripts-are-modules"
-        additional_dependencies:
-          # add stubs the project needs
-          - types-requests
-          - types-setuptools
-        stages: [manual]
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.8
-    hooks:
-      - id: ruff-check
-        args: ["--fix"]
-      - id: ruff-format
-      - id: ruff-check
-        alias: ruff-check-rdjson
-        args: ["--fix", "-q", "--output-format=rdjson"]
-        stages: [manual]
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.12
     hooks:
@@ -67,6 +34,8 @@ repos:
     rev: v0.23.3
     hooks:
       - id: markdownlint-cli2
+        additional_dependencies:
+          - markdownlint-rule-table-format@1.0.3
   - repo: local
     hooks:
       - id: generate-group-vars
@@ -101,7 +70,7 @@ repos:
         name: prettier-yaml
         entry: prettier
         language: node
-        additional_dependencies: ["prettier@3.5.3"]
+        additional_dependencies: ["prettier@3.7.4"]
         files: \.(yml|yaml)$
         exclude: ^roles/
         args: ["--write"]
@@ -139,3 +108,9 @@ repos:
         name: "yamllint (parsable output)"
         args: ["--format", "parsable"]
         stages: [manual]
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: ["--force-scope"]

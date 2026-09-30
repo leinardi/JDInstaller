@@ -1,11 +1,14 @@
 version: 2
-enable-beta-ecosystems: true # Required for the pre-commit ecosystem
 
+# Every ecosystem uses chore(deps): none of them changes what the playbooks install, so a bump is
+# not a release on its own.
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
     labels: ["dependencies", "ci"]
     groups:
       github-actions:
@@ -16,8 +19,23 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
     labels: ["dependencies", "ci"]
     groups:
       pre-commit-hooks:
+        patterns:
+          - "*"
+
+  # requirements-ci.txt only: the ansible-core the CI syntax check runs with.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+    labels: ["dependencies", "ci"]
+    groups:
+      python:
         patterns:
           - "*"
