@@ -6,21 +6,27 @@ generate-group-vars: check-installed-pre-commit ## Generate inventory/group_vars
 	@echo "Generating inventory/group_vars/all.yaml..."
 	pre-commit run generate-group-vars --all-files
 
+# The playbook runs with a temporary passwordless sudoers rule for the current user, so a long run
+# never stops at a sudo prompt. The EXIT trap removes it however the recipe ends: a failed
+# playbook, Ctrl-C (the signal traps turn INT, TERM and HUP into an exit, which runs the trap), or
+# a failing step before the playbook. While the rule exists, the `sudo rm` needs no password. The
+# recipe's exit status stays the playbook's.
 .PHONY: install
 install: check-ansible ## Run ansible-playbook with optional parameters
 	@echo "Running ansible-playbook with optional parameters..."
 	@read -r -s -p "BECOME password: " _pass; echo; \
+	_sudoers=/etc/sudoers.d/90-ansible-nopasswd; \
 	_tmpfile=$$(mktemp -t ansible-sudoers.XXXXXXXX); \
+	trap 'rm -f "$$_tmpfile"; sudo rm -f "$$_sudoers"' EXIT; \
+	trap 'exit 129' HUP; trap 'exit 130' INT; trap 'exit 143' TERM; \
 	printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$$USER" > "$$_tmpfile"; \
-	echo "$$_pass" | sudo -S cp "$$_tmpfile" /etc/sudoers.d/90-ansible-nopasswd; \
-	sudo chmod 0440 /etc/sudoers.d/90-ansible-nopasswd; \
-	rm -f "$$_tmpfile"; \
+	echo "$$_pass" | sudo -S cp "$$_tmpfile" "$$_sudoers"; \
+	sudo chmod 0440 "$$_sudoers"; \
 	ansible-playbook playbooks/ubuntu-setup.yaml $(strip \
 	$(if $(TAGS),--tags=$(TAGS)) \
 	$(if $(LIMIT),--limit=$(LIMIT)) \
 	$(if $(EXTRA_VARS),--extra-vars="$(EXTRA_VARS)") \
-	$(if $(OTHER_PARAMS),$(OTHER_PARAMS))); \
-	_rc=$$?; sudo rm -f /etc/sudoers.d/90-ansible-nopasswd; exit $$_rc
+	$(if $(OTHER_PARAMS),$(OTHER_PARAMS)))
 
 .PHONY: check-ansible
 check-ansible: # Check if ansible is installed, and run the ansible installation script if not
