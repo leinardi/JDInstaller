@@ -24,6 +24,19 @@ STORED_EXPECTED=""
 STORED_SHA=""
 REMOTE_SHA=""
 
+# Resolves VERSION on the remote to a commit SHA: the tag, peeled when it is
+# annotated (a raw download needs a commit, not a tag object), else a branch.
+# Exact ref names only: a bare pattern would also match refs/tags/<x>/<version>.
+resolve_sha() {
+  git ls-remote "https://github.com/${MK_REPO}.git" \
+    "refs/tags/${VERSION}" "refs/tags/${VERSION}^{}" "refs/heads/${VERSION}" 2>/dev/null \
+    | awk -v tag="refs/tags/${VERSION}" -v head="refs/heads/${VERSION}" '
+        $2 == tag "^{}" { peeled = $1 }
+        $2 == tag       { tagged = $1 }
+        $2 == head      { branch = $1 }
+        END { print (peeled != "" ? peeled : (tagged != "" ? tagged : branch)) }'
+}
+
 # Read existing version file, if any: format "<repo>@<version> [sha]"
 if [[ -f "${MK_VERSION_FILE}" ]]; then
   IFS=' ' read -r STORED_EXPECTED STORED_SHA < "${MK_VERSION_FILE}" || true
@@ -33,11 +46,10 @@ if [[ "${MK_UPDATE_MODE}" = "1" ]]; then
   # ---------------------------------------------------------------------------
   # UPDATE MODE: go online, compare remote SHA, refresh only if changed
   # ---------------------------------------------------------------------------
-  REMOTE_URL="https://github.com/${MK_REPO}.git"
-  REMOTE_SHA="$(git ls-remote "${REMOTE_URL}" "${VERSION}" 2>/dev/null | awk 'NR==1 {print $1}')"
+  REMOTE_SHA="$(resolve_sha)"
 
   if [[ -z "${REMOTE_SHA}" ]]; then
-    echo "[mk] ERROR: could not resolve '${VERSION}' in ${REMOTE_URL}" >&2
+    echo "[mk] ERROR: could not resolve '${VERSION}' in https://github.com/${MK_REPO}.git" >&2
     echo "[mk]        Check MK_COMMON_VERSION or your network connection." >&2
     exit 1
   fi
@@ -86,34 +98,60 @@ if [[ "${NEED_REFRESH}" -eq 1 ]]; then
   # If we don't already know REMOTE_SHA (normal mode), resolve it now.
   # This only happens when we are *already* going online to download files.
   if [[ -z "${REMOTE_SHA}" ]]; then
-    REMOTE_URL="https://github.com/${MK_REPO}.git"
-    REMOTE_SHA="$(git ls-remote "${REMOTE_URL}" "${VERSION}" 2>/dev/null | awk 'NR==1 {print $1}')"
+    REMOTE_SHA="$(resolve_sha)"
     if [[ -z "${REMOTE_SHA}" ]]; then
       echo "[mk] WARNING: could not resolve SHA for ${EXPECTED};" \
            "version file will not contain a SHA." >&2
     fi
   fi
 
-  # Fetch the script itself from the tagged ref
-  curl -fsSL \
-    "https://raw.githubusercontent.com/${MK_REPO}/${VERSION}/scripts/bootstrap-mk-common.sh" \
-    -o "${SCRIPT_PATH}"
-  chmod +x "${SCRIPT_PATH}"
+  # Fetch the exact commit the version file records, not the tag name:
+  # raw.githubusercontent.com caches by URL, so right after a tag moves the tag
+  # URL can still serve the previous commit's files, or a mix of both.
+  REF="${REMOTE_SHA:-${VERSION}}"
 
-  # Fetch all requested .mk files
+  # Download everything into a staging directory first, and install only once
+  # every download has succeeded: a failure part-way leaves the script, the .mk
+  # files and the version file exactly as they were. The Makefile runs this
+  # through $(shell ...), which ignores the exit status, so a half-updated .mk/
+  # would otherwise be used silently. Staging inside MK_DIR keeps the final
+  # moves same-filesystem renames.
+  STAGE="$(mktemp -d "${MK_DIR}/.mk-common-stage.XXXXXX")"
+  trap 'rm -rf "${STAGE}"' EXIT
+
+  fetch() {
+    curl -fsSL --retry 3 \
+      "https://raw.githubusercontent.com/${MK_REPO}/${REF}/$1" \
+      -o "${STAGE}/$2"
+  }
+
+  fetch scripts/bootstrap-mk-common.sh bootstrap-mk-common.sh
   for f in ${FILES}; do
     echo "[mk] Fetching ${f} from ${MK_REPO}@${VERSION}" >&2
-    curl -fsSL \
-      "https://raw.githubusercontent.com/${MK_REPO}/${VERSION}/.mk/${f}" \
-      -o "${MK_DIR}/${f}"
+    fetch ".mk/${f}" "${f}"
   done
 
-  # Store "<repo>@<version> <sha>" (sha may be empty only if resolution failed)
+  # Every download succeeded: install. From here on only renames happen.
+  for f in ${FILES}; do
+    mv -f "${STAGE}/${f}" "${MK_DIR}/${f}"
+  done
+
+  # The version file goes last: if the install is interrupted, it still names
+  # the previous commit and the next update refreshes again.
+  # Format: "<repo>@<version> <sha>" (sha empty only if resolution failed)
   if [[ -n "${REMOTE_SHA}" ]]; then
-    printf '%s %s\n' "${EXPECTED}" "${REMOTE_SHA}" > "${MK_VERSION_FILE}"
+    printf '%s %s\n' "${EXPECTED}" "${REMOTE_SHA}" > "${STAGE}/version"
   else
-    printf '%s\n' "${EXPECTED}" > "${MK_VERSION_FILE}"
+    printf '%s\n' "${EXPECTED}" > "${STAGE}/version"
   fi
+  mv -f "${STAGE}/version" "${MK_VERSION_FILE}"
+
+  chmod +x "${STAGE}/bootstrap-mk-common.sh"
+  mv -f "${STAGE}/bootstrap-mk-common.sh" "${SCRIPT_PATH}"
+
+  # exec replaces this process and skips the EXIT trap, so clean up first.
+  rm -rf "${STAGE}"
+  trap - EXIT
 
   # Re-exec the freshly downloaded script so any new logic applies immediately
   exec "${SCRIPT_PATH}" "$@"
