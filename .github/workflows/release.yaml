@@ -3,55 +3,23 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      semver:
-        description: "Release Semantic Versioning (e.g. 4.15.2)"
-        required: true
+      version:
+        description: "Version, e.g. 1.2.0 or v1.2.0 (empty: derive from the commits since the last release)"
+        required: false
+        type: string
+      dry_run:
+        description: "Dry run: resolve the version and print the plan, change nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
 
 jobs:
   release:
-    name: Release
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    env:
-      TERM: dumb
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Create release tag
-        uses: actions/github-script@v9
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: "refs/tags/${{ github.event.inputs.semver }}",
-              sha: context.sha
-            })
-
-      - name: Workaround to fetch the tag # Is there a better way to do it?
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ github.event.inputs.semver }}
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Delete release tag
-        if: ${{ failure() || cancelled() }}
-        uses: actions/github-script@v9
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.git.deleteRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: "tags/${{ github.event.inputs.semver }}"
-            })
+    permissions:
+      contents: write
+    uses: leinardi/gh-reusable-workflows/.github/workflows/simple-tag-and-release.yaml@4b8d094239089d9f91fd15b929db30fcb2a3c118 # v1.3.1
+    with:
+      version: ${{ inputs.version }}
+      dry_run: ${{ inputs.dry_run }}
