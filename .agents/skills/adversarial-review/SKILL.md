@@ -5,9 +5,10 @@ description: >
   branch, commit range, or PR. Hunts for non-idempotent tasks, roles that
   break when disabled or run alone, unverified downloads and signing keys,
   over-broad privilege, secrets in a public repository, group_vars drift, and
-  README contract drift, then reports ranked findings. Use whenever the user
-  asks to review changes, a diff, PR, branch, or commit; check work before
-  committing; assess merge readiness; or poke holes in an implementation.
+  README contract drift in this Ansible Ubuntu-setup playbook, then reports
+  ranked findings. Use when the user asks to review changes, a diff, PR,
+  branch, or commit; check work before committing; assess merge readiness; or
+  poke holes in an implementation.
 ---
 
 # Adversarial Review - JDInstaller
@@ -18,20 +19,32 @@ host state, variable value, or tag selection where it fails. Do not praise or
 restyle the change. A review with no findings is credible only after active
 attempts to break the changed behavior.
 
-This skill is the entry point for reviewing any change in this repository.
-`AGENTS.md` and the README remain the sources of truth; this skill defines
-review procedure and reporting.
+This skill defines the review procedure and reporting. `AGENTS.md` and the
+README remain the sources of truth.
+
+Copy this checklist and tick items as you go:
+
+```text
+Review progress:
+- [ ] 1. Diff and intent established (default scope if none given)
+- [ ] 2. AGENTS.md, the whole changed role and its playbook read
+- [ ] 3. Repository invariants checked
+- [ ] 4. Adversarial passes run
+- [ ] 5. Findings confirmed or dropped; gates run
+- [ ] 6. Report written
+```
 
 ## 1. Establish the diff
 
 Never review from memory or only from the user's description. Read the actual
-diff and determine its intent.
+diff and determine its intent. With no scope given, review the uncommitted
+work; if the tree is clean, review the branch against `master`.
 
 | User intent | Command |
 | --- | --- |
 | "my work", "before I commit", uncommitted changes | `git status --short`, then `git diff HEAD`; inspect untracked files too |
 | staged changes only | `git diff --staged` |
-| branch, "this PR", "ready to merge" | determine the default/base branch, then `git diff <base>...HEAD` |
+| branch, "this PR", "ready to merge" | `git diff master...HEAD` |
 | specific commit range | `git diff <base>..<head>` |
 | GitHub PR number | `gh pr view <n>` for intent and metadata, then `gh pr diff <n>` |
 
@@ -41,8 +54,9 @@ finding.
 
 Read every changed file with enough surrounding context to understand its
 contracts. For non-trivial behavior changes, inspect callers, implementations,
-tests, and documentation that depend on the changed symbol. Use symbol and
-reference tools rather than assuming all call sites appear in the diff.
+tests, and documentation that depend on the changed variable or file. Find
+every use with `grep -rn '<name>' roles/ playbooks/ inventory/`; never assume
+every use is in the diff.
 
 ## 2. Load project authority
 
@@ -105,8 +119,10 @@ Do not skim for style. Run each pass with "how can this fail?" framing:
   twice, or restart a service needlessly?
 - **Fresh machine:** walk it on a clean install, where a directory, user,
   group, package or repository it assumes does not exist yet.
-- **Variations:** the Ubuntu release (`ansible_distribution_release`), a package renamed or dropped in the current release, a missing PPA for a new codename, a role disabled while another that used its
-  output stays on, `--tags` selecting only this role, `--check` mode.
+- **Variations:** the Ubuntu release (`ansible_distribution_release`), a
+  package renamed or dropped in a newer release, a missing PPA for a new
+  codename, a role disabled while another that used its output stays on,
+  `--tags` selecting only this role, `--check` mode.
 - **Failure half-way:** a download that fails or returns HTML, a package
   manager lock, a handler that never runs because a later task failed. Is the
   machine left in a state the next run repairs?
@@ -116,9 +132,10 @@ Do not skim for style. Run each pass with "how can this fail?" framing:
 - **Contract drift:** compare the change with the README tables, the role's
   defaults, the playbook tags, and the commit/PR intent.
 
-Prefer one reproducible defect over ten vague suggestions. If you cannot name
-the triggering state and wrong result or broken invariant, keep investigating
-or omit it.
+For each candidate finding, reproduce it or trace the failing host state end
+to end. If that confirms it, report it. If not, dig once more; if it is still
+unconfirmed, drop it. Never report a finding without the triggering state and
+the wrong result or broken invariant.
 
 ## 5. Verify findings and gates
 
@@ -131,16 +148,17 @@ machine for anything that needs a real run.
 | roles, playbooks, inventory | `make check`, then `make ansible-syntax-check` |
 | a role's behavior | the above, then `ansible-playbook playbooks/ubuntu-setup.yaml --tags <role>` twice on a throwaway VM: the second run must report no changes |
 | workflows, Makefile, scripts | `make check` |
-| docs or skill only | inspect rendered content/references and run `git diff --check` |
+| docs or skill only | `make check` |
 
 A failing gate is a confirmed finding when caused by the reviewed change. If a
 gate cannot run, state why and mark it unverified; never imply it passed.
 
 ## 6. Report
 
-Rank findings by severity, worst first. A secret or personal data in the repository, an unverified download
-or key, or a leftover privilege escalation are normally blockers. Skip pure
-formatting unless it changes meaning or breaks a required gate.
+Rank findings by severity, worst first. A secret or personal data in the
+repository, an unverified download or key, or a leftover privilege escalation
+are normally blockers. Skip pure formatting unless it changes meaning or
+breaks a required gate.
 
 For each finding:
 
