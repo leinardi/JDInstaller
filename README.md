@@ -149,6 +149,7 @@ Default" column shows whether the role is active by default. Even if a role is e
 | `doublecmd` | ✅ | apt | Installs Double Commander, a file manager. |
 | `earth` | ✅ | apt | Installs Google Earth Pro. |
 | `edge` | ⛔ | apt (Google repo) | Installs Microsoft Edge browser. |
+| `fingerprint` | ⛔ | apt | Configures fingerprint authentication: retries for sudo, su and polkit, an instant password field on the lock screen, and password-only login after boot so the GNOME keyring unlocks. The reader's driver must come from libfprint. |
 | `firefox` | ✅ | apt (Mozilla repo) | Installs Mozilla Firefox. |
 | `flatpak` | ✅ | apt | Installs Flatpak for managing app installations. |
 | `gimp` | ✅ | apt | Installs GIMP, a graphic editor. |

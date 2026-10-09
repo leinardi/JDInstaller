@@ -22,6 +22,9 @@
     - role: edge
       tags: edge
       when: edge_enabled | bool
+    - role: fingerprint
+      tags: fingerprint
+      when: fingerprint_enabled | bool
     - role: firefox
       tags: firefox
       when: firefox_enabled | bool

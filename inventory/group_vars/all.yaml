@@ -148,6 +148,17 @@ edge_enabled: false
 # Variables from roles/filezilla
 filezilla_enabled: true
 
+# Variables from roles/fingerprint
+fingerprint_enabled: false
+
+# Fingerprint attempts before sudo, su and polkit fall back to the password.
+fingerprint_max_tries: 2
+# Seconds sudo, su and polkit wait for a finger.
+fingerprint_timeout: 10
+# Offer the fingerprint on the login screen. Logging in with a fingerprint leaves the GNOME keyring locked, so by default the
+# password is asked after boot and the fingerprint is kept for the lock screen, sudo, su and polkit.
+fingerprint_login_screen: false
+
 # Variables from roles/firefox
 firefox_enabled: true
 
