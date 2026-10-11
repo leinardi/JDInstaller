@@ -2,16 +2,23 @@
 customRules:
   - markdownlint-rule-table-format
 
-# Disable some built-in rules
+# Built-in rules: everything on, with these adjustments.
 config:
   fenced-code-language: false
   # README.md opens with the CI badges, not a heading.
   first-line-heading: false
-  line-length: false
   no-inline-html: false
+  # Prose wraps at 100 columns (AGENTS.md); tables, code blocks and headings may run longer.
+  line-length:
+    line_length: 100
+    tables: false
+    code_blocks: false
+    headings: false
   ul-indent:
-    indent: 4
-
+    indent: 2
+  # Configuration examples keep their own indentation.
+  no-hard-tabs:
+    code_blocks: false
   no-duplicate-heading:
     siblings_only: true
 
@@ -31,15 +38,6 @@ fix: true
 
 # Ignore files referenced by .gitignore (only valid at root)
 gitignore: true
-
-# Disable banner message on stdout (only valid at root)
-# noBanner: true
-
-# Disable inline config comments
-# noInlineConfig: true
-
-# Disable progress on stdout (only valid at root)
-# noProgress: true
 
 # Show found files on stdout (only valid at root)
 showFound: false

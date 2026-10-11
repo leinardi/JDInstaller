@@ -39,7 +39,9 @@ assignees: []
 
 ### Relevant configuration
 
-<!-- The variables you changed in inventory/group_vars/all.yaml, if any. Never paste passwords or tokens. -->
+<!--
+The variables you changed in inventory/group_vars/all.yaml, if any. Never paste passwords or tokens.
+-->
 
 ```yaml
 # Example (replace with your own)
