@@ -7,8 +7,28 @@ group_vars/_*.yaml
 group_vars/local.yaml
 .lock
 
-# Intellij
-*.iml
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IntelliJ: only the shared code style and copyright profile are tracked
 .idea/*
 !.idea/codeStyles/
 !.idea/copyright/
+*.iml
+
+# Other editors
+.vscode/
+*.code-workspace
+*.swp
+*~
+
+# Tool caches
+.cache/
+
+# Claude Code: the shared settings and the skills symlink are tracked; local settings
+# (settings.local.json) and session state never are.
+.claude/*
+!.claude/settings.json
+!.claude/skills
