@@ -9,8 +9,8 @@ contributions.
 
 ## Setup
 
-Install [`pre-commit`](https://pre-commit.com/) and [`shellcheck`](https://www.shellcheck.net/) (`sudo apt install pre-commit shellcheck`), then install the
-hooks once with `make pre-commit-install`. It installs both the `pre-commit` and the `commit-msg` hooks, so commit messages are
+Install [`pre-commit`](https://pre-commit.com/) (`sudo apt install pre-commit`); the hooks bring their own tools, shellcheck
+included. Then install the hooks once with `make pre-commit-install`. It installs both the `pre-commit` and the `commit-msg` hooks, so commit messages are
 checked when you commit.
 
 - `make check` runs the full pre-commit suite on every file, `make check-stage` on the staged files only. It also regenerates
