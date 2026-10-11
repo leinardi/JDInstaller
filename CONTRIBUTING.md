@@ -46,8 +46,9 @@ The release version is derived from these types, since the last release:
 | none | everything else: `build`, `chore`, `ci`, `docs`, `perf`, `refactor`, `style`, `test`, `revert` | `docs(readme): fix a link` |
 
 Pick the type by whether the change should ship, not by what kind of change it is: a refactor or a
-revert that changes what the playbook does is a `fix`. Every commit of a pull request lands on
-`master` as it is, so each one needs a correct type, not just the pull request as a whole.
+revert that changes what the playbook does is a `fix`, and a `revert` of a shipped `feat` or `fix` is
+itself a `fix`. Every commit of a pull request lands on `master` as it is, so each one needs a
+correct type, not just the pull request as a whole.
 
 ## Releasing
 
