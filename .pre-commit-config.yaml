@@ -70,6 +70,16 @@ repos:
         files: \.(yml|yaml)$
         exclude: ^roles/
         args: ["--write"]
+      # Every code file carries the Apache-2.0 header (scripts/check-license-headers.sh says which).
+      # Reads the whole tree, so it always runs; pinned to one stage because always_run makes a hook
+      # eligible at every installed stage, and commit-msg is one of them.
+      - id: check-license-headers
+        name: license headers
+        entry: scripts/check-license-headers.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
   - repo: https://github.com/ansible/ansible-lint
     rev: v26.9.0
     hooks:
