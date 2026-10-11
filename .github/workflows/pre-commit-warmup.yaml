@@ -1,20 +1,35 @@
 name: Pre-commit Cache Warm-up
 
+# Keeps a master-branch cache of the pre-commit hook environments for the pre-commit-all job and the
+# reviewdog jobs in ci.yaml to restore under the same key (pre-commit|<OS>|<hash of
+# .pre-commit-config.yaml>). The weekly schedule is eviction insurance: GitHub evicts a cache nobody
+# restored for 7 days.
 on:
   push:
     branches:
       - master
     paths:
       - .pre-commit-config.yaml
+      - .github/workflows/pre-commit-warmup.yaml
+  schedule:
+    - cron: "17 4 * * 1"
   workflow_dispatch:
 
-# The reusable workflow only checks out and fills the cache; it declares the same.
+concurrency:
+  group: pre-commit-warmup-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
   warm-pre-commit-cache:
-    uses: leinardi/gh-reusable-workflows/.github/workflows/pre-commit-warmup.yaml@4b8d094239089d9f91fd15b929db30fcb2a3c118 # v1.3.1
+    # The reusable workflow checks out and fills the cache, then prunes the older caches of this
+    # ref, keeping the newest two; actions: write lets it delete them.
+    permissions:
+      contents: read
+      actions: write
+    uses: leinardi/gh-reusable-workflows/.github/workflows/pre-commit-warmup.yaml@ba5f6ec7596a5eb306ad2f7511a888ec8dde6d53 # v1.4.0
     with:
       # The ansible-lint hooks pin language_version: python3.14.
       python_version: "3.14"
