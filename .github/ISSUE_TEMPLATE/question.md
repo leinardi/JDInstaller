@@ -8,7 +8,8 @@ assignees: []
 ## Step 1: Is this the right place?
 
 * [ ] I have checked the existing issues and discussions to see if this has already been answered.
-* [ ] My question is specifically about this project (usage, configuration, behavior, roadmap, etc.).
+* [ ] My question is specifically about this project (usage, configuration, behavior, roadmap,
+  etc.).
 
 ---
 

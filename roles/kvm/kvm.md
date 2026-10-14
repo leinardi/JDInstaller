@@ -1,6 +1,7 @@
 # KVM Role – Installation & GPU-Passthrough Guide
 
-This document explains how to install KVM and, optionally, enable GPU passthrough on Ubuntu 26.04 using this Ansible role.
+This document explains how to install KVM and, optionally, enable GPU passthrough on Ubuntu 26.04
+using this Ansible role.
 
 ## Prerequisites
 
@@ -36,16 +37,20 @@ The KVM role is disabled by default. Enable it in either of two ways:
   kvm_enabled: true
   ```
 
-> Note that GPU passthrough is enabled by default. If you don't have 2 GPUs, then you must run the installation as follows:
+> Note that GPU passthrough is enabled by default. If you don't have 2 GPUs, then you must run the
+> installation as follows:
 > `make install TAGS="kvm" EXTRA_VARS="kvm_enabled=true,kvm_gpu_passthrough='disabled'"`
 
 ---
 
 ## GPU Passthrough (optional)
 
-If your system has at least two IOMMU-isolated GPUs (typically an integrated GPU plus a dedicated one), the role can add extra GRUB [other bootloader may be supported in the future] menu entries that bind the chosen dedicated GPU to `vfio-pci` at boot.
+If your system has at least two IOMMU-isolated GPUs (typically an integrated GPU plus a dedicated
+one), the role can add extra GRUB [other bootloader may be supported in the future] menu entries
+that bind the chosen dedicated GPU to `vfio-pci` at boot.
 
-> Note that GPUs must not belong to the same pci group. If a single group is found, then the installation exits.
+> Note that GPUs must not belong to the same pci group. If a single group is found, then the
+> installation exits.
 
 * One menu entry is generated per GPU, e.g.
 
@@ -57,13 +62,17 @@ If your system has at least two IOMMU-isolated GPUs (typically an integrated GPU
 
   The default menu entry remains the standard “Ubuntu” which keeps all GPUs on the host.
 
-* Selecting a passthrough entry hands the specified GPU (and its HDMI-audio function, if present) to virtual machines. The host can still boot using the integrated GPU.
+* Selecting a passthrough entry hands the specified GPU (and its HDMI-audio function, if present) to
+  virtual machines. The host can still boot using the integrated GPU.
 
-> Note that this role doesn't configure your virtual machines. You must pass the GPU PCI manually to it (add hardware button on virt-manager)
+> Note that this role doesn't configure your virtual machines. You must pass the GPU PCI manually to
+> it (add hardware button on virt-manager)
 
 ### Runtime un-/re-binding
 
-This role sets up passthrough **at boot**. It does not attempt runtime rebinding of GPUs. For hot-plug style switching see Bryan Steiner’s excellent [gpu-passthrough-tutorial](https://github.com/bryansteiner/gpu-passthrough-tutorial).
+This role sets up passthrough **at boot**. It does not attempt runtime rebinding of GPUs. For
+hot-plug style switching see Bryan Steiner’s excellent
+[gpu-passthrough-tutorial](https://github.com/bryansteiner/gpu-passthrough-tutorial).
 
 ---
 

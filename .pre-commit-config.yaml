@@ -36,6 +36,22 @@ repos:
       - id: markdownlint-cli2
         additional_dependencies:
           - markdownlint-rule-table-format@1.0.3
+  # Pinned rather than taken from the system, so a developer machine and CI run the same release.
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: ["-x"]
+      - id: shellcheck
+        alias: shellcheck-diff-output
+        name: shellcheck (diff output)
+        args: ["-f", "diff", "-x"]
+        stages: [manual]
+      - id: shellcheck
+        alias: shellcheck-json-output
+        name: shellcheck (json output)
+        args: ["-f", "json", "-x"]
+        stages: [manual]
   - repo: local
     hooks:
       - id: generate-group-vars
@@ -44,36 +60,26 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
-      - id: shellcheck
-        name: shellcheck
-        entry: shellcheck
-        language: system
-        types: [shell]
-        args: ["-x"]
-      - id: shellcheck
-        alias: shellcheck-diff-output
-        name: shellcheck (diff output)
-        entry: shellcheck
-        language: system
-        types: [shell]
-        args: ["-f", "diff", "-x"]
-        stages: [manual]
-      - id: shellcheck
-        alias: shellcheck-json-output
-        name: shellcheck (json output)
-        entry: shellcheck
-        language: system
-        types: [shell]
-        args: ["-f", "json", "-x"]
-        stages: [manual]
+        # always_run makes a hook eligible at every installed stage, and commit-msg is one of them.
+        stages: [pre-commit]
       - id: prettier-yaml
         name: prettier-yaml
         entry: prettier
         language: node
-        additional_dependencies: ["prettier@3.7.4"]
+        additional_dependencies: ["prettier@3.9.9"]
         files: \.(yml|yaml)$
         exclude: ^roles/
         args: ["--write"]
+      # Every code file carries the Apache-2.0 header (scripts/check-license-headers.sh says which).
+      # Reads the whole tree, so it always runs; pinned to one stage because always_run makes a hook
+      # eligible at every installed stage, and commit-msg is one of them.
+      - id: check-license-headers
+        name: license headers
+        entry: scripts/check-license-headers.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
   - repo: https://github.com/ansible/ansible-lint
     rev: v26.9.0
     hooks:

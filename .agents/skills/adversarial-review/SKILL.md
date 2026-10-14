@@ -50,7 +50,8 @@ work; if the tree is clean, review the branch against `master`.
 
 Read `git log --oneline` for the reviewed range and any linked issue or PR
 body. Code that works but does something other than the stated intent is a
-finding.
+finding. A commit type that ships the wrong version is a finding too (pass in
+§4).
 
 Read every changed file with enough surrounding context to understand its
 contracts. For non-trivial behavior changes, inspect callers, implementations,
@@ -131,6 +132,25 @@ Do not skim for style. Run each pass with "how can this fail?" framing:
   paths with spaces, `lookup` on the controller versus the host.
 - **Contract drift:** compare the change with the README tables, the role's
   defaults, the playbook tags, and the commit/PR intent.
+- **Commit type matches whether it ships:** `svu` derives the release from the
+  commits since the last tag, and every commit lands as it is (merge commits).
+  What ships is the playbook: a change to what it does on a machine (a role,
+  a playbook, a default, `install_ansible.sh`, `make install`) typed `chore`,
+  `ci`, `docs` or `refactor` never reaches a release; a `feat` or `fix` on a
+  workflow, a hook, a test or a doc cuts a release for nothing; a stray `!` or
+  `BREAKING CHANGE:` cuts a major. A revert of a shipped `feat` or `fix` is a
+  `fix`. `svu` also matches `feat`/`fix` anywhere before a colon (`prefix:`
+  counts as `fix:`). See `AGENTS.md`.
+- **A check that can no longer fail:** the gates guard claims nobody re-checks
+  by hand. Make the guarded thing go wrong and see whether the check still
+  notices: a hand-edited `inventory/group_vars/all.yaml` against the
+  `generate-group-vars` hook, a file without the header against
+  `scripts/check-license-headers.sh` (a governed-file filter that matches no
+  file, an exemption that swallows real code), a broken playbook against
+  `ansible-syntax`. A hook that lost `always_run`, a `files:` pattern that no
+  longer matches, a new `SKIP` in `pre-commit-all`, a job dropped from
+  `ci-result`'s `needs`, or a CI step that adds `|| true` or
+  `continue-on-error` is a false pass: a finding.
 
 For each candidate finding, reproduce it or trace the failing host state end
 to end. If that confirms it, report it. If not, dig once more; if it is still
@@ -148,6 +168,7 @@ machine for anything that needs a real run.
 | roles, playbooks, inventory | `make check`, then `make ansible-syntax-check` |
 | a role's behavior | the above, then `ansible-playbook playbooks/ubuntu-setup.yaml --tags <role>` twice on a throwaway VM: the second run must report no changes |
 | workflows, Makefile, scripts | `make check` |
+| `scripts/check-license-headers.sh` | the script, once as is and once on a file without the header |
 | docs or skill only | `make check` |
 
 A failing gate is a confirmed finding when caused by the reviewed change. If a

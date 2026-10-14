@@ -19,7 +19,7 @@ jobs:
   release:
     permissions:
       contents: write
-    uses: leinardi/gh-reusable-workflows/.github/workflows/simple-tag-and-release.yaml@4b8d094239089d9f91fd15b929db30fcb2a3c118 # v1.3.1
+    uses: leinardi/gh-reusable-workflows/.github/workflows/simple-tag-and-release.yaml@ba5f6ec7596a5eb306ad2f7511a888ec8dde6d53 # v1.4.0
     with:
       version: ${{ inputs.version }}
       dry_run: ${{ inputs.dry_run }}
