@@ -1,0 +1,51 @@
+---
+- name: Install fprintd and its PAM module
+  become: true
+  ansible.builtin.apt:
+    name:
+      - fprintd
+      - libpam-fprintd
+    state: present
+
+# Ubuntu's own fprintd profile is owned by libpam-fprintd and is overwritten on every package update, so a separate profile
+# carries the settings. Besides the attempts, it skips the fingerprint for the gdm-password service: GDM reads fingerprints
+# through its own gdm-fingerprint service, and without the skip the password field waits for the fingerprint timeout.
+- name: Install the fingerprint PAM profile
+  become: true
+  ansible.builtin.template:
+    src: fprintd-jdinstaller.j2
+    dest: /usr/share/pam-configs/fprintd-jdinstaller
+    owner: root
+    group: root
+    mode: "0644"
+  register: fingerprint_pam_profile
+
+- name: Read the PAM auth stack
+  ansible.builtin.slurp:
+    src: /etc/pam.d/common-auth
+  register: fingerprint_common_auth
+
+- name: Switch the PAM auth stack to the fingerprint profile
+  become: true
+  ansible.builtin.command:
+    cmd: "pam-auth-update {{ item }}"
+  loop:
+    - --disable fprintd
+    - --enable fprintd-jdinstaller
+  changed_when: true
+  when: >-
+    fingerprint_pam_profile is changed
+    or ('pam_fprintd.so max-tries=' ~ fingerprint_max_tries ~ ' timeout=' ~ fingerprint_timeout)
+    not in (fingerprint_common_auth.content | b64decode)
+
+- name: Configure the fingerprint on the login screen
+  become: true
+  community.general.ini_file:
+    path: /etc/gdm3/greeter.dconf-defaults
+    section: org/gnome/login-screen
+    option: enable-fingerprint-authentication
+    value: "{{ fingerprint_login_screen | bool | lower }}"
+    no_extra_spaces: true
+    create: false
+    mode: "0644"
+  notify: Reload GDM

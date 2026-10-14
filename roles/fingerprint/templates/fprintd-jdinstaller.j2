@@ -1,0 +1,8 @@
+Name: Fingerprint authentication (JDInstaller)
+Default: no
+Priority: 260
+Conflicts: fprint fprintd
+Auth-Type: Primary
+Auth:
+	[success=1 default=ignore]	pam_succeed_if.so service = gdm-password quiet
+	[success=end default=ignore]	pam_fprintd.so max-tries={{ fingerprint_max_tries }} timeout={{ fingerprint_timeout }}
