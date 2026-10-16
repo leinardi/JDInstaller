@@ -435,11 +435,14 @@
     state: directory
     mode: "0755"
   loop:
+    - "/opt/{{ package }}/Apple Immersive/Calibration"
     - "/opt/{{ package }}/configs"
     - "/opt/{{ package }}/DolbyVision"
     - "/opt/{{ package }}/easyDCP"
+    - "/opt/{{ package }}/Extras"
     - "/opt/{{ package }}/Fairlight"
     - "/opt/{{ package }}/GPUCache"
+    - "/opt/{{ package }}/Immersive/Canon/STMap"
     - "/opt/{{ package }}/logs"
     - "/opt/{{ package }}/Media"
     - "/opt/{{ package }}/Resolve Disk Database"
