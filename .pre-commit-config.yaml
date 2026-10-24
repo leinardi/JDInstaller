@@ -87,15 +87,15 @@ repos:
         alias: ansible-lint-fix
         name: ansible-lint-fix
         always_run: false
+        # Upstream lints the whole project on every run; passing only the changed files keeps a
+        # commit to about 2 s. astl below covers the whole tree, and --all-files in CI still hands
+        # over every file.
+        pass_filenames: true
+        require_serial: true
         files: ^(playbooks|roles|inventory)/.*\.(ya?ml)$
-        exclude: ^roles/.*/(files|templates)/|^\.github/|^docs/|^public/|^mkdocs\.ya?ml$
+        # A file passed explicitly bypasses exclude_paths in .ansible-lint, so mirror it here.
+        exclude: ^roles/.*/(files|templates)/|^inventory/group_vars/all\.yaml$
         args: [--fix]
-        language_version: python3.14
-      - id: ansible-lint
-        name: ansible-lint
-        always_run: false
-        files: ^(playbooks|roles|inventory)/.*\.(ya?ml)$
-        exclude: ^roles/.*/(files|templates)/|^\.github/|^docs/|^public/|^mkdocs\.ya?ml$
         language_version: python3.14
       - id: ansible-lint
         alias: ansible-lint-parseable
@@ -105,6 +105,14 @@ repos:
         args: ["-p"]
         stages: [manual]
         language_version: python3.14
+  # The full check after ansible-lint --fix: astl runs ansible-lint's statically decidable rules
+  # from .ansible-lint in milliseconds. It lints the whole tree whenever a YAML file changes.
+  - repo: https://github.com/arhuman/ansible-static-lint
+    rev: v0.7.2
+    hooks:
+      - id: astl
+        files: ^(playbooks|roles|inventory)/.*\.(ya?ml)$
+        exclude: ^roles/.*/(files|templates)/|^\.github/|^docs/|^public/|^mkdocs\.ya?ml$
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.38.0
     hooks:
