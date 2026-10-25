@@ -444,7 +444,7 @@ security pattern here is actually a **strength** worth noting: fingerprint asser
 is a model for other roles.
 
 **Recommendation:** No change needed. Consider documenting this pattern as the standard for other
-roles that download binaries (orcaslicer, hadolint, etc.).
+roles that download binaries (orcaslicer, etc.).
 **Priority:** N/A (positive note)
 
 ---
