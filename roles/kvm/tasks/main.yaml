@@ -35,6 +35,8 @@
       - libvirt-clients # libvirt client utilities
       - bridge-utils # network bridging utilities
       - virt-manager # GUI wrapper
+      - virtinst # virt-install, to create VMs from the command line
+      - cpu-checker # kvm-ok, to check that the CPU and firmware allow KVM acceleration
       - ovmf # Enables custom UEFIs in VMs
     state: present
     update_cache: true
