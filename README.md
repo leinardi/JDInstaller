@@ -186,6 +186,7 @@ playbook or role, make sure both the playbook and the role are enabled in
 | `git` | ✅ | apt | Installs Git, a version control system. |
 | `openjdk` | ✅ | apt | Installs OpenJDK, a Java development environment. |
 | `python` | ✅ | apt | Installs Python. |
+| `qemu_user` | ✅ | apt | Installs QEMU user-mode emulation with binfmt registration, so foreign-architecture binaries and containers (e.g. `docker run --platform linux/arm64`) run here. |
 | `slack` | ⛔ | snap | Installs Slack for team communication. |
 
 ### Playbook: `gaming.yaml`
