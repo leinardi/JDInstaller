@@ -365,6 +365,15 @@ pipx_enabled: false
 # Variables from roles/python
 python_enabled: true
 
+# Variables from roles/qemu_user
+qemu_user_enabled: true
+
+qemu_user:
+  # binfmt_misc entries that must be registered with the F (fix-binary) flag after the install, so
+  # the emulators also work inside containers (e.g. `docker run --platform linux/arm64`).
+  binfmt_check:
+    - qemu-aarch64
+
 # Variables from roles/slack
 slack_enabled: false
 

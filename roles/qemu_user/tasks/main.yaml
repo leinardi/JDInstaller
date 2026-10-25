@@ -1,0 +1,34 @@
+---
+- name: Install QEMU user-mode emulation with binfmt registration
+  become: true
+  ansible.builtin.apt:
+    # qemu-user-static is a virtual package on Ubuntu 26.04; qemu-user-binfmt provides it and
+    # pulls in the static qemu-user emulators.
+    name: qemu-user-binfmt
+    state: present
+    update_cache: true
+    cache_valid_time: "{{ apt_cache_time | default(3600) }}"
+
+- name: Read the binfmt_misc registrations
+  ansible.builtin.slurp:
+    src: "/proc/sys/fs/binfmt_misc/{{ item }}"
+  loop: "{{ qemu_user.binfmt_check }}"
+  register: qemu_user_binfmt
+  check_mode: false
+
+- name: Verify each emulator is registered with the fix-binary flag
+  vars:
+    qemu_user_entry: "{{ item.content | b64decode }}"
+  ansible.builtin.assert:
+    that:
+      - "'enabled' in qemu_user_entry.splitlines()"
+      - >-
+        'F' in (qemu_user_entry | regex_search('^flags: *(\\S*)', '\\1', multiline=True)
+        | default([''], true) | first)
+    fail_msg: >-
+      {{ item.item }} is not registered as enabled with the F flag, so containers for that
+      architecture will not start: {{ qemu_user_entry }}
+    success_msg: "{{ item.item }} is registered with the F flag"
+  loop: "{{ qemu_user_binfmt.results }}"
+  loop_control:
+    label: "{{ item.item }}"

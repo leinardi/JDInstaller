@@ -30,6 +30,9 @@
     - role: python
       tags: python
       when: python_enabled | bool
+    - role: qemu_user
+      tags: qemu_user
+      when: qemu_user_enabled | bool
     - role: slack
       tags: slack
       when: slack_enabled | bool
