@@ -13,9 +13,6 @@
     - role: git
       tags: git
       when: git_enabled | bool
-    - role: hadolint
-      tags: hadolint
-      when: hadolint_enabled | bool
     - role: openjdk
       tags:
         - java
