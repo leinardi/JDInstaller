@@ -262,15 +262,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      # make runs ansible-core through uvx, at the version pinned in requirements-ci.txt.
+      - name: Set up uv
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
-          python-version: "3.14"
-          cache: pip
-          cache-dependency-path: requirements-ci.txt
-
-      - name: Install ansible-core
-        run: python -m pip install --disable-pip-version-check -r requirements-ci.txt
+          enable-cache: true
+          cache-dependency-glob: requirements-ci.txt
 
       - name: Check the syntax of every playbook
         run: make ansible-syntax-check

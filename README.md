@@ -81,15 +81,13 @@ make install
 
 This command will:
 
-1. Automatically install Ansible if it’s not already installed.
-2. Launch the main playbook (`playbooks/ubuntu-setup.yaml`) to configure the system.
+1. Install [uv](https://docs.astral.sh/uv/) into `~/.local/bin` if it’s not already installed.
+2. Install the Ansible collections from `requirements.yml` into `.galaxy/`.
 3. Prompt for the sudo password of the current user.
+4. Launch the main playbook (`playbooks/ubuntu-setup.yaml`) to configure the system.
 
-Alternatively, you can run the playbook manually:
-
-```bash
-ansible-playbook playbooks/ubuntu-setup.yaml --ask-become-pass
-```
+You don't need to install Ansible: `make` runs it with `uvx`, at the ansible-core version pinned in
+`requirements-ci.txt`, so an Ansible already on the machine is never used.
 
 ### Run Single Roles
 
@@ -98,12 +96,6 @@ parameter like this:
 
 ```bash
 make install TAGS=virtualbox
-```
-
-Or manually run the playbook with specific tags:
-
-```bash
-ansible-playbook playbooks/ubuntu-setup.yaml --ask-become-pass --tags=virtualbox
 ```
 
 ### Reset Configuration

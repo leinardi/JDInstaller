@@ -1,4 +1,5 @@
-# CI only: the ansible-core that the ansible-syntax job in .github/workflows/ci.yaml runs
-# `make ansible-syntax-check` with. A local run uses the Ansible that install_ansible.sh sets up.
-# Kept here rather than inline in the workflow so Dependabot's pip ecosystem keeps it current.
+# The ansible-core every make target runs through uvx (.mk/ansible.mk): `make install`, and
+# `make ansible-syntax-check` locally and in the ansible-syntax job in .github/workflows/ci.yaml.
+# Kept here rather than inline in the makefile so Dependabot's pip ecosystem keeps it current; keep
+# the exact `ansible-core==<version>` form, which the makefile parses.
 ansible-core==2.21.4

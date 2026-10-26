@@ -135,7 +135,7 @@ Do not skim for style. Run each pass with "how can this fail?" framing:
 - **Commit type matches whether it ships:** `svu` derives the release from the
   commits since the last tag, and every commit lands as it is (merge commits).
   What ships is the playbook: a change to what it does on a machine (a role,
-  a playbook, a default, `install_ansible.sh`, `make install`) typed `chore`,
+  a playbook, a default, `install_uv.sh`, `make install`) typed `chore`,
   `ci`, `docs` or `refactor` never reaches a release; a `feat` or `fix` on a
   workflow, a hook, a test or a doc cuts a release for nothing; a stray `!` or
   `BREAKING CHANGE:` cuts a major. A revert of a shipped `feat` or `fix` is a
@@ -166,7 +166,7 @@ machine for anything that needs a real run.
 | Diff touched | Run |
 | --- | --- |
 | roles, playbooks, inventory | `make check`, then `make ansible-syntax-check` |
-| a role's behavior | the above, then `ansible-playbook playbooks/ubuntu-setup.yaml --tags <role>` twice on a throwaway VM: the second run must report no changes |
+| a role's behavior | the above, then `make install TAGS=<role>` twice on a throwaway VM: the second run must report no changes |
 | workflows, Makefile, scripts | `make check` |
 | `scripts/check-license-headers.sh` | the script, once as is and once on a file without the header |
 | docs or skill only | `make check` |
