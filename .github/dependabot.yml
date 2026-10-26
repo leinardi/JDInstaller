@@ -27,7 +27,7 @@ updates:
         patterns:
           - "*"
 
-  # requirements-ci.txt only: the ansible-core the CI syntax check runs with.
+  # requirements-ci.txt only: the ansible-core the make targets run through uvx.
   - package-ecosystem: "pip"
     directory: "/"
     schedule:

@@ -15,6 +15,14 @@
 ifndef MK_LOCAL_ANSIBLE_INCLUDED
 MK_LOCAL_ANSIBLE_INCLUDED := 1
 
+# Every Ansible tool the targets run comes from an ansible-core that uvx installs in its own cached
+# environment, so the machine needs no Ansible of its own. The version comes from
+# requirements-ci.txt, where Dependabot's pip ecosystem keeps it current. install_uv.sh puts uv in
+# ~/.local/bin, which a fresh install does not have on PATH yet.
+export PATH := $(HOME)/.local/bin:$(PATH)
+ANSIBLE_CORE_VERSION := $(shell sed -n 's/^ansible-core==//p' requirements-ci.txt)
+ANSIBLE_UVX          := uvx --from ansible-core==$(ANSIBLE_CORE_VERSION)
+
 .PHONY: generate-group-vars
 generate-group-vars: check-installed-pre-commit ## Generate inventory/group_vars/all.yaml
 	@echo "Generating inventory/group_vars/all.yaml..."
@@ -26,7 +34,7 @@ generate-group-vars: check-installed-pre-commit ## Generate inventory/group_vars
 # a failing step before the playbook. While the rule exists, the `sudo rm` needs no password. The
 # recipe's exit status stays the playbook's.
 .PHONY: install
-install: check-ansible ## Run ansible-playbook with optional parameters
+install: ansible-galaxy-install ## Run ansible-playbook with optional parameters
 	@echo "Running ansible-playbook with optional parameters..."
 	@read -r -s -p "BECOME password: " _pass; echo; \
 	_sudoers=/etc/sudoers.d/90-ansible-nopasswd; \
@@ -36,31 +44,33 @@ install: check-ansible ## Run ansible-playbook with optional parameters
 	printf '%s ALL=(ALL) NOPASSWD: ALL\n' "$$USER" > "$$_tmpfile"; \
 	echo "$$_pass" | sudo -S cp "$$_tmpfile" "$$_sudoers"; \
 	sudo chmod 0440 "$$_sudoers"; \
-	ansible-playbook playbooks/ubuntu-setup.yaml $(strip \
+	$(ANSIBLE_UVX) ansible-playbook playbooks/ubuntu-setup.yaml $(strip \
 	$(if $(TAGS),--tags=$(TAGS)) \
 	$(if $(LIMIT),--limit=$(LIMIT)) \
 	$(if $(EXTRA_VARS),--extra-vars="$(EXTRA_VARS)") \
 	$(if $(OTHER_PARAMS),$(OTHER_PARAMS)))
 
-.PHONY: check-ansible
-check-ansible: # Check if ansible is installed, and run the ansible installation script if not
-	@if ! command -v ansible >/dev/null 2>&1; then \
-		echo "Ansible is not installed, running setup script..."; \
-		sudo ./install_ansible.sh; \
-	else \
-		echo "Ansible is already installed."; \
+.PHONY: check-uv
+check-uv: # Install uv if it is missing, and check that the ansible-core pin can be read
+	@if ! command -v uvx >/dev/null 2>&1; then \
+		echo "uv is not installed, running install_uv.sh..."; \
+		./install_uv.sh; \
+	fi
+	@if [ -z "$(ANSIBLE_CORE_VERSION)" ]; then \
+		echo "Error: no ansible-core==<version> line in requirements-ci.txt."; \
+		exit 1; \
 	fi
 
 # The collections in requirements.yml go to ./.galaxy/collections, the first entry of
-# collections_path in ansible.cfg, so a syntax check never depends on what the host happens to
-# have installed globally.
+# collections_path in ansible.cfg, so neither a run nor a syntax check depends on what the host
+# happens to have installed globally.
 .PHONY: ansible-galaxy-install
-ansible-galaxy-install: ## Install the collections listed in requirements.yml into .galaxy/
-	ansible-galaxy collection install -r requirements.yml -p .galaxy/collections
+ansible-galaxy-install: check-uv ## Install the collections listed in requirements.yml into .galaxy/
+	$(ANSIBLE_UVX) ansible-galaxy collection install -r requirements.yml -p .galaxy/collections
 
 # Every playbook, not only the entry point: a playbook that is not imported yet is still checked.
 .PHONY: ansible-syntax-check
 ansible-syntax-check: ansible-galaxy-install ## Check the syntax of every playbook (no host is contacted)
-	ansible-playbook --syntax-check playbooks/*.yaml
+	$(ANSIBLE_UVX) ansible-playbook --syntax-check playbooks/*.yaml
 
 endif  # MK_LOCAL_ANSIBLE_INCLUDED
