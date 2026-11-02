@@ -2,4 +2,4 @@
 # `make ansible-syntax-check` locally and in the ansible-syntax job in .github/workflows/ci.yaml.
 # Kept here rather than inline in the makefile so Dependabot's pip ecosystem keeps it current; keep
 # the exact `ansible-core==<version>` form, which the makefile parses.
-ansible-core==2.21.4
+ansible-core==2.21.5
