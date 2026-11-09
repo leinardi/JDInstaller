@@ -174,6 +174,7 @@ playbook or role, make sure both the playbook and the role are enabled in
 | Role | Enabled by Default | Source | Description |
 | --- | --- | --- | --- |
 | `development` | ✅ | apt | Installs a set of development tools listed in `development.packages`. |
+| `claude_desktop` | ✅ | apt (Anthropic repo) | Installs the Claude desktop app (beta). |
 | `filezilla` | ✅ | apt | Installs FileZilla, an FTP client. |
 | `git` | ✅ | apt | Installs Git, a version control system. |
 | `openjdk` | ✅ | apt | Installs OpenJDK, a Java development environment. |
