@@ -1,0 +1,8 @@
+---
+claude_desktop_enabled: true
+claude_desktop:
+  key_url: "https://downloads.claude.ai/claude-desktop/key.asc"
+  repo_uri: "https://downloads.claude.ai/claude-desktop/apt/stable"
+  architectures:
+    - amd64
+    - arm64

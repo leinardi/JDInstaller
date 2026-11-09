@@ -34,6 +34,15 @@ chrome_enabled: true
 # Variables from roles/chromium
 chromium_enabled: false
 
+# Variables from roles/claude_desktop
+claude_desktop_enabled: true
+claude_desktop:
+  key_url: "https://downloads.claude.ai/claude-desktop/key.asc"
+  repo_uri: "https://downloads.claude.ai/claude-desktop/apt/stable"
+  architectures:
+    - amd64
+    - arm64
+
 # Variables from roles/common
 apt_cache_time: 3600
 locales:

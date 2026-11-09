@@ -1,0 +1,36 @@
+---
+# The package's postinst otherwise writes its own claude-desktop.list, whose Signed-By
+# differs from the .sources below, and apt refuses conflicting Signed-By values.
+- name: "Claude Desktop | Keep the package from registering its own repository"
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/default/claude-desktop
+    content: |
+      CLAUDE_DESKTOP_ADD_REPO="false"
+    mode: "0644"
+
+- name: "Claude Desktop | Remove the package's claude-desktop.list"
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/claude-desktop.list
+    state: absent
+
+# The key is fetched over HTTPS and embedded as is, like the other vendor repositories here,
+# rather than checked against Anthropic's published fingerprint.
+- name: "Claude Desktop | Add the Claude Desktop repository"
+  become: true
+  ansible.builtin.deb822_repository:
+    name: claude-desktop
+    types: deb
+    uris: "{{ claude_desktop.repo_uri }}"
+    suites: stable
+    components: main
+    architectures: "{{ claude_desktop.architectures }}"
+    signed_by: "{{ claude_desktop.key_url }}"
+
+- name: "Claude Desktop | Install claude-desktop"
+  become: true
+  ansible.builtin.apt:
+    name: claude-desktop
+    state: present
+    update_cache: true

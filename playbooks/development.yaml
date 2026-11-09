@@ -4,6 +4,9 @@
   roles:
     - role: development
       when: development_enabled | bool
+    - role: claude_desktop
+      tags: claude_desktop
+      when: claude_desktop_enabled | bool
     - role: docker
       tags: docker
       when: docker_enabled | bool
