@@ -19,47 +19,24 @@ host state, variable value, or tag selection where it fails. Do not praise or
 restyle the change. A review with no findings is credible only after active
 attempts to break the changed behavior.
 
-This skill defines the review procedure and reporting. `AGENTS.md` and the
-README remain the sources of truth.
+This skill routes to the project's authorities rather than replacing them: `AGENTS.md` and the
+README own the rules.
 
-Copy this checklist and tick items as you go:
+## Scope
 
-```text
-Review progress:
-- [ ] 1. Diff and intent established (default scope if none given)
-- [ ] 2. AGENTS.md, the whole changed role and its playbook read
-- [ ] 3. Repository invariants checked
-- [ ] 4. Adversarial passes run
-- [ ] 5. Findings confirmed or dropped; gates run
-- [ ] 6. Report written
-```
+When invoked directly: review the scope the user gives (`gh pr view <n>` for intent, then `gh pr
+diff <n>`); with none, the uncommitted work (`git diff HEAD` plus untracked files, which no diff
+shows); on a clean tree, `git diff master...HEAD`. Never review from memory or only from the
+user's description of the change.
 
-## 1. Establish the diff
+Read the stated intent (`git log --oneline` for the range, any linked issue or PR body): code
+that works but does something other than the stated intent is a finding. Read every changed file
+with enough surrounding context to understand its contracts. For non-trivial behavior changes,
+inspect callers, implementations, tests, and documentation that depend on the changed variable or
+file. Find every use with `grep -rn '<name>' roles/ playbooks/ inventory/`; never assume every
+use is in the diff.
 
-Never review from memory or only from the user's description. Read the actual
-diff and determine its intent. With no scope given, review the uncommitted
-work; if the tree is clean, review the branch against `master`.
-
-| User intent | Command |
-| --- | --- |
-| "my work", "before I commit", uncommitted changes | `git status --short`, then `git diff HEAD`; inspect untracked files too |
-| staged changes only | `git diff --staged` |
-| branch, "this PR", "ready to merge" | `git diff master...HEAD` |
-| specific commit range | `git diff <base>..<head>` |
-| GitHub PR number | `gh pr view <n>` for intent and metadata, then `gh pr diff <n>` |
-
-Read `git log --oneline` for the reviewed range and any linked issue or PR
-body. Code that works but does something other than the stated intent is a
-finding. A commit type that ships the wrong version is a finding too (pass in
-§4).
-
-Read every changed file with enough surrounding context to understand its
-contracts. For non-trivial behavior changes, inspect callers, implementations,
-tests, and documentation that depend on the changed variable or file. Find
-every use with `grep -rn '<name>' roles/ playbooks/ inventory/`; never assume
-every use is in the diff.
-
-## 2. Load project authority
+## Authority
 
 Always read `AGENTS.md`. For a role change, read the whole role (defaults,
 tasks, handlers, meta) and the playbook that includes it, not only the diff.
@@ -67,7 +44,7 @@ For a new or renamed variable, trace every use across `roles/`, `playbooks/`
 and `inventory/group_vars/all.yaml`. For a user-visible change, read the
 README's playbook and role tables.
 
-## 3. Repository invariants
+## Repository invariants
 
 Check these whenever affected, directly or indirectly:
 
@@ -110,10 +87,19 @@ Check these whenever affected, directly or indirectly:
 - **Workflows stay pinned and least-privilege.** `contents: read` at the top,
   extra permissions per job with the reason; every action pinned to a full
   commit SHA with a `# vX.Y.Z` comment; inputs reach shell through `env:`.
+- **Commit type matches whether it ships.** `svu` derives the release from the commits since the
+  last tag, and every commit lands as it is (merge commits). What ships is the playbook: a change
+  to what it does on a machine (a role, a playbook, a default, `install_uv.sh`, `make install`)
+  typed `chore`, `ci`, `docs` or `refactor` never reaches a release; a `feat` or `fix` on a
+  workflow, a hook, a test or a doc cuts a release for nothing; a stray `!` or `BREAKING CHANGE:`
+  cuts a major. A revert of a shipped `feat` or `fix` is a `fix`. `svu` also matches `feat`/`fix`
+  anywhere before a colon (`prefix:` counts as `fix:`). See `AGENTS.md`.
 
-## 4. Adversarial passes
+## Adversarial passes
 
-Do not skim for style. Run each pass with "how can this fail?" framing:
+Do not skim for style. Beyond the generic passes (logic, empty input, error handling, resources,
+security), run each pass with "how can this fail?" framing, and name the triggering host state or
+value per candidate rather than asserting "looks fine":
 
 - **Second run:** walk every changed task on a machine where it already ran.
   Does it report changed? Does it re-download, re-add a key, append a line
@@ -132,15 +118,6 @@ Do not skim for style. Run each pass with "how can this fail?" framing:
   paths with spaces, `lookup` on the controller versus the host.
 - **Contract drift:** compare the change with the README tables, the role's
   defaults, the playbook tags, and the commit/PR intent.
-- **Commit type matches whether it ships:** `svu` derives the release from the
-  commits since the last tag, and every commit lands as it is (merge commits).
-  What ships is the playbook: a change to what it does on a machine (a role,
-  a playbook, a default, `install_uv.sh`, `make install`) typed `chore`,
-  `ci`, `docs` or `refactor` never reaches a release; a `feat` or `fix` on a
-  workflow, a hook, a test or a doc cuts a release for nothing; a stray `!` or
-  `BREAKING CHANGE:` cuts a major. A revert of a shipped `feat` or `fix` is a
-  `fix`. `svu` also matches `feat`/`fix` anywhere before a colon (`prefix:`
-  counts as `fix:`). See `AGENTS.md`.
 - **A check that can no longer fail:** the gates guard claims nobody re-checks
   by hand. Make the guarded thing go wrong and see whether the check still
   notices: a hand-edited `inventory/group_vars/all.yaml` against the
@@ -152,29 +129,28 @@ Do not skim for style. Run each pass with "how can this fail?" framing:
   `ci-result`'s `needs`, or a CI step that adds `|| true` or
   `continue-on-error` is a false pass: a finding.
 
-For each candidate finding, reproduce it or trace the failing host state end
-to end. If that confirms it, report it. If not, dig once more; if it is still
-unconfirmed, drop it. Never report a finding without the triggering state and
-the wrong result or broken invariant.
+## Gates
 
-## 5. Verify findings and gates
+Do not re-run the repository's gates (`make check`, `make ansible-syntax-check`). The implementer is
+expected to run them and CI runs them again, but do not assume either happened: report the
+verification evidence you actually have (under adversarial-review-loop, `verification.txt` when
+supplied, which is the implementer's claim and not proof; when invoked directly, the CI status or
+gate output in the PR or session) and what is missing, such as a role's behavior change with no
+result from running `make install TAGS=<role>` twice on a throwaway Ubuntu virtual machine (the
+second run must report no changes), or a change to `scripts/check-license-headers.sh` with no
+evidence that it still fails on a file without the header. A failure in that evidence caused by the
+change is a confirmed finding. Never say that a check you did not see passed. Judge whether the
+change's tests prove it: a behaviour change needs a check that fails on the old code.
 
-Never verify by running the playbook on the machine you are working on: it
-changes that machine. Use the static gates, and a throwaway Ubuntu virtual
-machine for anything that needs a real run.
+Never run the playbook on the machine you are working on: it changes that machine. There is no
+focused runner for a role's behavior, so a suspected finding is confirmed by tracing the task, its
+variables and the host state statically. When invoked directly, one hook on the changed file
+(`pre-commit run <hook-id> --files <file>`, for a hook that checks only the files it is given) may
+be run to confirm a single suspected finding, never a full suite or gate. A candidate that is
+neither reproduced nor traced end to end is dropped: never report a finding without the triggering
+state and the wrong result or broken invariant.
 
-| Diff touched | Run |
-| --- | --- |
-| roles, playbooks, inventory | `make check`, then `make ansible-syntax-check` |
-| a role's behavior | the above, then `make install TAGS=<role>` twice on a throwaway VM: the second run must report no changes |
-| workflows, Makefile, scripts | `make check` |
-| `scripts/check-license-headers.sh` | the script, once as is and once on a file without the header |
-| docs or skill only | `make check` |
-
-A failing gate is a confirmed finding when caused by the reviewed change. If a
-gate cannot run, state why and mark it unverified; never imply it passed.
-
-## 6. Report
+## Report
 
 Rank findings by severity, worst first. A secret or personal data in the
 repository, an unverified download or key, or a leftover privilege escalation
@@ -189,8 +165,8 @@ For each finding:
   Fix: <specific corrective change>
 ```
 
-Put findings first. Then list open questions or assumptions, followed by a
-one-line verdict: **block**, **approve with nits**, or **approve**. Include gates
-actually run and gates not run. If no findings exist, say so explicitly and
-briefly name the failure modes you tried to trigger. Be blunt, but never invent
-a finding to appear thorough.
+Put findings first. Then list open questions or assumptions, followed by a one-line verdict:
+**block**, **approve with nits**, or **approve**, and one line:
+`Verification evidence: seen … / missing …`. If no findings exist, say so explicitly and briefly
+name the failure modes you tried to trigger. Be blunt, but never invent a finding to appear
+thorough.
