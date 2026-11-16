@@ -138,9 +138,11 @@ supplied, which is the implementer's claim and not proof; when invoked directly,
 gate output in the PR or session) and what is missing, such as a role's behavior change with no
 result from running `make install TAGS=<role>` twice on a throwaway Ubuntu virtual machine (the
 second run must report no changes), or a change to `scripts/check-license-headers.sh` with no
-evidence that it still fails on a file without the header. A failure in that evidence caused by the
-change is a confirmed finding. Never say that a check you did not see passed. Judge whether the
-change's tests prove it: a behaviour change needs a check that fails on the old code.
+evidence that it still fails on a file without the header. Judge what is missing against
+`AGENTS.md`'s *Validation matrix*: every changed path owes the checks its row names. A failure in
+that evidence caused by the change is a confirmed finding. Never say that a check you did not see
+passed. Judge whether the change's tests prove it: a behaviour change needs a check that fails on
+the old code.
 
 Never run the playbook on the machine you are working on: it changes that machine. There is no
 focused runner for a role's behavior, so a suspected finding is confirmed by tracing the task, its
