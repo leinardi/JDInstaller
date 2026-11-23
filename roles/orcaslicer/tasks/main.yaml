@@ -38,7 +38,7 @@
 
 - name: "OrcaSlicer | Get installed version string"
   ansible.builtin.command:
-    cmd: "{{ orcaslicer_appimage.install_dir }}/bin/orca-slicer -h"
+    cmd: "{{ orcaslicer_appimage.install_dir }}/AppRun -h"
   register: _orcaslicer_ai_version_output
   changed_when: false
   failed_when: false
@@ -323,7 +323,7 @@
     src: orcaslicer.desktop.j2
     dest: /usr/share/applications/orcaslicer.desktop
     mode: "0644"
-  when: _orcaslicer_ai_do_install
+  register: _orcaslicer_desktop_entry
 
 - name: "OrcaSlicer | Check for hicolor icon"
   ansible.builtin.stat:
@@ -355,16 +355,15 @@
   ansible.builtin.command: update-desktop-database
   changed_when: false
   failed_when: false
-  when: _orcaslicer_ai_do_install
+  when: _orcaslicer_ai_do_install or _orcaslicer_desktop_entry.changed
 
 - name: "OrcaSlicer | Create bin symlink"
   become: true
   ansible.builtin.file:
-    src: "{{ orcaslicer_appimage.install_dir }}/bin/orca-slicer"
+    src: "{{ orcaslicer_appimage.install_dir }}/AppRun"
     dest: "{{ orcaslicer_appimage.bin_symlink }}"
     state: link
     force: true
-  when: _orcaslicer_ai_do_install
 
 - name: "OrcaSlicer | Cleanup temporary directory"
   ansible.builtin.file:
